@@ -1,0 +1,26 @@
+{
+  "name": "synthetic-data-pipeline",
+  "version": "1.0.0",
+  "description": "Schema-aware synthetic data pipeline: Claude picks per-column generator strategies once (cached), deterministic code enforces scale and referential integrity.",
+  "type": "module",
+  "scripts": {
+    "extract-schema": "node src/01-extract-schema.mjs",
+    "build-graph": "node src/02-build-dependency-graph.mjs",
+    "generate-spec": "node src/03-generate-spec.mjs",
+    "generate-data": "node src/04-generate-data.mjs",
+    "load-data": "node src/05-load-data.mjs",
+    "validate": "node src/06-validate.mjs",
+    "pipeline": "node run.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "@faker-js/faker": "^9.3.0",
+    "dotenv": "^16.4.5",
+    "pg": "^8.13.1",
+    "pg-copy-streams": "^6.0.6"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}
