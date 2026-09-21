@@ -1,0 +1,515 @@
+\documentclass[10pt, letterpaper]{article}
+
+% Packages:
+\usepackage[
+    ignoreheadfoot, % set margins without considering header and footer
+    top=2 cm, % seperation between body and page edge from the top
+    bottom=1.5 cm, % seperation between body and page edge from the bottom
+    left=2 cm, % seperation between body and page edge from the left
+    right=2 cm, % seperation between body and page edge from the right
+    footskip=1.0 cm, % seperation between body and footer
+    % showframe % for debugging 
+]{geometry} % for adjusting page geometry
+\usepackage{titlesec} % for customizing section titles
+\usepackage{tabularx} % for making tables with fixed width columns
+\usepackage{array} % tabularx requires this
+\usepackage[dvipsnames]{xcolor} % for coloring text
+\definecolor{primaryColor}{RGB}{0, 0, 0} % define primary color
+\usepackage{enumitem} % for customizing lists
+\usepackage{fontawesome5} % for using icons
+\usepackage{amsmath} % for math
+\usepackage[
+    pdftitle={Balázs László's CV},
+    pdfauthor={Balázs László},
+    pdfcreator={LaTeX with RenderCV},
+    colorlinks=true,
+    urlcolor=primaryColor
+]{hyperref} % for links, metadata and bookmarks
+\usepackage[pscoord]{eso-pic} % for floating text on the page
+\usepackage{calc} % for calculating lengths
+\usepackage{bookmark} % for bookmarks
+\usepackage{lastpage} % for getting the total number of pages
+\usepackage{changepage} % for one column entries (adjustwidth environment)
+\usepackage{paracol} % for two and three column entries
+\usepackage{ifthen} % for conditional statements
+\usepackage{needspace} % for avoiding page brake right after the section title
+\usepackage{iftex} % check if engine is pdflatex, xetex or luatex
+
+% Ensure that generate pdf is machine readable/ATS parsable:
+\ifPDFTeX
+    \input{glyphtounicode}
+    \pdfgentounicode=1
+    \usepackage[T1]{fontenc}
+    \usepackage[utf8]{inputenc}
+    \usepackage{lmodern}
+\fi
+
+\usepackage{charter}
+
+% Some settings:
+\raggedright
+\AtBeginEnvironment{adjustwidth}{\partopsep0pt} % remove space before adjustwidth environment
+\pagestyle{empty} % no header or footer
+\setcounter{secnumdepth}{0} % no section numbering
+\setlength{\parindent}{0pt} % no indentation
+\setlength{\topskip}{0pt} % no top skip
+\setlength{\columnsep}{0.15cm} % set column seperation
+\pagenumbering{gobble} % no page numbering
+
+\titleformat{\section}{\needspace{4\baselineskip}\bfseries\large}{}{0pt}{}[\vspace{1pt}\titlerule]
+
+\titlespacing{\section}{
+    % left space:
+    -1pt
+}{
+    % top space:
+    0.3 cm
+}{
+    % bottom space:
+    0.2 cm
+} % section title spacing
+
+\renewcommand\labelitemi{$\vcenter{\hbox{\small$\bullet$}}$} % custom bullet points
+\newenvironment{highlights}{
+    \begin{itemize}[
+        topsep=0.10 cm,
+        parsep=0.10 cm,
+        partopsep=0pt,
+        itemsep=0pt,
+        leftmargin=0 cm + 10pt
+    ]
+}{
+    \end{itemize}
+} % new environment for highlights
+
+
+\newenvironment{highlightsforbulletentries}{
+    \begin{itemize}[
+        topsep=0.10 cm,
+        parsep=0.10 cm,
+        partopsep=0pt,
+        itemsep=0pt,
+        leftmargin=10pt
+    ]
+}{
+    \end{itemize}
+} % new environment for highlights for bullet entries
+
+\newenvironment{onecolentry}{
+    \begin{adjustwidth}{
+        0 cm + 0.00001 cm
+    }{
+        0 cm + 0.00001 cm
+    }
+}{
+    \end{adjustwidth}
+} % new environment for one column entries
+
+\newenvironment{twocolentry}[2][]{
+    \onecolentry
+    \def\secondColumn{#2}
+    \setcolumnwidth{\fill, 4.5 cm}
+    \begin{paracol}{2}
+}{
+    \switchcolumn \raggedleft \secondColumn
+    \end{paracol}
+    \endonecolentry
+} % new environment for two column entries
+
+\newenvironment{threecolentry}[3][]{
+    \onecolentry
+    \def\thirdColumn{#3}
+    \setcolumnwidth{, \fill, 4.5 cm}
+    \begin{paracol}{3}
+    {\raggedright #2} \switchcolumn
+}{
+    \switchcolumn \raggedleft \thirdColumn
+    \end{paracol}
+    \endonecolentry
+} % new environment for three column entries
+
+\newenvironment{header}{
+    \setlength{\topsep}{0pt}\par\kern\topsep\centering\linespread{1.5}
+}{
+    \par\kern\topsep
+} % new environment for the header
+
+\newcommand{\placelastupdatedtext}{% \placetextbox{<horizontal pos>}{<vertical pos>}{<stuff>}
+  \AddToShipoutPictureFG*{% Add <stuff> to current page foreground
+    \put(
+        \LenToUnit{\paperwidth-2 cm-0 cm+0.05cm},
+        \LenToUnit{\paperheight-1.0 cm}
+    ){\vtop{{\null}\makebox[0pt][c]{
+        \small\color{gray}\textit{Last updated in September 2024}\hspace{\widthof{Last updated in September 2024}}
+    }}}%
+  }%
+}%
+
+% save the original href command in a new command:
+\let\hrefWithoutArrow\href
+
+% new command for external links:
+\usepackage{tikz}
+\usepackage[export]{adjustbox}
+\usepackage{paracol}
+
+\begin{document}
+    \newcommand{\AND}{\unskip
+        \cleaders\copy\ANDbox\hskip\wd\ANDbox
+        \ignorespaces
+    }
+    \newsavebox\ANDbox
+    \sbox\ANDbox{$|$}
+
+
+    \begin{header}
+        \setcolumnwidth{\fill, 4cm}
+        \begin{paracol}{2}
+        
+        \raggedright
+        \fontsize{25 pt}{25 pt}\selectfont Balázs László
+        \vspace{0 pt}
+        \newline\fontsize{15 pt}{15 pt}\selectfont AI Safety Generalist $|$ Technical \& Governance \& Advocacy
+
+        \vspace{6 pt}
+        
+        \normalsize
+        \mbox{Sønderborg, DK}%
+        \kern 3.0 pt%
+        \AND%
+        \kern 3.0 pt%
+        \mbox{\hrefWithoutArrow{mailto:lbazsi09@gmail.com}{lbazsi09@gmail.com}}%
+        \kern 3.0 pt%
+        \AND%
+        \kern 3.0 pt%
+        \mbox{\hrefWithoutArrow{tel:+36 70 365 6656}{+36 70 365 6656}}%
+        \\\mbox{\hrefWithoutArrow{https://www.linkedin.com/in/balazs-laszlo19/}{https://www.linkedin.com/in/balazs-laszlo19/}} $|$ \mbox{\hrefWithoutArrow{https://github.com/lbazsi}{https://github.com/lbazsi}}%
+        
+        \switchcolumn
+        \raggedleft
+        
+        \begin{tikzpicture}
+        \clip (2,2)  circle (1.8cm) ;
+        \includegraphics[width=4cm]{Balazs.jpeg}; 
+        \end{tikzpicture}
+        
+        \end{paracol}
+        
+    \end{header}
+
+    \section{Education}
+
+        \begin{twocolentry}{\textbf{January 2026}}
+        \textbf{University of Cambridge}, Computer Science Tripos\end{twocolentry}
+
+        \vspace{0.1cm}
+        
+        \begin{onecolentry}
+            \begin{highlights}
+                \item  Offered admission to the Computer Science Tripos; unable to take up the place due to insufficient funding.
+            \end{highlights}
+        \end{onecolentry}
+
+    \begin{twocolentry}{\textbf{Sept 2025 - Sept 2026}}
+        
+        \textbf{University of Southern Denmark}, BSc in Mechatronics \end{twocolentry}
+
+        \vspace{0.1 cm}
+
+        \begin{onecolentry}
+            \begin{highlights}
+                \item Administration - ARC Rocketry Club: Developing an inventory system via building data-driven automation pipelines using \textbf{Python and Microsoft tools}
+                \item Founder, President - SIRAIS (Student Initiative for AI Safety Research): Established a university group focusing on \textbf{AI Safety research}
+            \end{highlights}
+        \end{onecolentry}
+
+        \vspace{0.2cm}
+
+\section{Projects}
+    
+        \begin{twocolentry}{
+        \textbf{May 2026 - June 2026}
+        }
+            \textbf{Technical AIS project sprint}, BlueDot Impact, Remote\end{twocolentry}
+
+        \vspace{0.1 cm}
+        
+        \begin{onecolentry}
+            \begin{highlights}
+                \item Investigated whether low-level linguistic features are represented, sparsely separable, and suitable targets for causal interventions in language-model activations.
+                \item Established the experimental foundation for follow-up research on linguistic structure, behavioral effects, and constitutional language.
+            \end{highlights}
+        \end{onecolentry}
+    
+        \begin{twocolentry}{
+        \textbf{Sept 2025 - Sept 2025}
+        }
+            \textbf{Research Sprint}, Apart Research, Remote\end{twocolentry}
+
+        \vspace{0.1 cm}
+
+        \begin{onecolentry}
+            \begin{highlights}
+                \item Developed \textbf{Python} prototypes for a toolkit designed to reduce weaknesses in \textbf{CBRN AI benchmarks}.
+                \item Earned \textbf{second place} globally while gaining experience in collaborative technical research, experimental evaluation, and research communication.
+            \end{highlights}
+        \end{onecolentry}
+
+        \vspace{0.2 cm}
+        
+        \begin{twocolentry}{
+        \textbf{Dec 2024 - March 2025}
+        }
+            \textbf{International research competition}, TUDOK, HU\end{twocolentry}
+
+        \vspace{0.1 cm}
+
+        \begin{onecolentry}
+            \begin{highlights}
+                \item Developed a research proposal on \textbf{reducing bias} in large language models through structured databases informed by EU AI Act requirements.
+                \item Received \textbf{two international second-place awards} for the AI governance proposal and the MLM participation study, demonstrating interdisciplinary expertise across technology, policy, and sociology.
+            \end{highlights}
+        \end{onecolentry}
+
+        \vspace{0.2 cm}
+
+        \begin{twocolentry}{
+        \textbf{June 2024 - Nov 2024}
+        }
+            \textbf{National university research competition}, BGE TDK and OTDK, HU\end{twocolentry}
+
+        \vspace{0.1 cm}
+
+        \begin{onecolentry}
+            \begin{highlights}
+                \item Co-authored a mixed-methods study examining student participation in multi-level marketing networks, combining quantitative analysis with qualitative research.
+                \item Advanced to the national round and received a \textbf{special award} strengthening academic writing and presentation skills.
+            \end{highlights}
+        \end{onecolentry}
+
+        \vspace{0.2 cm}
+
+        \begin{twocolentry}{
+        \textbf{June 2024 - Sept 2024}
+        }
+            \textbf{Robotics World Championship}, First Global Challenge 2024, Athens\end{twocolentry}
+
+        \vspace{0.1 cm}
+
+        \begin{onecolentry}
+            \begin{highlights}
+                \item Co-built and programmed a competition robot using Python and sensor-based control, prioritizing rapid task execution, mechanical stability, and iterative troubleshooting.
+                \item \textbf{Ranked 34th among 193} international teams while developing engineering teamwork, resilience under pressure, and cross-cultural collaboration skills.
+            \end{highlights}
+        \end{onecolentry}
+
+        \vspace{0.2 cm}
+
+    \section{Experience, research \& volunteering}
+  
+        \begin{twocolentry}{
+        \textbf{Sept 2026 - Sept 2026}
+        }
+            \textbf{Participant}, Technical ML4Good Bootcamp, Greens Norton - UK\end{twocolentry}
+
+        \vspace{0.1 cm}
+        
+        \begin{onecolentry}
+            \begin{highlights}
+                \item Completed an intensive technical bootcamp focused on machine learning, AI safety, and applied research methods. 
+                \item Worked on hands-on technical exercises and collaborative projects while developing practical skills in Python, ML experimentation, and research workflows.
+            \end{highlights}
+        \end{onecolentry}
+
+        \begin{twocolentry}{
+        \textbf{Aug 2026 - Nov 2026}
+        }
+            \textbf{Mentor}, Sentient Futures Incubator Program, remote\end{twocolentry}
+
+        \vspace{0.1 cm}
+        
+        \begin{onecolentry}
+            \begin{highlights}
+                \item Mentoring fellows on improving synthetic data for animal-aligned value generalization by identifying potential risks and effects of linguistic differences on downstream model behavior.
+                \item Supporting fellows in shaping their own projects and research directions throughout the program.
+            \end{highlights}
+        \end{onecolentry}
+
+        \vspace{0.2 cm}
+    
+        \begin{twocolentry}{
+        \textbf{April 2026 - Sept 2026}
+        }
+            \textbf{AI Integrations}, LINAK - Operations Excellence department and R\&D, Guderup - DK\end{twocolentry}
+
+        \vspace{0.1 cm}
+        
+        \begin{onecolentry}
+            \begin{highlights}
+                \item Developed technical and operational plans to integrate AI into company workflows.
+                \item Led workshops and presentations while contributing to technical and operational discussions and planning.
+            \end{highlights}
+        \end{onecolentry}
+
+        \vspace{0.2 cm}
+    
+        \begin{twocolentry}{
+            \textbf{March 2026 – May 2026}
+        }
+            \textbf{Research Fellow}, Sentient Futures Incubator Program, remote\end{twocolentry}
+
+        \vspace{0.10 cm}
+        \begin{onecolentry}
+            \begin{highlights}
+                \item Designing a welfare-first monitoring \& mitigation framework for zoonotic disease risk that uses animal-welfare indicators to support earlier, humane interventions.
+                \item Started building Disease Free Futures, which will be a non-profit focusing on wild animal disease mitigation.
+            \end{highlights}
+        \end{onecolentry}
+
+        \vspace{0.2 cm}
+    
+        \begin{twocolentry}{
+            \textbf{Oct 2025 – Present}
+        }
+            \textbf{AI Researcher}, Algoverse AI Research Program, remote\end{twocolentry}
+
+        \vspace{0.10 cm}
+        \begin{onecolentry}
+            \begin{highlights}
+                \item Working on steganography detection research from a \textbf{mechanistic interpretability} perspective primarily in Python.
+                \item Collaborating in an international research environment on experimental design, model analysis, and technical research workflows.
+            \end{highlights}
+        \end{onecolentry}
+
+        \vspace{0.2 cm}
+
+        \begin{twocolentry}{
+            \textbf{Sept 2024 – Present}
+        }
+            \textbf{Leader}, Next Generation Hungary (NGH) - Erasmus+ (ID:E10372683)\end{twocolentry}
+
+        \vspace{0.10 cm}
+        \begin{onecolentry}
+            \begin{highlights}
+                \item Participated in international youth initiatives addressing climate change, and youth empowerment.
+                \item Contributed to projects organized in Portugal, Greece and Lithuania, focusing on emerging topics.
+            \end{highlights}
+        \end{onecolentry}
+
+        \vspace{0.2 cm}
+
+        \begin{twocolentry}{
+            \textbf{July 2024 – July 2025}
+        }
+            \textbf{Secretary General}, JEF Hungary, HU\end{twocolentry}
+
+        \vspace{0.10 cm}
+        \begin{onecolentry}
+            \begin{highlights}
+                \item Directed international youth projects, conferences, and policy discussions while securing and administering project grants.
+                \item Represented Hungary in the organisation’s Federal Committee, developing international leadership, financial management, and stakeholder-coordination experience.
+            \end{highlights}
+        \end{onecolentry}
+
+        \vspace{0.2 cm}
+
+        \begin{twocolentry}{
+            \textbf{Sept 2022 – Jan 2023}
+        }
+            \textbf{Programming Educator - Python}, Logiscool, Tatabánya - HU\end{twocolentry}
+
+        \vspace{0.10 cm}
+        \begin{onecolentry}
+            \begin{highlights}
+                \item Taught Python to secondary-school students through interactive exercises and project-based lessons.
+                \item Adapted technical explanations to different learning styles, strengthening leadership and mentoring.
+            \end{highlights}
+        \end{onecolentry}
+
+        \vspace{0.2 cm}
+
+    \section{Courses}
+    
+        \begin{twocolentry}{
+        \textbf{Aug 2025 - Oct 2025}
+        }
+            \textbf{AGI Strategy Course}, BlueDot Impact, Remote\end{twocolentry}
+
+        \vspace{0.1 cm}
+        
+        \begin{onecolentry}
+            \begin{highlights}
+                \item Explored global governance, safety, and long-term planning for advanced AI systems.
+                \item Developed early expertise in \textbf{technical AI governance} at the intersection of technology and public policy.
+            \end{highlights}
+        \end{onecolentry}
+    
+        \begin{twocolentry}{
+        \textbf{Aug 2023 - Sept 2023}
+        }
+            \textbf{AI Safety Technical Fellowship}, AI Safety Hungary, Budapest - HU\end{twocolentry}
+
+        \vspace{0.1 cm}
+        
+        \begin{onecolentry}
+            \begin{highlights}
+                \item Explored foundations of \textbf{AI alignment and interpretability} through lectures and collaborative research discussions.
+                \item Strengthened theoretical knowledge of \textbf{machine learning} and research methodologies.
+            \end{highlights}
+        \end{onecolentry}
+
+        \vspace{0.2 cm}
+        
+        \begin{twocolentry}{
+        \textbf{Jan 2022 - June 2025}
+        }
+            \textbf{Mathias Corvinus Collegium Talent program}, MCC, HU\end{twocolentry}
+
+        \vspace{0.1 cm}
+        
+        \begin{onecolentry}
+            \begin{highlights}
+                \item Selected for a multi-disciplinary excellence program providing training in both \textbf{STEM and social sciences}.
+                \item Attended intensive seminars and conferences with academics, entrepreneurs, and policymakers.
+            \end{highlights}
+        \end{onecolentry}
+
+        \vspace{0.2 cm}
+    
+    \section{Skills}
+        \setcolumnwidth{\fill, 2 cm, 2 cm, 3 cm}
+        \begin{paracol}{4}
+ 
+        \begin{onecolentry}
+            \textbf{Programming languages:} \textbf{Python}, \textbf{R}, C, C++, LaTeX, \textbf{SQL}\end{onecolentry}
+
+        \vspace{0.2 cm}
+
+        \begin{onecolentry}
+            \textbf{Technologies:} Excel, Word, Canva, WordPress\end{onecolentry}
+
+        \vspace{0.2 cm}
+
+        \begin{onecolentry}
+            \textbf{Tools:} Git, \textbf{CAD (NX)}, \textbf{MATLAB}, \textbf{Power BI}\end{onecolentry}
+
+        \switchcolumn
+
+        \begin{onecolentry}
+            \textbf{Languages:}\end{onecolentry}
+
+        \switchcolumn
+
+        \begin{onecolentry}
+            \raggedright
+            \textbf{Hungarian} \\\textbf{English} \\\textbf{German} \\\textbf{Danish}
+        \end{onecolentry}
+
+        \switchcolumn
+        
+        \begin{onecolentry}
+            \raggedleft
+            native (C2) \\fluent (C2) \\fluent (C1) \\intermediate (B1)\end{onecolentry}
+
+        \end{paracol}
+\end{document}
