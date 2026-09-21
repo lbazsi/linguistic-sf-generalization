@@ -1,1 +1,1 @@
-# linguistic-sf-generalization
+# Effects of linguistic structures on generalization in synthetic data generation
