@@ -1,0 +1,21 @@
+Repair or regenerate the flagged synthetic contrast pairs.
+
+Feature specification:
+{{FEATURE_YAML}}
+
+Topic:
+{{TOPIC}}
+
+Flagged IDs, source candidates, and deterministic issues:
+{{PROBLEMS_JSON}}
+
+Requirements:
+- Return exactly one corrected item for every flagged ID and no other IDs.
+- Preserve usable semantic content from a source candidate when possible; regenerate the pair when the source is missing or structurally unusable.
+- Use the exact requested ID, feature name, language, and topic.
+- Hold semantic content and value content constant within each pair.
+- Make the feature_variant express only the target linguistic feature relative to the canonical text.
+- Respect the feature transformation instructions, semantic constraints, preferred patterns, and avoid patterns.
+- Produce natural text and no commentary.
+
+The response must conform to the JSON schema supplied with the API request.

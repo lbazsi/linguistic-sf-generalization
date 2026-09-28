@@ -1,0 +1,23 @@
+Generate synthetic contrast pairs for the linguistic feature defined below.
+
+Feature specification:
+{{FEATURE_YAML}}
+
+Topic:
+{{TOPIC}}
+
+Requested items:
+{{REQUESTS_JSON}}
+
+Requirements:
+- Return exactly one item for every requested ID and no other IDs.
+- Use the feature name and language exactly as defined in the feature specification.
+- Use the supplied topic exactly.
+- Hold semantic content and value content constant within each pair.
+- The canonical text should realize the content according to the canonical definition.
+- The feature_variant should change only the target linguistic feature according to the transformation instructions.
+- Respect every semantic constraint, preferred pattern, and avoid pattern in the feature specification.
+- Keep the pair natural and independently understandable.
+- Do not add metadata or commentary.
+
+The response must conform to the JSON schema supplied with the API request.

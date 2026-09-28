@@ -1,9 +1,0 @@
-{
-  "defaultRows": 1000,
-  "rowsPerTable": {
-    "users": 500,
-    "products": 200,
-    "orders": 3000,
-    "order_items": 8000
-  }
-}

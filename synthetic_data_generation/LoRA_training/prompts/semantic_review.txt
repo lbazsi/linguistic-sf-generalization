@@ -1,0 +1,18 @@
+Review every supplied contrast pair for non-deterministic quality problems.
+
+Feature specification:
+{{FEATURE_YAML}}
+
+Items:
+{{ITEMS_JSON}}
+
+Review for material issues including:
+- semantic or value-content differences between canonical and feature_variant;
+- failure to realize the target feature or insufficient contrast;
+- unintended linguistic, stylistic, emotional, epistemic, moral, or pragmatic confounds;
+- violations of the feature semantic constraints or avoid patterns;
+- unnatural, incoherent, or meaningfully ambiguous text.
+
+Return only issues that require correction. Each issue must reference an item ID, identify an issue type, optionally identify a field, and give a concise reason. An item may have more than one issue. Return an empty issues list when no corrections are needed.
+
+The response must conform to the JSON schema supplied with the API request.

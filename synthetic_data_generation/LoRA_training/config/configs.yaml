@@ -1,0 +1,45 @@
+config_version: "1.0"
+schema_version: "1.0"
+prompt_version: "1.0"
+
+models:
+  generator: null
+  judge: null
+  reviewer: null
+
+temperatures:
+  generator: 0.7
+  judge: 0.2
+  reviewer: 0.0
+
+concurrency: 8
+batch_size: 20
+
+seeds:
+  generator: 42
+  judge: 43
+  reviewer: 44
+
+retry_limits:
+  max_attempts: 5
+  backoff_seconds: 2
+  max_backoff_seconds: 30
+
+dataset_size: 5000
+
+api:
+  base_url: "https://openrouter.ai/api/v1"
+  timeout_seconds: 120
+  max_output_tokens: 8000
+  require_parameters: true
+
+paths:
+  topics: "config/topics.yaml"
+  features: "features"
+  prompts: "prompts"
+  raw: "data/raw"
+  first_review: "data/first_review"
+  final: "data/final"
+  deterministic_issues: "data/issues/deterministic"
+  nondeterministic_issues: "data/issues/non-deterministic"
+  manifests: "data/manifests"
