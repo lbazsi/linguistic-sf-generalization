@@ -1,20 +1,19 @@
-Repair the flagged contrast pairs after semantic review.
+Repair the flagged feature transformations after semantic review.
 
 Feature specification:
 {{FEATURE_YAML}}
 
-Topic:
-{{TOPIC}}
-
-Flagged items and issues:
+Flagged items, immutable canonical sources, and issues:
 {{PROBLEMS_JSON}}
 
 Requirements:
 - Return exactly one corrected item for every flagged ID and no other IDs.
-- Resolve all listed issues.
-- Preserve the underlying semantic and value content where possible; rewrite both sides when needed to restore a clean controlled contrast.
-- Use the exact requested ID, feature name, language, and topic.
-- Make the feature_variant express only the target linguistic feature relative to the canonical text.
+- Resolve all listed issues by changing feature_variant only.
+- Copy the exact ID, language, topic, and canonical text from canonical_source.
+- Use the exact feature name from the feature specification.
+- Treat canonical_source as immutable; never rewrite the canonical text.
+- Preserve its semantic and value content, entities, quantities, stance, and factual claims.
+- Make feature_variant express only the target linguistic feature relative to the canonical text.
 - Respect every semantic constraint, preferred pattern, and avoid pattern in the feature specification.
 - Produce natural text and no commentary.
 
