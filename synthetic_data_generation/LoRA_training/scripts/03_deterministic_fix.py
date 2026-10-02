@@ -21,7 +21,7 @@ from common import (
     select_features,
     write_jsonl_atomic,
 )
-from schemas import pair_batch_schema
+from schemas import variant_batch_schema
 from validation import validate_item
 
 
@@ -106,10 +106,21 @@ async def fix_feature(
         response = await client.request_json(
             role="judge",
             prompt=prompt,
-            schema=pair_batch_schema(ids),
+            schema=variant_batch_schema(ids),
             schema_name="deterministically_repaired_pairs",
         )
-        rows = response["items"]
+        variants = {row["id"]: row["feature_variant"] for row in response["items"]}
+        rows = [
+            {
+                "id": item_id,
+                "feature": feature_name,
+                "language": canonical[item_id]["language"],
+                "topic": canonical[item_id]["topic"],
+                "canonical": canonical[item_id]["canonical"],
+                "feature_variant": variants[item_id],
+            }
+            for item_id in ids
+        ]
         async with write_lock:
             append_jsonl(output_path, rows)
         return len(rows)
