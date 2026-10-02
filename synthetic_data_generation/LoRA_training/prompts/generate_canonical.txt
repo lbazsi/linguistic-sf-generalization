@@ -1,0 +1,20 @@
+Generate the shared canonical corpus items requested below.
+
+Language:
+{{LANGUAGE}}
+
+Topic:
+{{TOPIC}}
+
+Requested items:
+{{REQUESTS_JSON}}
+
+Requirements:
+- Return exactly one item for every requested ID and no other IDs.
+- Use the supplied language and topic exactly.
+- Generate natural, independently understandable text suitable as source material for later controlled linguistic transformations.
+- Keep the content varied within the topic.
+- Do not target or anticipate any particular linguistic feature.
+- Do not add metadata or commentary.
+
+The response must conform to the JSON schema supplied with the API request.
