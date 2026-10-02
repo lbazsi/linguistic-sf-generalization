@@ -139,7 +139,7 @@ def validate_item(
 
     canonical_text = item.get("canonical")
     variant = item.get("feature_variant")
-    if isinstance(canonical_text, str) and not canonical.strip():
+    if isinstance(canonical_text, str) and not canonical_text.strip():
         issues.append(
             make_issue(
                 feature=feature_name,
