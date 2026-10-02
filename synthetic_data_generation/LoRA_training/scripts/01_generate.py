@@ -57,7 +57,18 @@ async def generate_canonical_corpus(
     plan = topic_plan(topics, dataset_size)
     output_path = canonical_corpus_path(config)
 
-    completed = resumable_ids(output_path, CANONICAL_SCHEMA, dataset_size)
+    validator = Draft202012Validator(CANONICAL_SCHEMA)
+    completed: set[int] = set()
+    for item_id, candidates in index_items(output_path).items():
+        if not (1 <= item_id <= dataset_size):
+            continue
+        if any(
+            not list(validator.iter_errors(candidate))
+            and candidate.get("topic") == plan[item_id]
+            and candidate.get("language") == language
+            for candidate in candidates
+        ):
+            completed.add(item_id)
     missing_ids = sorted(set(range(1, dataset_size + 1)) - completed)
     topic_batches = batches_by_topic(missing_ids, plan, config["batch_size"])
     write_lock = asyncio.Lock()
