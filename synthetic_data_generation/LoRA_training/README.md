@@ -1,10 +1,10 @@
 # Synthetic data generation for LoRA training
 
-This directory builds paired synthetic JSONL datasets for controlled linguistic-feature LoRA experiments. Each dataset contains a canonical text and a feature-enhanced version with the same semantic and value content.
+This directory builds paired synthetic JSONL datasets for controlled linguistic-feature LoRA experiments. It first generates one shared canonical corpus, then derives every feature dataset by transforming those exact canonical texts.
 
 ## Data contract
 
-Each JSONL row contains `id`, `feature`, `language`, `topic`, `canonical`, and `feature_variant`. IDs are integers in `1..dataset_size`. The same numeric ID range is used independently for every feature dataset. Topic allocation is deterministic and as even as possible across the configured dataset size; any remainder is assigned to the earliest topics in `config/topics.yaml`.
+The shared `data/canonical/corpus.jsonl` contains `id`, `language`, `topic`, and `canonical`. Topic allocation is determined only when this corpus is generated: it is deterministic and as even as possible across `dataset_size`, with any remainder assigned to the earliest topics in `config/topics.yaml`. Each feature dataset then contains `id`, `feature`, `language`, `topic`, `canonical`, and `feature_variant`, inheriting the ID, language, topic, and canonical text exactly from the shared corpus.
 
 ## Configuration
 
@@ -16,7 +16,7 @@ OpenRouter calls use JSON-schema structured outputs. API credentials are read fr
 
 ## Pipeline
 
-1. `01_generate.py` generates resumable raw paired datasets.
+1. `01_generate.py` first generates/resumes `data/canonical/corpus.jsonl`, then generates each raw feature dataset by asking the model only to transform the canonical text into `feature_variant`.
 2. `02_deterministic_review.py` performs JSON/schema, ID, topic, and basic pair validation.
 3. `03_deterministic_fix.py` uses the judge model to repair or regenerate flagged IDs and writes `data/first_review/`.
 4. `04_deterministic_recheck.py` reruns deterministic validation on the repaired datasets.
@@ -38,7 +38,7 @@ python scripts/05_semantic_review.py
 python scripts/06_semantic_fix.py
 ```
 
-Each script accepts repeated `--feature <variable_name>` arguments. Dataset files are named `<variable_name>.jsonl` at every data stage.
+Each script accepts repeated `--feature <variable_name>` arguments. Feature dataset files are named `<variable_name>.jsonl` at every data stage. The shared source corpus is `data/canonical/corpus.jsonl`; downstream feature generation, validation, and repair use it as the source of truth rather than recomputing topic assignments.
 
 ## Design reference
 
@@ -66,6 +66,8 @@ prompts/
 scripts/
 
 data/
+├── canonical/
+│   └── corpus.jsonl
 ├── raw/
 ├── first_review/
 ├── final/
@@ -99,6 +101,7 @@ seeds:
   reviewer: <integer>
 
 dataset_size: <integer>
+canonical_language: "en"
 
 retry_limits:
   max_attempts: <integer>
@@ -115,6 +118,7 @@ paths:
   topics: "config/topics.yaml"
   features: "features"
   prompts: "prompts"
+  canonical: "data/canonical"
   raw: "data/raw"
   first_review: "data/first_review"
   final: "data/final"
@@ -144,6 +148,7 @@ Issue files use one JSON object per line:
 
 ```text
 prompts/
+├── generate_canonical.txt
 ├── generate.txt
 ├── deterministic_fix.txt
 ├── semantic_review.txt
