@@ -1,6 +1,6 @@
-config_version: "1.0"
-schema_version: "1.0"
-prompt_version: "1.0"
+config_version: "1.1"
+schema_version: "1.1"
+prompt_version: "1.1"
 
 models:
   generator: null
@@ -26,6 +26,7 @@ retry_limits:
   max_backoff_seconds: 30
 
 dataset_size: 5000
+canonical_language: "en"
 
 api:
   base_url: "https://openrouter.ai/api/v1"
@@ -37,6 +38,7 @@ paths:
   topics: "config/topics.yaml"
   features: "features"
   prompts: "prompts"
+  canonical: "data/canonical"
   raw: "data/raw"
   first_review: "data/first_review"
   final: "data/final"
