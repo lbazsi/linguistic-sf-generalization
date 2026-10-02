@@ -43,7 +43,7 @@ def validate_item(
     item: Any,
     *,
     feature_spec: dict,
-    plan: dict[int, str],
+    canonical: dict[int, dict],
     dataset_size: int,
     stage: str,
 ) -> list[dict]:
@@ -98,7 +98,8 @@ def validate_item(
             )
         )
 
-    expected_language = feature_spec["language"]
+    source = canonical.get(raw_id)
+    expected_language = source["language"] if source else feature_spec["language"]
     if item.get("language") != expected_language:
         issues.append(
             make_issue(
@@ -111,8 +112,8 @@ def validate_item(
             )
         )
 
-    if raw_id in plan:
-        expected_topic = plan[raw_id]
+    if source is not None:
+        expected_topic = source["topic"]
         if item.get("topic") != expected_topic:
             issues.append(
                 make_issue(
@@ -120,7 +121,18 @@ def validate_item(
                     stage=stage,
                     issue_type="topic_mismatch",
                     field="topic",
-                    message=f"Expected topic '{expected_topic}'.",
+                    message=f"Expected canonical topic '{expected_topic}'.",
+                    item_id=raw_id,
+                )
+            )
+        if item.get("canonical") != source["canonical"]:
+            issues.append(
+                make_issue(
+                    feature=feature_name,
+                    stage=stage,
+                    issue_type="canonical_mismatch",
+                    field="canonical",
+                    message="canonical must exactly match the shared canonical corpus.",
                     item_id=raw_id,
                 )
             )
@@ -194,7 +206,7 @@ def deterministic_review_file(
         item_issues = validate_item(
             item,
             feature_spec=feature_spec,
-            plan=plan,
+            canonical=canonical,
             dataset_size=dataset_size,
             stage=stage,
         )
@@ -252,7 +264,7 @@ def clean_singletons(
     by_id, _ = deterministic_review_file(
         path,
         feature_spec=feature_spec,
-        plan=plan,
+        canonical=canonical,
         dataset_size=dataset_size,
         stage=stage,
     )
@@ -264,7 +276,7 @@ def clean_singletons(
         if not validate_item(
             candidate,
             feature_spec=feature_spec,
-            plan=plan,
+            canonical=canonical,
             dataset_size=dataset_size,
             stage=stage,
         ):
