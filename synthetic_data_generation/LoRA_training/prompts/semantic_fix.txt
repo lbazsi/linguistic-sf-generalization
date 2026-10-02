@@ -9,8 +9,7 @@ Flagged items, immutable canonical sources, and issues:
 Requirements:
 - Return exactly one corrected item for every flagged ID and no other IDs.
 - Resolve all listed issues by changing feature_variant only.
-- Copy the exact ID, language, topic, and canonical text from canonical_source.
-- Use the exact feature name from the feature specification.
+- Return only the ID and corrected feature_variant; do not return canonical text, topic, language, or feature metadata.
 - Treat canonical_source as immutable; never rewrite the canonical text.
 - Preserve its semantic and value content, entities, quantities, stance, and factual claims.
 - Make feature_variant express only the target linguistic feature relative to the canonical text.
