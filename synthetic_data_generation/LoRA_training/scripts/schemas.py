@@ -4,6 +4,28 @@ from copy import deepcopy
 from typing import Iterable
 
 
+CANONICAL_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["id", "language", "topic", "canonical"],
+    "properties": {
+        "id": {"type": "integer", "minimum": 1},
+        "language": {"type": "string", "minLength": 1},
+        "topic": {"type": "string", "minLength": 1},
+        "canonical": {"type": "string", "minLength": 1},
+    },
+}
+
+VARIANT_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["id", "feature_variant"],
+    "properties": {
+        "id": {"type": "integer", "minimum": 1},
+        "feature_variant": {"type": "string", "minLength": 1},
+    },
+}
+
 PAIR_SCHEMA = {
     "type": "object",
     "additionalProperties": False,
@@ -106,10 +128,10 @@ FEATURE_SCHEMA = {
 }
 
 
-def pair_batch_schema(expected_ids: Iterable[int]) -> dict:
+def _batch_schema(item_schema: dict, expected_ids: Iterable[int]) -> dict:
     ids = list(expected_ids)
-    item_schema = deepcopy(PAIR_SCHEMA)
-    item_schema["properties"]["id"] = {"type": "integer", "enum": ids}
+    schema = deepcopy(item_schema)
+    schema["properties"]["id"] = {"type": "integer", "enum": ids}
     return {
         "type": "object",
         "additionalProperties": False,
@@ -119,10 +141,22 @@ def pair_batch_schema(expected_ids: Iterable[int]) -> dict:
                 "type": "array",
                 "minItems": len(ids),
                 "maxItems": len(ids),
-                "items": item_schema,
+                "items": schema,
             }
         },
     }
+
+
+def canonical_batch_schema(expected_ids: Iterable[int]) -> dict:
+    return _batch_schema(CANONICAL_SCHEMA, expected_ids)
+
+
+def variant_batch_schema(expected_ids: Iterable[int]) -> dict:
+    return _batch_schema(VARIANT_SCHEMA, expected_ids)
+
+
+def pair_batch_schema(expected_ids: Iterable[int]) -> dict:
+    return _batch_schema(PAIR_SCHEMA, expected_ids)
 
 
 def review_batch_schema(expected_ids: Iterable[int]) -> dict:
