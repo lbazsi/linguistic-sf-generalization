@@ -137,9 +137,9 @@ def validate_item(
                 )
             )
 
-    canonical = item.get("canonical")
+    canonical_text = item.get("canonical")
     variant = item.get("feature_variant")
-    if isinstance(canonical, str) and not canonical.strip():
+    if isinstance(canonical_text, str) and not canonical.strip():
         issues.append(
             make_issue(
                 feature=feature_name,
@@ -161,8 +161,8 @@ def validate_item(
                 item_id=raw_id,
             )
         )
-    if isinstance(canonical, str) and isinstance(variant, str):
-        if _normalized_text(canonical) == _normalized_text(variant):
+    if isinstance(canonical_text, str) and isinstance(variant, str):
+        if _normalized_text(canonical_text) == _normalized_text(variant):
             issues.append(
                 make_issue(
                     feature=feature_name,
@@ -181,7 +181,7 @@ def deterministic_review_file(
     path: Path,
     *,
     feature_spec: dict,
-    plan: dict[int, str],
+    canonical: dict[int, dict],
     dataset_size: int,
     stage: str,
 ) -> tuple[dict[int, list[dict]], list[dict]]:
@@ -257,7 +257,7 @@ def clean_singletons(
     path: Path,
     *,
     feature_spec: dict,
-    plan: dict[int, str],
+    canonical: dict[int, dict],
     dataset_size: int,
     stage: str,
 ) -> dict[int, dict]:
