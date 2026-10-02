@@ -8,8 +8,7 @@ Flagged IDs, immutable canonical sources, source candidates, and deterministic i
 
 Requirements:
 - Return exactly one corrected item for every flagged ID and no other IDs.
-- Copy the exact ID, language, topic, and canonical text from canonical_source.
-- Use the exact feature name from the feature specification.
+- Return only the ID and corrected feature_variant; do not return canonical text, topic, language, or feature metadata.
 - Treat canonical_source as immutable; never rewrite the canonical text.
 - Repair or regenerate only feature_variant.
 - Preserve the canonical semantic and value content, entities, quantities, stance, and factual claims.
