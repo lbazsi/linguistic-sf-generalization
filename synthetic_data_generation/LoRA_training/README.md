@@ -1,10 +1,10 @@
 # Synthetic data generation for LoRA training
 
-This directory builds paired synthetic JSONL datasets for controlled linguistic-feature LoRA experiments. It first generates one shared canonical corpus, then derives every feature dataset by transforming those exact canonical texts.
+This directory builds paired synthetic JSONL datasets for controlled linguistic-feature LoRA experiments. It generates one shared canonical corpus, reviews that corpus for non-deterministic quality problems, and then derives every feature dataset by transforming the reviewed canonical texts.
 
 ## Data contract
 
-The shared `data/canonical/corpus.jsonl` contains `id`, `language`, `topic`, and `canonical`. Topic allocation is determined only when this corpus is generated: it is deterministic and as even as possible across `dataset_size`, with any remainder assigned to the earliest topics in `config/topics.yaml`. Each feature dataset then contains `id`, `feature`, `language`, `topic`, `canonical`, and `feature_variant`, inheriting the ID, language, topic, and canonical text exactly from the shared corpus.
+The initial canonical generation is stored in `data/canonical/generated.jsonl`. The reviewed authoritative corpus is stored in `data/canonical/corpus.jsonl` and contains `id`, `language`, `topic`, and `canonical`. Topic allocation is determined during canonical generation: it is deterministic and as even as possible across `dataset_size`, with any remainder assigned to the earliest topics in `config/topics.yaml`. Each feature dataset contains `id`, `feature`, `language`, `topic`, `canonical`, and `feature_variant`, inheriting the ID, language, topic, and reviewed canonical text exactly from the authoritative corpus.
 
 ## Configuration
 
@@ -16,12 +16,13 @@ OpenRouter calls use JSON-schema structured outputs. API credentials are read fr
 
 ## Pipeline
 
-1. `01_generate.py` first generates/resumes `data/canonical/corpus.jsonl`, then generates each raw feature dataset by asking the model only to transform the canonical text into `feature_variant`.
-2. `02_deterministic_review.py` performs JSON/schema, ID, topic, and basic pair validation.
-3. `03_deterministic_fix.py` uses the judge model to repair or regenerate flagged IDs and writes `data/first_review/`.
-4. `04_deterministic_recheck.py` reruns deterministic validation on the repaired datasets.
-5. `05_semantic_review.py` reviews all pairs for semantic, feature-isolation, and other non-deterministic issues while carrying forward deterministic residue.
-6. `06_semantic_fix.py` uses the judge model to repair flagged pairs, performs a final deterministic validation, and writes `data/final/`.
+1. `01_generate.py` generates/resumes `data/canonical/generated.jsonl`, invokes the canonical review stage, and then generates raw feature datasets from the reviewed canonical corpus.
+2. `review_canonical.py` reviews every canonical item with the judge model. Suitable items are preserved; materially flawed items are repaired while preserving their subject matter, semantic content, factual claims, quantities, entities, stance, and value content. The reviewed corpus is written to `data/canonical/corpus.jsonl`.
+3. `02_deterministic_review.py` performs JSON/schema, ID, topic, canonical-reference, and basic pair validation.
+4. `03_deterministic_fix.py` uses the judge model to repair or regenerate flagged feature variants and writes `data/first_review/`.
+5. `04_deterministic_recheck.py` reruns deterministic validation on the repaired datasets.
+6. `05_semantic_review.py` reviews all pairs for semantic, feature-isolation, and other non-deterministic issues while treating each canonical text as the authoritative reference that every variant must continue to follow.
+7. `06_semantic_fix.py` uses the judge model to repair flagged feature variants, keeps repairs tied to the exact canonical example, performs final deterministic validation, and writes `data/final/`.
 
 Every run records a manifest in `data/manifests/` with configuration and prompt versions, model settings, hashes, timestamps, and run statistics.
 
@@ -38,7 +39,7 @@ python scripts/05_semantic_review.py
 python scripts/06_semantic_fix.py
 ```
 
-Each script accepts repeated `--feature <variable_name>` arguments. Feature dataset files are named `<variable_name>.jsonl` at every data stage. The shared source corpus is `data/canonical/corpus.jsonl`; downstream feature generation, validation, and repair use it as the source of truth rather than recomputing topic assignments.
+`01_generate.py` and the feature-processing scripts accept repeated `--feature <variable_name>` arguments where applicable. `review_canonical.py` can also be run independently to review the generated canonical artifact. Feature dataset files are named `<variable_name>.jsonl` at every feature-data stage. The reviewed source corpus is `data/canonical/corpus.jsonl`; downstream feature generation, validation, review, and repair use it as the source of truth.
 
 ## Design reference
 
@@ -67,6 +68,7 @@ scripts/
 
 data/
 ├── canonical/
+│   ├── generated.jsonl
 │   └── corpus.jsonl
 ├── raw/
 ├── first_review/
@@ -126,7 +128,7 @@ paths:
   nondeterministic_issues: "data/issues/non-deterministic"
   manifests: "data/manifests"
 
-schema_version: "1.0"
+schema_version: "1.2"
 ```
 
 ### Issue JSONL schema
@@ -149,6 +151,7 @@ Issue files use one JSON object per line:
 ```text
 prompts/
 ├── generate_canonical.txt
+├── canonical_review.txt
 ├── generate.txt
 ├── deterministic_fix.txt
 ├── semantic_review.txt
