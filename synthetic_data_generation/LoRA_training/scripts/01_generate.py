@@ -11,7 +11,7 @@ from common import (
     append_jsonl,
     batches,
     batches_by_topic,
-    canonical_corpus_path,
+    generated_canonical_path,
     ensure_directories,
     feature_yaml_text,
     index_items,
@@ -25,11 +25,12 @@ from common import (
     write_jsonl_atomic,
 )
 from schemas import CANONICAL_SCHEMA, PAIR_SCHEMA, canonical_batch_schema, variant_batch_schema
+from review_canonical import review_canonical_corpus
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Generate the shared canonical corpus, then transform it for each feature."
+        description="Generate, review, and transform the shared canonical corpus for each feature."
     )
     parser.add_argument("--feature", action="append", help="Run only the named feature; repeatable.")
     return parser.parse_args()
@@ -55,7 +56,7 @@ async def generate_canonical_corpus(
     dataset_size = config["dataset_size"]
     language = config["canonical_language"]
     plan = topic_plan(topics, dataset_size)
-    output_path = canonical_corpus_path(config)
+    output_path = generated_canonical_path(config)
 
     validator = Draft202012Validator(CANONICAL_SCHEMA)
     completed: set[int] = set()
@@ -212,7 +213,7 @@ async def async_main() -> None:
         stage="01_generate",
         config=config,
         feature_paths=feature_paths,
-        prompt_filenames=["generate_canonical.txt", "generate.txt"],
+        prompt_filenames=["generate_canonical.txt", "canonical_review.txt", "generate.txt"],
     )
     client: OpenRouterClient | None = None
 
@@ -226,6 +227,15 @@ async def async_main() -> None:
         print(
             f"[canonical] generated {canonical_stats['generated_items']} "
             f"items; resumed {canonical_stats['resumed_items']}."
+        )
+
+        canonical, review_stats = await review_canonical_corpus(
+            client=client,
+            config=config,
+        )
+        print(
+            f"[canonical-review] reviewed {review_stats['reviewed_items']} items; "
+            f"changed {review_stats['changed_items']}."
         )
 
         feature_stats = []
@@ -249,7 +259,8 @@ async def async_main() -> None:
 
         manifest.finish(
             {
-                "canonical": canonical_stats,
+                "canonical_generation": canonical_stats,
+                "canonical_review": review_stats,
                 "features": feature_stats,
                 **client.stats(),
             }
