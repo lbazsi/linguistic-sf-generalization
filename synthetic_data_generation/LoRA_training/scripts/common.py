@@ -165,6 +165,10 @@ def batches_by_topic(
     return batches
 
 
+def generated_canonical_path(config: dict) -> Path:
+    return resolve_path(config, "canonical") / "generated.jsonl"
+
+
 def canonical_corpus_path(config: dict) -> Path:
     return resolve_path(config, "canonical") / "corpus.jsonl"
 
