@@ -1,0 +1,51 @@
+config_version: "1.0"
+
+model:
+  name: "google/gemma-2-9b"
+  revision: "main"
+  torch_dtype: "bfloat16"
+  attn_implementation: "sdpa"
+
+data:
+  root: "../synthetic_data_generation/LoRA_training/data"
+  validation_size: 50
+
+sequence:
+  max_length: null
+  auto_quantile: 0.995
+  auto_candidates: [128, 256, 512, 1024, 2048]
+  pad_to_multiple_of: 8
+
+lora:
+  r: 16
+  alpha: 32
+  dropout: 0.0
+  bias: "none"
+  target_modules:
+    - "q_proj"
+    - "k_proj"
+    - "v_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+
+training:
+  seed: 42
+  num_train_epochs: 3
+  learning_rate: 0.0001
+  lr_scheduler_type: "cosine"
+  warmup_ratio: 0.05
+  weight_decay: 0.0
+  per_device_train_batch_size: 4
+  per_device_eval_batch_size: 4
+  gradient_accumulation_steps: 8
+  max_grad_norm: 1.0
+  gradient_checkpointing: true
+  tf32: true
+  logging_steps: 10
+  dataloader_num_workers: 2
+
+output:
+  root: "outputs"
+  save_midpoint_adapter: true
