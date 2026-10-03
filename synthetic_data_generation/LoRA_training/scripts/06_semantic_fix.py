@@ -8,7 +8,7 @@ from common import (
     OpenRouterClient,
     RunManifest,
     append_jsonl,
-    batches_by_topic,
+    batches,
     ensure_directories,
     feature_yaml_text,
     index_items,
@@ -16,14 +16,13 @@ from common import (
     json_text,
     load_config,
     load_issues,
-    load_topics,
+    load_canonical_corpus,
     render_prompt,
     resolve_path,
     select_features,
-    topic_plan,
     write_jsonl_atomic,
 )
-from schemas import pair_batch_schema
+from schemas import variant_batch_schema
 from validation import deterministic_review_file, validate_item
 
 
@@ -38,11 +37,10 @@ async def fix_feature(
     client: OpenRouterClient,
     config: dict,
     feature: dict,
-    topics: list[str],
+    canonical: dict[int, dict],
 ) -> dict:
     feature_name = feature["name"]
     dataset_size = config["dataset_size"]
-    plan = topic_plan(topics, dataset_size)
 
     source_path = resolve_path(config, "first_review") / f"{feature_name}.jsonl"
     issue_path = (
@@ -81,7 +79,7 @@ async def fix_feature(
             if not validate_item(
                 candidate,
                 feature_spec=feature,
-                plan=plan,
+                canonical=canonical,
                 dataset_size=dataset_size,
                 stage="semantic_fix_resume",
             ):
@@ -91,17 +89,17 @@ async def fix_feature(
 
     write_jsonl_atomic(partial_path, [output[item_id] for item_id in sorted(output)])
     pending_ids = sorted(flagged_ids - set(output))
-    batches = batches_by_topic(pending_ids, plan, config["batch_size"])
+    item_batches = batches(pending_ids, config["batch_size"])
     write_lock = asyncio.Lock()
 
-    async def run_batch(topic: str, ids: list[int]) -> int:
+    async def run_batch(ids: list[int]) -> int:
         problems = []
         for item_id in ids:
             candidates = source_candidates.get(item_id, [])
             problems.append(
                 {
                     "id": item_id,
-                    "topic": topic,
+                    "canonical_source": canonical[item_id],
                     "item": candidates[-1] if candidates else None,
                     "issues": grouped_issues.get(item_id, []),
                 }
@@ -112,22 +110,32 @@ async def fix_feature(
             "semantic_fix.txt",
             {
                 "FEATURE_YAML": feature_yaml_text(feature),
-                "TOPIC": topic,
                 "PROBLEMS_JSON": json_text(problems),
             },
         )
         response = await client.request_json(
             role="judge",
             prompt=prompt,
-            schema=pair_batch_schema(ids),
+            schema=variant_batch_schema(ids),
             schema_name="semantically_repaired_pairs",
         )
-        rows = response["items"]
+        variants = {row["id"]: row["feature_variant"] for row in response["items"]}
+        rows = [
+            {
+                "id": item_id,
+                "feature": feature_name,
+                "language": canonical[item_id]["language"],
+                "topic": canonical[item_id]["topic"],
+                "canonical": canonical[item_id]["canonical"],
+                "feature_variant": variants[item_id],
+            }
+            for item_id in ids
+        ]
         async with write_lock:
             append_jsonl(partial_path, rows)
         return len(rows)
 
-    fixed_counts = await asyncio.gather(*(run_batch(topic, ids) for topic, ids in batches))
+    fixed_counts = await asyncio.gather(*(run_batch(ids) for ids in item_batches))
 
     candidates = index_items(partial_path)
     canonicalized = [
@@ -140,7 +148,7 @@ async def fix_feature(
     _, final_issues = deterministic_review_file(
         partial_path,
         feature_spec=feature,
-        plan=plan,
+        canonical=canonical,
         dataset_size=dataset_size,
         stage="final_validation",
     )
@@ -171,7 +179,7 @@ async def async_main() -> None:
     args = parse_args()
     config = load_config()
     ensure_directories(config)
-    topics = load_topics(config)
+    canonical = load_canonical_corpus(config)
     selected = select_features(config, args.feature)
     feature_paths = [path for path, _ in selected]
 
@@ -191,7 +199,7 @@ async def async_main() -> None:
                 client=client,
                 config=config,
                 feature=feature,
-                topics=topics,
+                canonical=canonical,
             )
             feature_stats.append(stats)
             print(

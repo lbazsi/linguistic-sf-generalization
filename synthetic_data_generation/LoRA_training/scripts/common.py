@@ -48,6 +48,7 @@ def load_config() -> dict:
         "seeds",
         "retry_limits",
         "dataset_size",
+        "canonical_language",
         "api",
         "paths",
     ]
@@ -61,6 +62,8 @@ def load_config() -> dict:
         raise ConfigError("batch_size must be a positive integer.")
     if not isinstance(config["concurrency"], int) or config["concurrency"] <= 0:
         raise ConfigError("concurrency must be a positive integer.")
+    if not isinstance(config["canonical_language"], str) or not config["canonical_language"].strip():
+        raise ConfigError("canonical_language must be a non-empty string.")
 
     retries = config["retry_limits"]
     if not isinstance(retries, dict) or int(retries.get("max_attempts", 0)) <= 0:
@@ -79,6 +82,7 @@ def resolve_path(config: dict, key: str) -> Path:
 
 def ensure_directories(config: dict) -> None:
     for key in [
+        "canonical",
         "raw",
         "first_review",
         "final",
@@ -159,6 +163,34 @@ def batches_by_topic(
         for start in range(0, len(topic_ids), batch_size):
             batches.append((topic, topic_ids[start : start + batch_size]))
     return batches
+
+
+def canonical_corpus_path(config: dict) -> Path:
+    return resolve_path(config, "canonical") / "corpus.jsonl"
+
+
+def load_canonical_corpus(config: dict) -> dict[int, dict]:
+    path = canonical_corpus_path(config)
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Missing canonical corpus: {path}. Run scripts/01_generate.py first."
+        )
+    candidates = index_items(path)
+    dataset_size = config["dataset_size"]
+    corpus: dict[int, dict] = {}
+    for item_id in range(1, dataset_size + 1):
+        rows = candidates.get(item_id, [])
+        if len(rows) != 1:
+            raise RuntimeError(
+                f"Canonical corpus must contain exactly one row for ID {item_id}; found {len(rows)}."
+            )
+        corpus[item_id] = rows[0]
+    return corpus
+
+
+def batches(ids: Iterable[int], batch_size: int) -> list[list[int]]:
+    ordered = sorted(ids)
+    return [ordered[start : start + batch_size] for start in range(0, len(ordered), batch_size)]
 
 
 def prompt_path(config: dict, filename: str) -> Path:

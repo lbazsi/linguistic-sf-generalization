@@ -6,10 +6,9 @@ from common import (
     RunManifest,
     ensure_directories,
     load_config,
-    load_topics,
+    load_canonical_corpus,
     resolve_path,
     select_features,
-    topic_plan,
     write_jsonl_atomic,
 )
 from validation import deterministic_review_file
@@ -25,7 +24,7 @@ def main() -> None:
     args = parse_args()
     config = load_config()
     ensure_directories(config)
-    topics = load_topics(config)
+    canonical = load_canonical_corpus(config)
     selected = select_features(config, args.feature)
     feature_paths = [path for path, _ in selected]
 
@@ -43,11 +42,10 @@ def main() -> None:
             if not source_path.exists():
                 raise FileNotFoundError(f"Missing first-review dataset: {source_path}")
 
-            plan = topic_plan(topics, config["dataset_size"])
             _, issues = deterministic_review_file(
                 source_path,
                 feature_spec=feature,
-                plan=plan,
+                canonical=canonical,
                 dataset_size=config["dataset_size"],
                 stage="deterministic_recheck",
             )
