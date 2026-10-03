@@ -1,0 +1,16 @@
+Review each supplied canonical corpus item and repair it only when a material quality problem is present.
+
+Canonical items:
+{{CANONICAL_ITEMS_JSON}}
+
+Requirements:
+- Return exactly one result for every supplied ID and no other IDs.
+- Return only the ID and canonical text; language and topic are fixed metadata and must not be returned or changed.
+- If an item is already suitable, return its canonical text unchanged.
+- Change an item only when needed to correct a material problem such as unnatural or incoherent wording, meaningful ambiguity, malformed text, lack of independent understandability, off-topic content, meta-commentary, an obvious internal contradiction, or an extreme stylistic artifact that makes it a poor neutral source sentence.
+- Preserve the item's intended subject matter, semantic content, factual claims, quantities, entities, stance, and value content wherever possible.
+- Do not add new substantive claims, moral content, emotional framing, or a systematic linguistic feature.
+- Keep the result natural, self-contained, and suitable as the immutable source for later controlled linguistic transformations.
+- Do not add commentary.
+
+The response must conform to the JSON schema supplied with the API request.
