@@ -16,6 +16,16 @@ CANONICAL_SCHEMA = {
     },
 }
 
+CANONICAL_TEXT_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["id", "canonical"],
+    "properties": {
+        "id": {"type": "integer", "minimum": 1},
+        "canonical": {"type": "string", "minLength": 1},
+    },
+}
+
 VARIANT_SCHEMA = {
     "type": "object",
     "additionalProperties": False,
@@ -149,6 +159,10 @@ def _batch_schema(item_schema: dict, expected_ids: Iterable[int]) -> dict:
 
 def canonical_batch_schema(expected_ids: Iterable[int]) -> dict:
     return _batch_schema(CANONICAL_SCHEMA, expected_ids)
+
+
+def canonical_text_batch_schema(expected_ids: Iterable[int]) -> dict:
+    return _batch_schema(CANONICAL_TEXT_SCHEMA, expected_ids)
 
 
 def variant_batch_schema(expected_ids: Iterable[int]) -> dict:
