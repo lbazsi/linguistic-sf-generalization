@@ -52,6 +52,8 @@ The default base model is `google/gemma-2-9b`.
 
 The model is loaded in bfloat16 and fine-tuned using LoRA rather than QLoRA. This avoids introducing quantization as an additional intervention while keeping GPU memory use far below full-parameter fine-tuning.
 
+Gemma 2 uses eager attention during training. This keeps the model's attention-logit soft-capping active during fine-tuning rather than changing that part of the base model's computation.
+
 Training uses the ordinary causal-language-model objective over each complete text. No chat template, instruction wrapper, preference objective, or contrastive objective is added. The training intervention is therefore the text distribution itself rather than an additional supervised task format.
 
 The configured Hugging Face revision is resolved to an exact repository commit SHA before the model is loaded. That resolved revision is written to each training summary.
