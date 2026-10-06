@@ -288,14 +288,19 @@ class OpenRouterClient:
         payload = {
             "model": model,
             "messages": [{"role": "user", "content": prompt}],
-            "temperature": float(self.config["temperatures"][temperature_key]),
             "max_tokens": int(api["max_output_tokens"]),
-            "seed": int(self.config["seeds"][seed_key]),
             "response_format": {
                 "type": "json_schema",
                 "json_schema": {"name": schema_name, "strict": True, "schema": schema},
             },
         }
+        temperature = self.config["temperatures"].get(temperature_key)
+        seed = self.config["seeds"].get(seed_key)
+        if temperature is not None:
+            payload["temperature"] = float(temperature)
+        if seed is not None:
+            payload["seed"] = int(seed)
+
         reasoning = (self.config.get("reasoning_effort") or {}).get(model_key)
         if reasoning:
             payload["reasoning"] = {"effort": reasoning}
