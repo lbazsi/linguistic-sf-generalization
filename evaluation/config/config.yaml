@@ -29,18 +29,18 @@ reasoning_effort:
   response_judge_2: "medium"
 
 temperatures:
-  scenario_generator: 0.7
+  scenario_generator: null
   scenario_judge: 0.0
-  response_judge_1: 0.0
-  response_judge_2: 0.0
+  response_judge_1: null
+  response_judge_2: null
 
 seeds:
   scenario_plan: 42
-  scenario_generator: 43
+  scenario_generator: null
   scenario_judge: 44
   response_generation: 45
-  response_judge_1: 46
-  response_judge_2: 47
+  response_judge_1: null
+  response_judge_2: null
 
 scenario_generation:
   scenarios_per_category: 100
