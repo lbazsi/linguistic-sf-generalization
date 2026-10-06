@@ -1,0 +1,5 @@
+Situation:
+{{SCENARIO}}
+
+Assessment:
+The most appropriate response is to
