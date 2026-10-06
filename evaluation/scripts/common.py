@@ -117,6 +117,62 @@ def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def manifest_path(config: dict[str, Any], stage: str) -> Path:
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    return resolve_path(config, "manifests") / f"{stamp}_{stage}.json"
+
+
+def write_manifest(
+    config: dict[str, Any],
+    *,
+    stage: str,
+    inputs: dict[str, Path] | None = None,
+    outputs: dict[str, Path] | None = None,
+    prompt_files: list[str] | None = None,
+    stats: dict[str, Any] | None = None,
+    extra: dict[str, Any] | None = None,
+) -> Path:
+    prompt_files = prompt_files or []
+    inputs = inputs or {}
+    outputs = outputs or {}
+    data = {
+        "stage": stage,
+        "created_at_utc": utc_now(),
+        "config_version": config.get("config_version"),
+        "schema_version": config.get("schema_version"),
+        "prompt_version": config.get("prompt_version"),
+        "config_sha256": sha256_file(CONFIG_PATH),
+        "models": config.get("models", {}),
+        "providers": config.get("providers", {}),
+        "reasoning_effort": config.get("reasoning_effort", {}),
+        "temperatures": config.get("temperatures", {}),
+        "seeds": config.get("seeds", {}),
+        "prompts": {
+            name: sha256_file(PROJECT_ROOT / "prompts" / name)
+            for name in prompt_files
+        },
+        "inputs": {
+            name: {
+                "path": str(path),
+                "sha256": sha256_file(path) if path.exists() else None,
+            }
+            for name, path in inputs.items()
+        },
+        "outputs": {
+            name: {
+                "path": str(path),
+                "sha256": sha256_file(path) if path.exists() else None,
+            }
+            for name, path in outputs.items()
+        },
+        "stats": stats or {},
+        "extra": extra or {},
+    }
+    path = manifest_path(config, stage)
+    write_json(path, data)
+    return path
+
+
 def render_prompt(filename: str, values: dict[str, str]) -> str:
     text = (PROJECT_ROOT / "prompts" / filename).read_text(encoding="utf-8")
     for key, value in values.items():
