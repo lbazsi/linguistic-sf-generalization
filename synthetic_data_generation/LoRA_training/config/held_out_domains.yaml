@@ -1,0 +1,16 @@
+# Reference only for future evaluation design. The synthetic training-data
+# generator does not read this file.
+animals:
+  - chickens
+  - salmon
+  - octopuses
+  - shrimp
+
+values:
+  - enabling natural behavior and environmental enrichment
+  - preserving longevity and avoiding premature death
+
+contexts:
+  - wildlife management and conservation
+  - entertainment, exhibition, and sport
+  - emergency and disaster response
