@@ -13,6 +13,7 @@ from common import (
     scenario_plan,
     validate_scenarios,
     write_jsonl_atomic,
+    write_manifest,
 )
 from schemas import CATEGORIES, scenario_text_batch_schema
 
@@ -54,7 +55,19 @@ async def main() -> None:
         config["scenario_generation"]["scenarios_per_category"]
     )
     validate_scenarios(rows, expected)
-    write_jsonl_atomic(resolve_path(config, "raw_scenarios"), rows)
+    output_path = resolve_path(config, "raw_scenarios")
+    write_jsonl_atomic(output_path, rows)
+    write_manifest(
+        config,
+        stage="01_generate_scenarios",
+        inputs={
+            "training_domains": resolve_path(config, "training_domains"),
+            "held_out_domains": resolve_path(config, "held_out_domains"),
+        },
+        outputs={"raw_scenarios": output_path},
+        prompt_files=["generate_scenarios.txt"],
+        stats={**client.stats(), "scenario_count": len(rows)},
+    )
     print(f"Wrote {len(rows)} raw scenarios.")
 
 
