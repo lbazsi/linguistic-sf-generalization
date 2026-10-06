@@ -365,7 +365,8 @@ class RunManifest:
         run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:8]
         self.path = resolve_path(config, "manifests") / f"{run_id}_{stage}.json"
 
-        domains_file = resolve_path(config, "domains")\n        held_out_domains_file = resolve_path(config, "held_out_domains")
+        domains_file = resolve_path(config, "domains")
+        held_out_domains_file = resolve_path(config, "held_out_domains")
         prompt_hashes = {
             name: sha256_file(prompt_path(config, name)) for name in self.prompt_filenames
         }
@@ -381,7 +382,8 @@ class RunManifest:
             "schema_version": config["schema_version"],
             "prompt_version": config["prompt_version"],
             "config_hash": sha256_file(CONFIG_PATH),
-            "domains_hash": sha256_file(domains_file),\n            "held_out_domains_hash": sha256_file(held_out_domains_file),
+            "domains_hash": sha256_file(domains_file),
+            "held_out_domains_hash": sha256_file(held_out_domains_file),
             "feature_hashes": feature_hashes,
             "prompt_hashes": prompt_hashes,
             "models": config["models"],
