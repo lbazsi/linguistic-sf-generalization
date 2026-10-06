@@ -250,7 +250,14 @@ Results are broken down by generalization category and by tradeoff status.
 - API batching/retries;
 - paths to domains, fine-tuning outputs, and evaluation artifacts.
 
-Model IDs for API-based stages are intentionally left unset until the evaluation models are selected.
+The API-based stages use OpenRouter with explicit provider pinning and no provider fallback:
+
+- scenario generator: `anthropic/claude-sonnet-5.5` through Anthropic;
+- scenario reviewer: `google/gemini-3.8-flash` through Google AI Studio;
+- response judge 1: `openai/gpt-5.6-sol` through OpenAI;
+- response judge 2: `anthropic/claude-sonnet-5.5` through Anthropic.
+
+Reasoning effort is configured explicitly in `config/config.yaml`. Provider pinning prevents an otherwise identical model ID from silently moving between upstream inference providers.
 
 ## Running the pipeline
 
@@ -273,6 +280,8 @@ python scripts/05_aggregate.py
 ```
 
 Individual model conditions can be generated with repeated `--condition` arguments. The response-judging script similarly supports condition selection and can run judge 1, judge 2, or both.
+
+Every evaluation stage writes a manifest containing configuration and prompt hashes, input/output hashes, model/provider/reasoning settings, seeds, and OpenRouter token usage where applicable. This makes the benchmark and judging runs auditable and supports direct cost reconstruction from recorded token counts.
 
 ## Directory layout
 
