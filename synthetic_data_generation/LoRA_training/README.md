@@ -28,7 +28,7 @@ Every run records a manifest in `data/manifests/` with configuration and prompt 
 
 ## Setup and execution
 
-Create a Python environment, install `requirements.txt`, copy `.env.example` to `.env`, and populate model IDs, topics, and feature YAML files. Then run:
+Create a Python environment, install `requirements.txt`, copy `.env.example` to `.env`, and configure model IDs, the domain YAML files, and feature YAML files. Then run:
 
 ```bash
 python scripts/01_generate.py
@@ -64,8 +64,9 @@ Each line in a feature dataset is a JSON object with the following fields:
 
 ```text
 config/
+├── configs.yaml
 ├── domains.yaml
-├── held_out_domains.yaml
+└── held_out_domains.yaml
 features/
 prompts/
 scripts/
