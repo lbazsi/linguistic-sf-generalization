@@ -11,7 +11,9 @@ CANONICAL_SCHEMA = {
     "properties": {
         "id": {"type": "integer", "minimum": 1},
         "language": {"type": "string", "minLength": 1},
-        "animal": {"type": "string", "minLength": 1},\n        "value": {"type": "string", "minLength": 1},\n        "context": {"type": "string", "minLength": 1},
+        "animal": {"type": "string", "minLength": 1},
+        "value": {"type": "string", "minLength": 1},
+        "context": {"type": "string", "minLength": 1},
         "canonical": {"type": "string", "minLength": 1},
     },
 }
@@ -39,12 +41,23 @@ VARIANT_SCHEMA = {
 PAIR_SCHEMA = {
     "type": "object",
     "additionalProperties": False,
-    "required": ["id", "feature", "language", "animal", "value", "context", "canonical", "feature_variant"],
+    "required": [
+        "id",
+        "feature",
+        "language",
+        "animal",
+        "value",
+        "context",
+        "canonical",
+        "feature_variant",
+    ],
     "properties": {
         "id": {"type": "integer", "minimum": 1},
         "feature": {"type": "string", "minLength": 1},
         "language": {"type": "string", "minLength": 1},
-        "animal": {"type": "string", "minLength": 1},\n        "value": {"type": "string", "minLength": 1},\n        "context": {"type": "string", "minLength": 1},
+        "animal": {"type": "string", "minLength": 1},
+        "value": {"type": "string", "minLength": 1},
+        "context": {"type": "string", "minLength": 1},
         "canonical": {"type": "string", "minLength": 1},
         "feature_variant": {"type": "string", "minLength": 1},
     },
