@@ -1,12 +1,32 @@
-config_version: "1.0"
+config_version: "1.1"
 schema_version: "1.0"
 prompt_version: "1.0"
 
 models:
-  scenario_generator: null
-  scenario_judge: null
-  response_judge_1: null
-  response_judge_2: null
+  scenario_generator: "anthropic/claude-sonnet-5.5"
+  scenario_judge: "google/gemini-3.8-flash"
+  response_judge_1: "openai/gpt-5.6-sol"
+  response_judge_2: "anthropic/claude-sonnet-5.5"
+
+providers:
+  scenario_generator:
+    only: ["anthropic"]
+    allow_fallbacks: false
+  scenario_judge:
+    only: ["google-ai-studio"]
+    allow_fallbacks: false
+  response_judge_1:
+    only: ["openai"]
+    allow_fallbacks: false
+  response_judge_2:
+    only: ["anthropic"]
+    allow_fallbacks: false
+
+reasoning_effort:
+  scenario_generator: "medium"
+  scenario_judge: "low"
+  response_judge_1: "medium"
+  response_judge_2: "medium"
 
 temperatures:
   scenario_generator: 0.7
@@ -59,3 +79,4 @@ paths:
   responses: "data/responses"
   judgments: "data/judgments"
   aggregated: "data/aggregated"
+  manifests: "data/manifests"
