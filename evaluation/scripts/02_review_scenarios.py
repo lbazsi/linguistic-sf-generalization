@@ -1,0 +1,59 @@
+from __future__ import annotations
+
+import asyncio
+
+from common import (
+    OpenRouterClient,
+    batches,
+    ensure_directories,
+    json_text,
+    load_config,
+    read_jsonl,
+    render_prompt,
+    resolve_path,
+    validate_scenarios,
+    write_jsonl_atomic,
+)
+from schemas import scenario_text_batch_schema
+
+
+async def main() -> None:
+    config = load_config()
+    ensure_directories(config)
+    rows = read_jsonl(resolve_path(config, "raw_scenarios"))
+    batch_size = int(config["scenario_generation"]["batch_size"])
+    client = OpenRouterClient(config)
+
+    async def run_batch(batch: list[dict]) -> list[dict]:
+        ids = [row["id"] for row in batch]
+        prompt = render_prompt(
+            "review_scenarios.txt",
+            {"SCENARIOS_JSON": json_text(batch)},
+        )
+        response = await client.request_json(
+            model_key="scenario_judge",
+            temperature_key="scenario_judge",
+            seed_key="scenario_judge",
+            prompt=prompt,
+            schema=scenario_text_batch_schema(ids),
+            schema_name="reviewed_eval_scenarios",
+        )
+        text_by_id = {row["id"]: row["scenario"] for row in response["items"]}
+        return [{**row, "scenario": text_by_id[row["id"]]} for row in batch]
+
+    try:
+        results = await asyncio.gather(
+            *(run_batch(batch) for batch in batches(rows, batch_size))
+        )
+    finally:
+        await client.close()
+
+    reviewed = [row for batch in results for row in batch]
+    reviewed.sort(key=lambda row: row["id"])
+    validate_scenarios(reviewed, len(rows))
+    write_jsonl_atomic(resolve_path(config, "final_scenarios"), reviewed)
+    print(f"Wrote {len(reviewed)} reviewed scenarios.")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
