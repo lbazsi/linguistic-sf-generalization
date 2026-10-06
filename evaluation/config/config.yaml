@@ -28,6 +28,7 @@ scenario_generation:
   batch_size: 20
 
 model_generation:
+  batch_size: 8
   max_new_tokens: 96
   temperature: 0.2
   top_p: 0.95
