@@ -65,7 +65,9 @@ async def review_canonical_corpus(
                 not list(validator.iter_errors(candidate))
                 and candidate.get("id") == item_id
                 and candidate.get("language") == source[item_id]["language"]
-                and candidate.get("topic") == source[item_id]["topic"]
+                and candidate.get("animal") == source[item_id]["animal"]
+                and candidate.get("value") == source[item_id]["value"]
+                and candidate.get("context") == source[item_id]["context"]
             ):
                 completed[item_id] = candidate
                 break
@@ -91,7 +93,9 @@ async def review_canonical_corpus(
             {
                 "id": item_id,
                 "language": source[item_id]["language"],
-                "topic": source[item_id]["topic"],
+                "animal": source[item_id]["animal"],
+                "value": source[item_id]["value"],
+                "context": source[item_id]["context"],
                 "canonical": reviewed[item_id],
             }
             for item_id in ids
