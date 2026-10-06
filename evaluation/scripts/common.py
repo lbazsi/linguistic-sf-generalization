@@ -5,6 +5,8 @@ import json
 import os
 import random
 import tempfile
+import hashlib
+from datetime import datetime, timezone
 from itertools import product
 from pathlib import Path
 from typing import Any, Iterable
@@ -46,7 +48,7 @@ def resolve_path(config: dict[str, Any], key: str) -> Path:
 def ensure_directories(config: dict[str, Any]) -> None:
     for key in ["raw_scenarios", "final_scenarios"]:
         resolve_path(config, key).parent.mkdir(parents=True, exist_ok=True)
-    for key in ["responses", "judgments", "aggregated"]:
+    for key in ["responses", "judgments", "aggregated", "manifests"]:
         resolve_path(config, key).mkdir(parents=True, exist_ok=True)
 
 
@@ -101,6 +103,18 @@ def write_json(path: Path, value: Any) -> None:
     with path.open("w", encoding="utf-8") as handle:
         json.dump(value, handle, ensure_ascii=False, indent=2, sort_keys=True)
         handle.write("\n")
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat()
 
 
 def render_prompt(filename: str, values: dict[str, str]) -> str:
@@ -196,6 +210,9 @@ class OpenRouterClient:
             timeout=float(api["timeout_seconds"]),
         )
         self.semaphore = asyncio.Semaphore(int(api["concurrency"]))
+        self.request_count = 0
+        self.input_tokens = 0
+        self.output_tokens = 0
 
     async def request_json(
         self,
@@ -223,8 +240,15 @@ class OpenRouterClient:
                 "json_schema": {"name": schema_name, "strict": True, "schema": schema},
             },
         }
+        reasoning = (self.config.get("reasoning_effort") or {}).get(model_key)
+        if reasoning:
+            payload["reasoning"] = {"effort": reasoning}
+
+        provider_cfg = dict((self.config.get("providers") or {}).get(model_key) or {})
         if api.get("require_parameters", True):
-            payload["provider"] = {"require_parameters": True}
+            provider_cfg["require_parameters"] = True
+        if provider_cfg:
+            payload["provider"] = provider_cfg
 
         last_error: Exception | None = None
         for attempt in range(int(api["max_attempts"])):
@@ -232,7 +256,12 @@ class OpenRouterClient:
                 async with self.semaphore:
                     response = await self.client.post("/chat/completions", json=payload)
                 response.raise_for_status()
-                content = response.json()["choices"][0]["message"]["content"]
+                self.request_count += 1
+                body = response.json()
+                usage = body.get("usage") or {}
+                self.input_tokens += int(usage.get("prompt_tokens") or 0)
+                self.output_tokens += int(usage.get("completion_tokens") or 0)
+                content = body["choices"][0]["message"]["content"]
                 parsed = json.loads(content) if isinstance(content, str) else content
                 Draft202012Validator(schema).validate(parsed)
                 return parsed
@@ -246,6 +275,13 @@ class OpenRouterClient:
                 )
                 await asyncio.sleep(delay)
         raise RuntimeError(f"OpenRouter request failed: {last_error}")
+
+    def stats(self) -> dict[str, int]:
+        return {
+            "openrouter_requests": self.request_count,
+            "prompt_tokens": self.input_tokens,
+            "completion_tokens": self.output_tokens,
+        }
 
     async def close(self) -> None:
         await self.client.aclose()
