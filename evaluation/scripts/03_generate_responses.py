@@ -18,6 +18,7 @@ from common import (
     render_prompt,
     resolve_path,
     write_jsonl_atomic,
+    write_manifest,
 )
 
 
@@ -206,6 +207,7 @@ def main() -> None:
             raise RuntimeError(f"Unknown conditions: {', '.join(missing)}")
         conditions = [spec for spec in conditions if spec["key"] in requested]
 
+    output_paths = {}
     for spec in conditions:
         generate_condition(
             config=config,
@@ -213,6 +215,19 @@ def main() -> None:
             spec=spec,
             overwrite=args.overwrite,
         )
+        output_paths[spec["key"]] = resolve_path(config, "responses") / f"{spec['key']}.jsonl"
+
+    write_manifest(
+        config,
+        stage="03_generate_responses",
+        inputs={"final_scenarios": resolve_path(config, "final_scenarios")},
+        outputs=output_paths,
+        prompt_files=["model_completion.txt"],
+        extra={
+            "evaluated_conditions": [spec["key"] for spec in conditions],
+            "local_generation": True,
+        },
+    )
 
 
 if __name__ == "__main__":
