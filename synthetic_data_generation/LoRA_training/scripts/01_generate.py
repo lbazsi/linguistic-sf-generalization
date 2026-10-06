@@ -10,21 +10,21 @@ from common import (
     RunManifest,
     append_jsonl,
     batches,
-    batches_by_topic,
+    batches_by_domain,
+    domain_plan,
     generated_canonical_path,
     ensure_directories,
     feature_yaml_text,
     index_items,
     json_text,
     load_config,
-    load_topics,
+    load_domains,
     render_prompt,
     resolve_path,
     select_features,
-    topic_plan,
     write_jsonl_atomic,
 )
-from schemas import CANONICAL_SCHEMA, PAIR_SCHEMA, canonical_batch_schema, variant_batch_schema
+from schemas import CANONICAL_SCHEMA, PAIR_SCHEMA, canonical_text_batch_schema, variant_batch_schema
 from review_canonical import review_canonical_corpus
 
 
