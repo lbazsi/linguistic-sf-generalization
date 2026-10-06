@@ -14,7 +14,7 @@ from common import (
     validate_scenarios,
     write_jsonl_atomic,
 )
-from schemas import scenario_text_batch_schema
+from schemas import CATEGORIES, scenario_text_batch_schema
 
 
 async def main() -> None:
@@ -50,10 +50,9 @@ async def main() -> None:
 
     rows = [row for batch in results for row in batch]
     rows.sort(key=lambda row: row["id"])
-    expected = (
-        len(config["scenario_generation"].get("categories", []))
-        or 8
-    ) * int(config["scenario_generation"]["scenarios_per_category"])
+    expected = len(CATEGORIES) * int(
+        config["scenario_generation"]["scenarios_per_category"]
+    )
     validate_scenarios(rows, expected)
     write_jsonl_atomic(resolve_path(config, "raw_scenarios"), rows)
     print(f"Wrote {len(rows)} raw scenarios.")
