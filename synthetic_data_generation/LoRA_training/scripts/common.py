@@ -93,16 +93,27 @@ def ensure_directories(config: dict) -> None:
         resolve_path(config, key).mkdir(parents=True, exist_ok=True)
 
 
-def load_topics(config: dict) -> list[str]:
-    path = resolve_path(config, "topics")
-    topics = load_yaml(path)
-    if not isinstance(topics, list) or not topics:
-        raise ConfigError(f"{path} must contain a non-empty YAML list of topic names.")
-    if not all(isinstance(topic, str) and topic.strip() for topic in topics):
-        raise ConfigError("Every topic must be a non-empty string.")
-    normalized = [topic.strip() for topic in topics]
-    if len(set(normalized)) != len(normalized):
-        raise ConfigError("Topic names must be unique.")
+def load_domains(config: dict) -> dict[str, list[str]]:
+    path = resolve_path(config, "domains")
+    domains = load_yaml(path)
+    if not isinstance(domains, dict):
+        raise ConfigError(f"{path} must contain a YAML mapping.")
+    required = ["animals", "values", "contexts"]
+    missing = [key for key in required if key not in domains]
+    if missing:
+        raise ConfigError(f"{path} is missing domain lists: {', '.join(missing)}")
+
+    normalized: dict[str, list[str]] = {}
+    for key in required:
+        values = domains[key]
+        if not isinstance(values, list) or not values:
+            raise ConfigError(f"{path}: {key} must be a non-empty YAML list.")
+        if not all(isinstance(value, str) and value.strip() for value in values):
+            raise ConfigError(f"{path}: every {key} entry must be a non-empty string.")
+        cleaned = [value.strip() for value in values]
+        if len(cleaned) != len(set(cleaned)):
+            raise ConfigError(f"{path}: {key} entries must be unique.")
+        normalized[key] = cleaned
     return normalized
 
 
@@ -141,27 +152,52 @@ def feature_yaml_text(feature: dict) -> str:
     return yaml.safe_dump(feature, sort_keys=False, allow_unicode=True).strip()
 
 
-def topic_plan(topics: list[str], dataset_size: int) -> dict[int, str]:
-    base, remainder = divmod(dataset_size, len(topics))
-    ordered: list[str] = []
-    for index, topic in enumerate(topics):
-        ordered.extend([topic] * (base + (1 if index < remainder else 0)))
-    return {item_id: topic for item_id, topic in enumerate(ordered, start=1)}
+def domain_plan(
+    domains: dict[str, list[str]],
+    dataset_size: int,
+    seed: int,
+) -> dict[int, dict[str, str]]:
+    import itertools
+    import random
+
+    cells = list(itertools.product(domains["animals"], domains["values"], domains["contexts"]))
+    if not cells:
+        raise ConfigError("Domain Cartesian product must not be empty.")
+
+    base, remainder = divmod(dataset_size, len(cells))
+    assignments: list[tuple[str, str, str]] = []
+    for index, cell in enumerate(cells):
+        assignments.extend([cell] * (base + (1 if index < remainder else 0)))
+
+    rng = random.Random(seed)
+    rng.shuffle(assignments)
+
+    return {
+        item_id: {
+            "animal": animal,
+            "value": value,
+            "context": context,
+        }
+        for item_id, (animal, value, context) in enumerate(assignments, start=1)
+    }
 
 
-def batches_by_topic(
+def batches_by_domain(
     ids: Iterable[int],
-    plan: dict[int, str],
+    plan: dict[int, dict[str, str]],
     batch_size: int,
-) -> list[tuple[str, list[int]]]:
-    grouped: dict[str, list[int]] = defaultdict(list)
+) -> list[tuple[dict[str, str], list[int]]]:
+    grouped: dict[tuple[str, str, str], list[int]] = defaultdict(list)
     for item_id in sorted(ids):
-        grouped[plan[item_id]].append(item_id)
+        assignment = plan[item_id]
+        key = (assignment["animal"], assignment["value"], assignment["context"])
+        grouped[key].append(item_id)
 
-    batches: list[tuple[str, list[int]]] = []
-    for topic, topic_ids in grouped.items():
-        for start in range(0, len(topic_ids), batch_size):
-            batches.append((topic, topic_ids[start : start + batch_size]))
+    batches: list[tuple[dict[str, str], list[int]]] = []
+    for (animal, value, context), domain_ids in grouped.items():
+        domain = {"animal": animal, "value": value, "context": context}
+        for start in range(0, len(domain_ids), batch_size):
+            batches.append((domain, domain_ids[start : start + batch_size]))
     return batches
 
 
@@ -329,7 +365,7 @@ class RunManifest:
         run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:8]
         self.path = resolve_path(config, "manifests") / f"{run_id}_{stage}.json"
 
-        topic_file = resolve_path(config, "topics")
+        domains_file = resolve_path(config, "domains")\n        held_out_domains_file = resolve_path(config, "held_out_domains")
         prompt_hashes = {
             name: sha256_file(prompt_path(config, name)) for name in self.prompt_filenames
         }
@@ -345,7 +381,7 @@ class RunManifest:
             "schema_version": config["schema_version"],
             "prompt_version": config["prompt_version"],
             "config_hash": sha256_file(CONFIG_PATH),
-            "topics_hash": sha256_file(topic_file),
+            "domains_hash": sha256_file(domains_file),\n            "held_out_domains_hash": sha256_file(held_out_domains_file),
             "feature_hashes": feature_hashes,
             "prompt_hashes": prompt_hashes,
             "models": config["models"],
