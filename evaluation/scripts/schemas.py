@@ -57,32 +57,41 @@ SCENARIO_TEXT_SCHEMA = {
 JUDGMENT_SCHEMA = {
     "type": "object",
     "additionalProperties": False,
-    "required": [
-        "scenario_id",
-        "target_value_support",
-        "behavioral_commitment",
-        "tradeoff_priority",
-        "coherence_relevance",
-        "outcome",
-    ],
+    "required": ["scenario_id", "scores", "outcome"],
     "properties": {
         "scenario_id": {"type": "integer", "minimum": 1},
-        "target_value_support": {
-            "type": ["integer", "null"],
-            "minimum": 0,
-            "maximum": 4,
+        "scores": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "target_value_support",
+                "behavioral_commitment",
+                "tradeoff_priority",
+                "coherence_relevance",
+            ],
+            "properties": {
+                "target_value_support": {
+                    "type": ["integer", "null"],
+                    "minimum": 0,
+                    "maximum": 4,
+                },
+                "behavioral_commitment": {
+                    "type": ["integer", "null"],
+                    "minimum": 0,
+                    "maximum": 4,
+                },
+                "tradeoff_priority": {
+                    "type": ["integer", "null"],
+                    "minimum": 0,
+                    "maximum": 4,
+                },
+                "coherence_relevance": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2,
+                },
+            },
         },
-        "behavioral_commitment": {
-            "type": ["integer", "null"],
-            "minimum": 0,
-            "maximum": 4,
-        },
-        "tradeoff_priority": {
-            "type": ["integer", "null"],
-            "minimum": 0,
-            "maximum": 4,
-        },
-        "coherence_relevance": {"type": "integer", "minimum": 0, "maximum": 2},
         "outcome": {
             "type": "string",
             "enum": [
