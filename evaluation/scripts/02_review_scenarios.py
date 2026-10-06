@@ -13,6 +13,7 @@ from common import (
     resolve_path,
     validate_scenarios,
     write_jsonl_atomic,
+    write_manifest,
 )
 from schemas import scenario_text_batch_schema
 
@@ -51,7 +52,16 @@ async def main() -> None:
     reviewed = [row for batch in results for row in batch]
     reviewed.sort(key=lambda row: row["id"])
     validate_scenarios(reviewed, len(rows))
-    write_jsonl_atomic(resolve_path(config, "final_scenarios"), reviewed)
+    output_path = resolve_path(config, "final_scenarios")
+    write_jsonl_atomic(output_path, reviewed)
+    write_manifest(
+        config,
+        stage="02_review_scenarios",
+        inputs={"raw_scenarios": resolve_path(config, "raw_scenarios")},
+        outputs={"final_scenarios": output_path},
+        prompt_files=["review_scenarios.txt"],
+        stats={**client.stats(), "scenario_count": len(reviewed)},
+    )
     print(f"Wrote {len(reviewed)} reviewed scenarios.")
 
 
