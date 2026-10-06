@@ -51,11 +51,11 @@ async def generate_canonical_corpus(
     *,
     client: OpenRouterClient,
     config: dict,
-    topics: list[str],
+    domains: dict[str, list[str]],
 ) -> tuple[dict[int, dict], dict]:
     dataset_size = config["dataset_size"]
     language = config["canonical_language"]
-    plan = topic_plan(topics, dataset_size)
+    plan = domain_plan(domains, dataset_size, int(config["seeds"]["generator"]))
     output_path = generated_canonical_path(config)
 
     validator = Draft202012Validator(CANONICAL_SCHEMA)
@@ -65,38 +65,53 @@ async def generate_canonical_corpus(
             continue
         if any(
             not list(validator.iter_errors(candidate))
-            and candidate.get("topic") == plan[item_id]
             and candidate.get("language") == language
+            and candidate.get("animal") == plan[item_id]["animal"]
+            and candidate.get("value") == plan[item_id]["value"]
+            and candidate.get("context") == plan[item_id]["context"]
             for candidate in candidates
         ):
             completed.add(item_id)
     missing_ids = sorted(set(range(1, dataset_size + 1)) - completed)
-    topic_batches = batches_by_topic(missing_ids, plan, config["batch_size"])
+    domain_batches = batches_by_domain(missing_ids, plan, config["batch_size"])
     write_lock = asyncio.Lock()
 
-    async def run_batch(topic: str, ids: list[int]) -> int:
+    async def run_batch(domain: dict[str, str], ids: list[int]) -> int:
         requests = [{"id": item_id} for item_id in ids]
         prompt = render_prompt(
             config,
             "generate_canonical.txt",
             {
                 "LANGUAGE": language,
-                "TOPIC": topic,
+                "ANIMAL": domain["animal"],
+                "VALUE": domain["value"],
+                "CONTEXT": domain["context"],
                 "REQUESTS_JSON": json_text(requests),
             },
         )
         response = await client.request_json(
             role="generator",
             prompt=prompt,
-            schema=canonical_batch_schema(ids),
+            schema=canonical_text_batch_schema(ids),
             schema_name="generated_canonical_corpus",
         )
-        rows = response["items"]
+        generated = {row["id"]: row["canonical"] for row in response["items"]}
+        rows = [
+            {
+                "id": item_id,
+                "language": language,
+                "animal": plan[item_id]["animal"],
+                "value": plan[item_id]["value"],
+                "context": plan[item_id]["context"],
+                "canonical": generated[item_id],
+            }
+            for item_id in ids
+        ]
         async with write_lock:
             append_jsonl(output_path, rows)
         return len(rows)
 
-    counts = await asyncio.gather(*(run_batch(topic, ids) for topic, ids in topic_batches))
+    counts = await asyncio.gather(*(run_batch(domain, ids) for domain, ids in domain_batches))
 
     candidates = index_items(output_path)
     corpus: dict[int, dict] = {}
@@ -105,8 +120,10 @@ async def generate_canonical_corpus(
         valid = [
             row for row in candidates.get(item_id, [])
             if not list(validator.iter_errors(row))
-            and row.get("topic") == plan[item_id]
             and row.get("language") == language
+            and row.get("animal") == plan[item_id]["animal"]
+            and row.get("value") == plan[item_id]["value"]
+            and row.get("context") == plan[item_id]["context"]
         ]
         if not valid:
             raise RuntimeError(f"Canonical corpus has no valid row for ID {item_id}.")
@@ -117,7 +134,7 @@ async def generate_canonical_corpus(
         "dataset_size": dataset_size,
         "resumed_items": len(completed),
         "generated_items": sum(counts),
-        "batches": len(topic_batches),
+        "batches": len(domain_batches),
         "output": str(output_path),
     }
 
