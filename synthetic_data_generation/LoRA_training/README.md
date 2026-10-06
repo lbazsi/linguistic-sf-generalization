@@ -14,6 +14,12 @@ Each `features/<variable_name>.yaml` contains `name`, `description`, `language`,
 
 OpenRouter calls use JSON-schema structured outputs. API credentials are read from `.env`.
 
+## Domain design
+
+The canonical training corpus is defined over three semantic dimensions: animal group, welfare value, and decision context. `config/domains.yaml` contains only domains used for training-data generation. `config/held_out_domains.yaml` records disjoint domains reserved for downstream generalization evaluation.
+
+This separation supports evaluation along several axes: unseen animals with familiar values and contexts, familiar animals with unseen values, familiar animals and values in unseen contexts, and combinations in which multiple semantic dimensions are held out. The held-out file is documentation for the evaluation design and is never consumed by the synthetic training-data generator.
+
 ## Pipeline
 
 1. `01_generate.py` builds a balanced shuffled animal × value × context assignment, generates/resumes `data/canonical/generated.jsonl`, invokes the canonical review stage, and then generates raw feature datasets from the reviewed canonical corpus.
