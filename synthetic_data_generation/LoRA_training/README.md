@@ -12,7 +12,13 @@ The initial canonical generation is stored in `data/canonical/generated.jsonl`. 
 
 Each `features/<variable_name>.yaml` contains `name`, `description`, `language`, `definition`, `transformation`, `semantic_constraints`, and `examples`. The feature filename stem and `name` must match. The transformation contains `instructions`, `preferred_patterns`, and `avoid_patterns`; semantic constraints contain a `preserve` list; definitions and examples each contain `canonical` and `feature_variant`.
 
-OpenRouter calls use JSON-schema structured outputs. API credentials are read from `.env`.
+OpenRouter calls use JSON-schema structured outputs. API credentials are read from `.env`. The default API roles are pinned to explicit upstream providers with provider fallback disabled:
+
+- generator: `google/gemini-3.8-flash` through Google AI Studio;
+- judge: `openai/gpt-5.6-sol` through OpenAI;
+- reviewer: `anthropic/claude-sonnet-5.5` through Anthropic.
+
+Reasoning effort is configured explicitly per role in `config/configs.yaml`.
 
 ## Domain design
 
@@ -34,7 +40,7 @@ Every run records a manifest in `data/manifests/` with configuration and prompt 
 
 ## Setup and execution
 
-Create a Python environment, install `requirements.txt`, copy `.env.example` to `.env`, and configure model IDs, the domain YAML files, and feature YAML files. Then run:
+Create a Python environment, install `requirements.txt`, copy `.env.example` to `.env`, and configure the domain and feature YAML files. The default OpenRouter model/provider assignments are already specified in `config/configs.yaml`. Then run:
 
 ```bash
 python scripts/01_generate.py
@@ -96,9 +102,25 @@ The central configuration controls model selection, sampling temperatures, concu
 
 ```yaml
 models:
-  generator: <openrouter_model>
-  judge: <openrouter_model>
-  reviewer: <openrouter_model>
+  generator: "google/gemini-3.8-flash"
+  judge: "openai/gpt-5.6-sol"
+  reviewer: "anthropic/claude-sonnet-5.5"
+
+providers:
+  generator:
+    only: ["google-ai-studio"]
+    allow_fallbacks: false
+  judge:
+    only: ["openai"]
+    allow_fallbacks: false
+  reviewer:
+    only: ["anthropic"]
+    allow_fallbacks: false
+
+reasoning_effort:
+  generator: "low"
+  judge: "medium"
+  reviewer: "medium"
 
 temperatures:
   generator: <float>
