@@ -386,6 +386,8 @@ class RunManifest:
             "prompt_hashes": prompt_hashes,
             "models": config["models"],
             "temperatures": config["temperatures"],
+            "providers": config.get("providers", {}),
+            "reasoning_effort": config.get("reasoning_effort", {}),
             "seeds": config["seeds"],
             "dataset_size": config["dataset_size"],
             "batch_size": config["batch_size"],
@@ -468,8 +470,16 @@ class OpenRouterClient:
         }
         if seed is not None:
             payload["seed"] = int(seed)
+
+        reasoning = (self.config.get("reasoning_effort") or {}).get(role)
+        if reasoning:
+            payload["reasoning"] = {"effort": reasoning}
+
+        provider_cfg = dict((self.config.get("providers") or {}).get(role) or {})
         if self.require_parameters:
-            payload["provider"] = {"require_parameters": True}
+            provider_cfg["require_parameters"] = True
+        if provider_cfg:
+            payload["provider"] = provider_cfg
 
         retry = self.config["retry_limits"]
         max_attempts = int(retry["max_attempts"])
