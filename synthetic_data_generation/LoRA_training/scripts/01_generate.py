@@ -161,7 +161,9 @@ async def generate_feature(
                 not list(validator.iter_errors(candidate))
                 and candidate.get("feature") == feature_name
                 and candidate.get("language") == source["language"]
-                and candidate.get("topic") == source["topic"]
+                and candidate.get("animal") == source["animal"]
+                and candidate.get("value") == source["value"]
+                and candidate.get("context") == source["context"]
                 and candidate.get("canonical") == source["canonical"]
             ):
                 completed.add(item_id)
@@ -193,7 +195,9 @@ async def generate_feature(
                 "id": item_id,
                 "feature": feature_name,
                 "language": canonical[item_id]["language"],
-                "topic": canonical[item_id]["topic"],
+                "animal": canonical[item_id]["animal"],
+                "value": canonical[item_id]["value"],
+                "context": canonical[item_id]["context"],
                 "canonical": canonical[item_id]["canonical"],
                 "feature_variant": variants[item_id],
             }
@@ -222,7 +226,7 @@ async def async_main() -> None:
     args = parse_args()
     config = load_config()
     ensure_directories(config)
-    topics = load_topics(config)
+    domains = load_domains(config)
     selected = select_features(config, args.feature)
     feature_paths = [path for path, _ in selected]
 
@@ -239,7 +243,7 @@ async def async_main() -> None:
         canonical, canonical_stats = await generate_canonical_corpus(
             client=client,
             config=config,
-            topics=topics,
+            domains=domains,
         )
         print(
             f"[canonical] generated {canonical_stats['generated_items']} "
