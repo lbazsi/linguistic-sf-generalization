@@ -35,7 +35,8 @@ api:
   require_parameters: true
 
 paths:
-  domains: "config/domains.yaml"\n  held_out_domains: "config/held_out_domains.yaml"
+  domains: "config/domains.yaml"
+  held_out_domains: "config/held_out_domains.yaml"
   features: "features"
   prompts: "prompts"
   canonical: "data/canonical"
