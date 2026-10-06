@@ -8,12 +8,13 @@ Canonical items:
 
 Requirements:
 - Return exactly one transformation for every supplied ID and no other IDs.
-- Return only the ID and transformed feature_variant; do not rewrite or return canonical text, topic, language, or feature metadata.
+- Return only the ID and transformed feature_variant; do not rewrite or return canonical text, language, animal, value, context, or feature metadata.
 - Treat every supplied canonical text as immutable source material.
-- Preserve its semantic and value content, entities, quantities, stance, and factual claims.
+- Preserve its exact animal domain, welfare value, decision context, semantic and value content, entities, quantities, stance, and factual claims.
 - Change only the target linguistic feature according to the transformation instructions.
 - Respect every semantic constraint, preferred pattern, and avoid pattern in the feature specification.
 - Keep the transformed text natural and independently understandable.
+- Do not substitute another animal, welfare principle, scenario, or context even if the rewritten sentence would remain plausible.
 - Do not add metadata or commentary.
 
 The response must conform to the JSON schema supplied with the API request.
