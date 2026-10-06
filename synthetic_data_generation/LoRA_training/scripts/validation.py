@@ -113,18 +113,19 @@ def validate_item(
         )
 
     if source is not None:
-        expected_topic = source["topic"]
-        if item.get("topic") != expected_topic:
-            issues.append(
-                make_issue(
-                    feature=feature_name,
-                    stage=stage,
-                    issue_type="topic_mismatch",
-                    field="topic",
-                    message=f"Expected canonical topic '{expected_topic}'.",
-                    item_id=raw_id,
+        for field in ["animal", "value", "context"]:
+            expected = source[field]
+            if item.get(field) != expected:
+                issues.append(
+                    make_issue(
+                        feature=feature_name,
+                        stage=stage,
+                        issue_type=f"{field}_mismatch",
+                        field=field,
+                        message=f"Expected canonical {field} '{expected}'.",
+                        item_id=raw_id,
+                    )
                 )
-            )
         if item.get("canonical") != source["canonical"]:
             issues.append(
                 make_issue(
