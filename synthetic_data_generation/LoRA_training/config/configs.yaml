@@ -25,16 +25,16 @@ reasoning_effort:
 
 temperatures:
   generator: 0.7
-  judge: 0.2
-  reviewer: 0.0
+  judge: null
+  reviewer: null
 
 concurrency: 8
 batch_size: 20
 
 seeds:
   generator: 42
-  judge: 43
-  reviewer: 44
+  judge: null
+  reviewer: null
 
 retry_limits:
   max_attempts: 5
