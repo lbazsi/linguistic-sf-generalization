@@ -1,6 +1,6 @@
-config_version: "1.2"
-schema_version: "1.2"
-prompt_version: "1.2"
+config_version: "1.3"
+schema_version: "1.3"
+prompt_version: "1.3"
 
 models:
   generator: null
@@ -35,7 +35,7 @@ api:
   require_parameters: true
 
 paths:
-  topics: "config/topics.yaml"
+  domains: "config/domains.yaml"\n  held_out_domains: "config/held_out_domains.yaml"
   features: "features"
   prompts: "prompts"
   canonical: "data/canonical"
