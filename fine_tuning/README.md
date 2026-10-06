@@ -26,19 +26,23 @@ The canonical corpus must contain:
 {
   "id": 1,
   "language": "en",
-  "topic": "<topic>",
+  "animal": "<animal_domain>",
+  "value": "<welfare_value>",
+  "context": "<decision_context>",
   "canonical": "<text>"
 }
 ```
 
-Each final feature dataset must contain the same IDs and must preserve the canonical `language`, `topic`, and `canonical` fields exactly:
+Each final feature dataset must contain the same IDs and must preserve the canonical `language`, `animal`, `value`, `context`, and `canonical` fields exactly:
 
 ```json
 {
   "id": 1,
   "feature": "<feature_name>",
   "language": "en",
-  "topic": "<topic>",
+  "animal": "<same animal domain>",
+  "value": "<same welfare value>",
+  "context": "<same decision context>",
   "canonical": "<same canonical text>",
   "feature_variant": "<transformed text>"
 }
@@ -83,9 +87,7 @@ LoRA is applied to both attention projections and MLP projections. The configura
 
 Exactly 50 canonical IDs are held out by default.
 
-The validation IDs are chosen once from the canonical corpus using the configured training seed and are stratified by topic. The same IDs are then held out from the canonical run and every feature run.
-
-Topic stratification avoids a tail split accidentally over-representing the final topic when the canonical corpus was generated in deterministic topic blocks.
+The validation IDs are chosen once from the canonical corpus using the configured training seed. The split uses distinct animal × value × context cells and greedily balances the animal, value, and context marginals. With the default domains and 50 validation examples, this gives 10 examples per training animal, 10 per training context, and 12–13 per training value. The same IDs are held out from the canonical run and every feature run.
 
 Validation data is used only as a diagnostic held-out set. It does not select checkpoints and there is no early stopping.
 
