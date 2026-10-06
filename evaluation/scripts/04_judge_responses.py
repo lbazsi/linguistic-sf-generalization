@@ -15,6 +15,7 @@ from common import (
     render_prompt,
     resolve_path,
     write_jsonl_atomic,
+    write_manifest,
 )
 from schemas import judgment_batch_schema
 
@@ -154,6 +155,25 @@ async def async_main() -> None:
                 )
     finally:
         await client.close()
+
+    output_paths = {}
+    for judge_number in judges:
+        for path in files:
+            candidate = resolve_path(config, "judgments") / f"judge_{judge_number}" / path.name
+            if candidate.exists():
+                output_paths[f"judge_{judge_number}_{path.stem}"] = candidate
+    write_manifest(
+        config,
+        stage="04_judge_responses",
+        inputs={
+            "final_scenarios": resolve_path(config, "final_scenarios"),
+            **{f"responses_{path.stem}": path for path in files},
+        },
+        outputs=output_paths,
+        prompt_files=["judge_response.txt"],
+        stats=client.stats(),
+        extra={"judges_run": judges, "conditions": [path.stem for path in files]},
+    )
 
 
 if __name__ == "__main__":
