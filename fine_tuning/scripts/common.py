@@ -104,7 +104,7 @@ def _unique_by_id(rows: Iterable[dict[str, Any]], path: Path) -> dict[int, dict[
 def load_canonical(data_root: Path) -> tuple[Path, list[dict[str, Any]], dict[int, dict[str, Any]]]:
     path = data_root / "canonical" / "corpus.jsonl"
     rows = read_jsonl(path)
-    required = {"id", "language", "topic", "canonical"}
+    required = {"id", "language", "animal", "value", "context", "canonical"}
     for index, row in enumerate(rows, start=1):
         missing = required - set(row)
         if missing:
@@ -137,7 +137,7 @@ def load_feature(
 ) -> tuple[Path, list[dict[str, Any]], dict[int, dict[str, Any]]]:
     path = data_root / "final" / f"{feature_name}.jsonl"
     rows = read_jsonl(path)
-    required = {"id", "feature", "language", "topic", "canonical", "feature_variant"}
+    required = {"id", "feature", "language", "animal", "value", "context", "canonical", "feature_variant"}
     by_id = _unique_by_id(rows, path)
 
     if set(by_id) != set(canonical_by_id):
@@ -154,7 +154,7 @@ def load_feature(
         source = canonical_by_id[item_id]
         if row["feature"] != feature_name:
             raise RuntimeError(f"{path}: id {item_id} has feature={row['feature']!r}")
-        for field in ["language", "topic", "canonical"]:
+        for field in ["language", "animal", "value", "context", "canonical"]:
             if row[field] != source[field]:
                 raise RuntimeError(
                     f"{path}: id {item_id} field {field!r} differs from canonical corpus"
@@ -173,40 +173,63 @@ def stratified_validation_ids(
     if validation_size >= len(canonical_rows):
         raise RuntimeError("validation_size must be smaller than the canonical dataset.")
 
-    grouped: dict[str, list[int]] = defaultdict(list)
+    dimensions = ["animal", "value", "context"]
     for row in canonical_rows:
-        grouped[str(row["topic"])].append(int(row["id"]))
+        missing = [field for field in dimensions if field not in row]
+        if missing:
+            raise RuntimeError(
+                f"Canonical row {row.get('id')} is missing domain fields: {missing}"
+            )
 
-    total = len(canonical_rows)
-    topics = sorted(grouped)
-    raw = {topic: validation_size * len(grouped[topic]) / total for topic in topics}
-    quota = {topic: min(len(grouped[topic]), math.floor(raw[topic])) for topic in topics}
+    cells: dict[tuple[str, str, str], list[int]] = defaultdict(list)
+    levels = {field: sorted({str(row[field]) for row in canonical_rows}) for field in dimensions}
+    for row in canonical_rows:
+        cell = (str(row["animal"]), str(row["value"]), str(row["context"]))
+        cells[cell].append(int(row["id"]))
 
-    remaining = validation_size - sum(quota.values())
-    priority = sorted(
-        topics,
-        key=lambda topic: (raw[topic] - math.floor(raw[topic]), len(grouped[topic]), topic),
-        reverse=True,
-    )
-    while remaining:
-        progressed = False
-        for topic in priority:
-            if quota[topic] < len(grouped[topic]):
-                quota[topic] += 1
-                remaining -= 1
-                progressed = True
-                if remaining == 0:
-                    break
-        if not progressed:
-            raise RuntimeError("Could not allocate the requested validation set.")
+    if validation_size > len(cells):
+        raise RuntimeError(
+            "validation_size exceeds the number of animal×value×context cells; "
+            "the diagnostic split is designed to use distinct domain cells."
+        )
 
     rng = random.Random(seed)
-    selected: list[int] = []
-    for topic in topics:
-        pool = sorted(grouped[topic])
-        selected.extend(rng.sample(pool, quota[topic]))
-    return sorted(selected)
+    for ids in cells.values():
+        rng.shuffle(ids)
 
+    remaining_cells = list(cells)
+    rng.shuffle(remaining_cells)
+    counts = {field: defaultdict(int) for field in dimensions}
+    selected: list[int] = []
+
+    for step in range(validation_size):
+        best_index = 0
+        best_score: float | None = None
+        for index, cell in enumerate(remaining_cells):
+            candidate = {
+                "animal": cell[0],
+                "value": cell[1],
+                "context": cell[2],
+            }
+            score = 0.0
+            for field in dimensions:
+                target = (step + 1) / len(levels[field])
+                for level in levels[field]:
+                    new_count = counts[field][level] + (
+                        1 if candidate[field] == level else 0
+                    )
+                    score += (new_count - target) ** 2
+            if best_score is None or score < best_score:
+                best_score = score
+                best_index = index
+
+        cell = remaining_cells.pop(best_index)
+        selected.append(cells[cell][0])
+        counts["animal"][cell[0]] += 1
+        counts["value"][cell[1]] += 1
+        counts["context"][cell[2]] += 1
+
+    return sorted(selected)
 
 def split_rows(
     rows: list[dict[str, Any]],
