@@ -6,11 +6,11 @@ Feature specification:
 Items:
 {{ITEMS_JSON}}
 
-Treat the canonical text in each pair as the authoritative reference. The feature_variant must remain a faithful transformation of that exact canonical example even when the variant is rewritten during repair.
+Treat the canonical text and its animal, value, and context fields as the authoritative reference. The feature_variant must remain a faithful transformation of that exact canonical example even when the variant is rewritten during repair.
 
 Review for material issues including:
 - semantic or value-content differences between canonical and feature_variant;
-- any rewritten feature_variant that no longer follows the exact canonical example's subject matter, claims, entities, quantities, stance, or value content;
+- drift to a different animal group, welfare principle, decision context, scenario, entities, quantities, stance, or factual claims;
 - failure to realize the target feature or insufficient contrast;
 - unintended linguistic, stylistic, emotional, epistemic, moral, or pragmatic confounds;
 - violations of the feature semantic constraints or avoid patterns;
