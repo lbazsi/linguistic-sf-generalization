@@ -1,20 +1,30 @@
-Generate the shared canonical corpus items requested below.
+Generate the requested canonical animal-welfare corpus items.
 
 Language:
 {{LANGUAGE}}
 
-Topic:
-{{TOPIC}}
+Animal:
+{{ANIMAL}}
+
+Welfare value:
+{{VALUE}}
+
+Decision context:
+{{CONTEXT}}
 
 Requested items:
 {{REQUESTS_JSON}}
 
 Requirements:
 - Return exactly one item for every requested ID and no other IDs.
-- Use the supplied language and topic exactly.
-- Generate natural, independently understandable text suitable as source material for later controlled linguistic transformations.
-- Keep the content varied within the topic.
+- Return only the ID and canonical text.
+- Every item must concern the specified animal, express the specified welfare value, and situate it naturally in the specified decision context.
+- The welfare value should be substantively relevant to the scenario rather than merely named.
+- Generate varied, natural, independently understandable texts. Vary concrete situations, actors, and wording within the assigned domain cell.
+- Keep the normative direction consistent with taking the specified animal-welfare value seriously.
+- Do not introduce a different animal group, welfare principle, or primary decision context.
 - Do not target or anticipate any particular linguistic feature.
-- Do not add metadata or commentary.
+- Avoid formulaic labels, dataset-like wording, meta-commentary, and explicit references to the domain configuration.
+- Do not add commentary.
 
 The response must conform to the JSON schema supplied with the API request.
