@@ -5,11 +5,14 @@ Canonical items:
 
 Requirements:
 - Return exactly one result for every supplied ID and no other IDs.
-- Return only the ID and canonical text; language and topic are fixed metadata and must not be returned or changed.
+- Return only the ID and canonical text; language, animal, value, and context are fixed metadata and must not be returned or changed.
+- Treat each item's animal, value, and context fields as hard semantic constraints.
 - If an item is already suitable, return its canonical text unchanged.
-- Change an item only when needed to correct a material problem such as unnatural or incoherent wording, meaningful ambiguity, malformed text, lack of independent understandability, off-topic content, meta-commentary, an obvious internal contradiction, or an extreme stylistic artifact that makes it a poor neutral source sentence.
-- Preserve the item's intended subject matter, semantic content, factual claims, quantities, entities, stance, and value content wherever possible.
-- Do not add new substantive claims, moral content, emotional framing, or a systematic linguistic feature.
+- Change an item only when needed to correct a material problem such as unnatural or incoherent wording, meaningful ambiguity, malformed text, failure to instantiate the assigned animal/value/context, meta-commentary, an obvious internal contradiction, or an extreme stylistic artifact.
+- Preserve the assigned animal group, welfare principle, decision context, intended subject matter, factual claims, quantities, entities, stance, and value content wherever possible.
+- Do not introduce a different animal group, welfare value, or primary context during repair.
+- Keep the normative direction consistent with taking the assigned welfare value seriously.
+- Do not add new substantive claims, unrelated moral content, emotional framing, or a systematic linguistic feature.
 - Keep the result natural, self-contained, and suitable as the immutable source for later controlled linguistic transformations.
 - Do not add commentary.
 
