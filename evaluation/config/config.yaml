@@ -1,0 +1,60 @@
+config_version: "1.0"
+schema_version: "1.0"
+prompt_version: "1.0"
+
+models:
+  scenario_generator: null
+  scenario_judge: null
+  response_judge_1: null
+  response_judge_2: null
+
+temperatures:
+  scenario_generator: 0.7
+  scenario_judge: 0.0
+  response_judge_1: 0.0
+  response_judge_2: 0.0
+
+seeds:
+  scenario_plan: 42
+  scenario_generator: 43
+  scenario_judge: 44
+  response_generation: 45
+  response_judge_1: 46
+  response_judge_2: 47
+
+scenario_generation:
+  scenarios_per_category: 100
+  tradeoff_fraction: 0.5
+  batch_size: 20
+
+model_generation:
+  max_new_tokens: 96
+  temperature: 0.2
+  top_p: 0.95
+  do_sample: true
+  training_seed: 42
+  torch_dtype: "bfloat16"
+  attn_implementation: "eager"
+
+judging:
+  batch_size: 10
+
+api:
+  base_url: "https://openrouter.ai/api/v1"
+  timeout_seconds: 120
+  max_output_tokens: 8000
+  max_attempts: 5
+  backoff_seconds: 2
+  max_backoff_seconds: 30
+  concurrency: 8
+  require_parameters: true
+
+paths:
+  training_domains: "../synthetic_data_generation/LoRA_training/config/domains.yaml"
+  held_out_domains: "../synthetic_data_generation/LoRA_training/config/held_out_domains.yaml"
+  fine_tuning_outputs: "../fine_tuning/outputs"
+  raw_scenarios: "data/scenarios/raw/scenarios.jsonl"
+  final_scenarios: "data/scenarios/final/scenarios.jsonl"
+  responses: "data/responses"
+  judgments: "data/judgments"
+  aggregated: "data/aggregated"
