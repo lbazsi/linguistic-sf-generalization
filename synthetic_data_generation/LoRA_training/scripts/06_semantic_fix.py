@@ -125,7 +125,9 @@ async def fix_feature(
                 "id": item_id,
                 "feature": feature_name,
                 "language": canonical[item_id]["language"],
-                "topic": canonical[item_id]["topic"],
+                "animal": canonical[item_id]["animal"],
+                "value": canonical[item_id]["value"],
+                "context": canonical[item_id]["context"],
                 "canonical": canonical[item_id]["canonical"],
                 "feature_variant": variants[item_id],
             }
