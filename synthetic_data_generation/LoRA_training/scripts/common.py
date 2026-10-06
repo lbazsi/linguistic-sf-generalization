@@ -451,13 +451,12 @@ class OpenRouterClient:
         schema_name: str,
     ) -> dict:
         model = self._role_setting("models", role)
-        temperature = float(self._role_setting("temperatures", role))
+        temperature = self.config["temperatures"].get(role)
         seed = self.config["seeds"].get(role)
 
         payload: dict[str, Any] = {
             "model": model,
             "messages": [{"role": "user", "content": prompt}],
-            "temperature": temperature,
             "max_tokens": self.max_output_tokens,
             "response_format": {
                 "type": "json_schema",
@@ -468,6 +467,8 @@ class OpenRouterClient:
                 },
             },
         }
+        if temperature is not None:
+            payload["temperature"] = float(temperature)
         if seed is not None:
             payload["seed"] = int(seed)
 
