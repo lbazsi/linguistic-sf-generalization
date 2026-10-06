@@ -1,14 +1,14 @@
 # Synthetic data generation for LoRA training
 
-This directory builds paired synthetic JSONL datasets for controlled linguistic-feature LoRA experiments. It generates one shared canonical corpus, reviews that corpus for non-deterministic quality problems, and then derives every feature dataset by transforming the reviewed canonical texts.
+This directory builds paired synthetic JSONL datasets for controlled linguistic-feature LoRA experiments. The canonical corpus is generated over a structured animal-welfare domain space, reviewed for non-deterministic quality problems, and then transformed into one dataset per linguistic feature.
 
 ## Data contract
 
-The initial canonical generation is stored in `data/canonical/generated.jsonl`. The reviewed authoritative corpus is stored in `data/canonical/corpus.jsonl` and contains `id`, `language`, `topic`, and `canonical`. Topic allocation is determined during canonical generation: it is deterministic and as even as possible across `dataset_size`, with any remainder assigned to the earliest topics in `config/topics.yaml`. Each feature dataset contains `id`, `feature`, `language`, `topic`, `canonical`, and `feature_variant`, inheriting the ID, language, topic, and reviewed canonical text exactly from the authoritative corpus.
+The initial canonical generation is stored in `data/canonical/generated.jsonl`. The reviewed authoritative corpus is stored in `data/canonical/corpus.jsonl` and contains `id`, `language`, `animal`, `value`, `context`, and `canonical`. `config/domains.yaml` defines the training animals, welfare values, and decision contexts. The generator uses the Cartesian product of these dimensions and distributes examples uniformly across domain cells before deterministically shuffling their IDs. With the default 5 × 4 × 5 domain design and 5,000 examples, each of the 100 cells receives exactly 50 examples. Each feature dataset inherits the exact domain metadata and canonical text from the authoritative corpus.
 
 ## Configuration
 
-`config/configs.yaml` contains model IDs, temperatures, concurrency, batch size, seeds, retry limits, dataset size, API settings, versions, and paths. `config/topics.yaml` is a YAML list of topic names.
+`config/configs.yaml` contains model IDs, temperatures, concurrency, batch size, seeds, retry limits, dataset size, API settings, versions, and paths. `config/domains.yaml` defines the animal, welfare-value, and context dimensions used for training. `config/held_out_domains.yaml` is a reference-only specification for future generalization evals and is never read by the training-data generator.
 
 Each `features/<variable_name>.yaml` contains `name`, `description`, `language`, `definition`, `transformation`, `semantic_constraints`, and `examples`. The feature filename stem and `name` must match. The transformation contains `instructions`, `preferred_patterns`, and `avoid_patterns`; semantic constraints contain a `preserve` list; definitions and examples each contain `canonical` and `feature_variant`.
 
@@ -16,9 +16,9 @@ OpenRouter calls use JSON-schema structured outputs. API credentials are read fr
 
 ## Pipeline
 
-1. `01_generate.py` generates/resumes `data/canonical/generated.jsonl`, invokes the canonical review stage, and then generates raw feature datasets from the reviewed canonical corpus.
-2. `review_canonical.py` reviews every canonical item with the judge model. Suitable items are preserved; materially flawed items are repaired while preserving their subject matter, semantic content, factual claims, quantities, entities, stance, and value content. The reviewed corpus is written to `data/canonical/corpus.jsonl`.
-3. `02_deterministic_review.py` performs JSON/schema, ID, topic, canonical-reference, and basic pair validation.
+1. `01_generate.py` builds a balanced shuffled animal × value × context assignment, generates/resumes `data/canonical/generated.jsonl`, invokes the canonical review stage, and then generates raw feature datasets from the reviewed canonical corpus.
+2. `review_canonical.py` reviews every canonical item with the judge model. Suitable items are preserved; materially flawed items are repaired while preserving the assigned animal, welfare value, decision context, subject matter, semantic content, factual claims, quantities, entities, stance, and value content. The reviewed corpus is written to `data/canonical/corpus.jsonl`.
+3. `02_deterministic_review.py` performs JSON/schema, ID, animal/value/context, canonical-reference, and basic pair validation.
 4. `03_deterministic_fix.py` uses the judge model to repair or regenerate flagged feature variants and writes `data/first_review/`.
 5. `04_deterministic_recheck.py` reruns deterministic validation on the repaired datasets.
 6. `05_semantic_review.py` reviews all pairs for semantic, feature-isolation, and other non-deterministic issues while treating each canonical text as the authoritative reference that every variant must continue to follow.
@@ -39,7 +39,7 @@ python scripts/05_semantic_review.py
 python scripts/06_semantic_fix.py
 ```
 
-`01_generate.py` and the feature-processing scripts accept repeated `--feature <variable_name>` arguments where applicable. `review_canonical.py` can also be run independently to review the generated canonical artifact. Feature dataset files are named `<variable_name>.jsonl` at every feature-data stage. The reviewed source corpus is `data/canonical/corpus.jsonl`; downstream feature generation, validation, review, and repair use it as the source of truth.
+`01_generate.py` and the feature-processing scripts accept repeated `--feature <variable_name>` arguments where applicable. `review_canonical.py` can also be run independently to review the generated canonical artifact. Feature dataset files are named `<variable_name>.jsonl` at every feature-data stage. The reviewed source corpus is `data/canonical/corpus.jsonl`; downstream feature generation, validation, review, and repair use it as the source of truth. The held-out-domain file is not consumed by any generation script.
 
 ## Design reference
 
@@ -52,7 +52,9 @@ Each line in a feature dataset is a JSON object with the following fields:
   "id": "<integer>",
   "feature": "<feature_name>",
   "language": "<language_code>",
-  "topic": "<topic_name>",
+  "animal": "<animal_domain>",
+  "value": "<welfare_value>",
+  "context": "<decision_context>",
   "canonical": "<canonical_text>",
   "feature_variant": "<feature_enhanced_text>"
 }
@@ -62,6 +64,8 @@ Each line in a feature dataset is a JSON object with the following fields:
 
 ```text
 config/
+├── domains.yaml
+├── held_out_domains.yaml
 features/
 prompts/
 scripts/
@@ -117,7 +121,8 @@ api:
   require_parameters: <boolean>
 
 paths:
-  topics: "config/topics.yaml"
+  domains: "config/domains.yaml"
+  held_out_domains: "config/held_out_domains.yaml"
   features: "features"
   prompts: "prompts"
   canonical: "data/canonical"
@@ -128,7 +133,7 @@ paths:
   nondeterministic_issues: "data/issues/non-deterministic"
   manifests: "data/manifests"
 
-schema_version: "1.2"
+schema_version: "1.3"
 ```
 
 ### Issue JSONL schema
