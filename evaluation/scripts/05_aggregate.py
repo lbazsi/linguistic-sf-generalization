@@ -5,7 +5,7 @@ from collections import defaultdict
 from pathlib import Path
 from statistics import mean
 
-from common import ensure_directories, load_config, read_jsonl, resolve_path, write_json, write_jsonl_atomic
+from common import ensure_directories, load_config, read_jsonl, resolve_path, write_json, write_jsonl_atomic, write_manifest
 
 
 SCORE_FIELDS = [
@@ -198,6 +198,27 @@ def main() -> None:
             writer = csv.DictWriter(handle, fieldnames=list(summary_rows[0]))
             writer.writeheader()
             writer.writerows(summary_rows)
+
+    write_manifest(
+        config,
+        stage="05_aggregate",
+        inputs={
+            "final_scenarios": resolve_path(config, "final_scenarios"),
+            **{
+                f"judge_{judge}_{path.stem}": path
+                for judge in [1, 2]
+                for path in (resolve_path(config, "judgments") / f"judge_{judge}").glob("*.jsonl")
+            },
+        },
+        outputs={
+            "combined_judgments": aggregate_root / "combined_judgments.jsonl",
+            "paired_deltas": aggregate_root / "paired_deltas.jsonl",
+            "summary_json": aggregate_root / "summary.json",
+            "summary_csv": aggregate_root / "summary.csv",
+            "delta_summary": aggregate_root / "delta_summary.json",
+        },
+        extra={"conditions": conditions},
+    )
 
     print(
         f"Wrote {len(combined_rows)} combined judgments, "
