@@ -86,6 +86,87 @@ def main() -> None:
 
     write_jsonl_atomic(aggregate_root / "combined_judgments.jsonl", combined_rows)
 
+    by_condition_and_scenario = {
+        (row["condition"], row["scenario_id"]): row for row in combined_rows
+    }
+    paired_deltas = []
+    for row in combined_rows:
+        if row["condition"] in {"base", "canonical"}:
+            continue
+        canonical = by_condition_and_scenario.get(("canonical", row["scenario_id"]))
+        if canonical is None:
+            raise RuntimeError("Canonical judgments are required for feature deltas.")
+        paired_deltas.append(
+            {
+                "scenario_id": row["scenario_id"],
+                "condition": row["condition"],
+                "category": row["category"],
+                "tradeoff": row["tradeoff"],
+                "comparison": "feature_minus_canonical",
+                "score_deltas": {
+                    field: (
+                        row["scores"][field] - canonical["scores"][field]
+                        if row["scores"][field] is not None
+                        and canonical["scores"][field] is not None
+                        else None
+                    )
+                    for field in SCORE_FIELDS
+                },
+            }
+        )
+
+    for scenario_id in sorted(scenarios_by_id):
+        canonical = by_condition_and_scenario.get(("canonical", scenario_id))
+        base = by_condition_and_scenario.get(("base", scenario_id))
+        if canonical is None or base is None:
+            continue
+        scenario = scenarios_by_id[scenario_id]
+        paired_deltas.append(
+            {
+                "scenario_id": scenario_id,
+                "condition": "canonical",
+                "category": scenario["category"],
+                "tradeoff": scenario["tradeoff"],
+                "comparison": "canonical_minus_base",
+                "score_deltas": {
+                    field: (
+                        canonical["scores"][field] - base["scores"][field]
+                        if canonical["scores"][field] is not None
+                        and base["scores"][field] is not None
+                        else None
+                    )
+                    for field in SCORE_FIELDS
+                },
+            }
+        )
+
+    write_jsonl_atomic(aggregate_root / "paired_deltas.jsonl", paired_deltas)
+
+    delta_buckets = defaultdict(list)
+    for row in paired_deltas:
+        delta_buckets[
+            (row["comparison"], row["condition"], row["category"], row["tradeoff"])
+        ].append(row)
+
+    delta_summary = []
+    for (comparison, condition, category, tradeoff), rows in sorted(delta_buckets.items()):
+        delta_summary.append(
+            {
+                "comparison": comparison,
+                "condition": condition,
+                "category": category,
+                "tradeoff": tradeoff,
+                "n": len(rows),
+                **{
+                    field: mean_or_none(
+                        [row["score_deltas"].get(field) for row in rows]
+                    )
+                    for field in SCORE_FIELDS
+                },
+            }
+        )
+    write_json(aggregate_root / "delta_summary.json", delta_summary)
+
     summary_rows = []
     for (condition, category, tradeoff), rows in sorted(summary_buckets.items()):
         summary_rows.append(
@@ -118,7 +199,10 @@ def main() -> None:
             writer.writeheader()
             writer.writerows(summary_rows)
 
-    print(f"Wrote {len(combined_rows)} combined judgments and {len(summary_rows)} summary rows.")
+    print(
+        f"Wrote {len(combined_rows)} combined judgments, "
+        f"{len(paired_deltas)} paired deltas, and {len(summary_rows)} summary rows."
+    )
 
 
 if __name__ == "__main__":
