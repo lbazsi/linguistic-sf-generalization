@@ -95,6 +95,7 @@ async def generate_canonical_corpus(
             prompt=prompt,
             schema=canonical_text_batch_schema(ids),
             schema_name="generated_canonical_corpus",
+            expected_ids=ids,
         )
         generated = {row["id"]: row["canonical"] for row in response["items"]}
         rows = [
@@ -197,6 +198,7 @@ async def generate_language_control(
             prompt=prompt,
             schema=control_text_batch_schema(ids),
             schema_name=f"generated_{language}_language_control",
+            expected_ids=ids,
         )
         translated = {row["id"]: row["canonical"] for row in response["items"]}
         rows = [
@@ -245,6 +247,7 @@ async def generate_language_control(
             prompt=prompt,
             schema=control_text_batch_schema(ids),
             schema_name=f"reviewed_{language}_language_control",
+            expected_ids=ids,
         )
         reviewed = {row["id"]: row["canonical"] for row in response["items"]}
         return [
@@ -358,6 +361,7 @@ async def generate_feature(
             prompt=prompt,
             schema=variant_batch_schema(ids),
             schema_name="generated_feature_transformations",
+            expected_ids=ids,
         )
         variants = {row["id"]: row["feature_variant"] for row in response["items"]}
         rows = [
