@@ -114,6 +114,47 @@ def load_canonical(data_root: Path) -> tuple[Path, list[dict[str, Any]], dict[in
     return path, rows, _unique_by_id(rows, path)
 
 
+def language_control_files(data_root: Path) -> list[Path]:
+    control_dir = data_root / "language_controls"
+    if not control_dir.exists():
+        return []
+    return sorted(
+        path for path in control_dir.glob("*.jsonl")
+        if path.is_file() and not path.name.endswith(".generated.jsonl")
+    )
+
+
+def load_language_control(
+    data_root: Path,
+    language: str,
+    canonical_by_id: dict[int, dict[str, Any]],
+) -> tuple[Path, list[dict[str, Any]], dict[int, dict[str, Any]]]:
+    path = data_root / "language_controls" / f"{language}.jsonl"
+    rows = read_jsonl(path)
+    required = {
+        "id", "language", "animal", "value", "context", "semantic_anchor", "canonical"
+    }
+    by_id = _unique_by_id(rows, path)
+    if set(by_id) != set(canonical_by_id):
+        raise RuntimeError(f"{path}: IDs do not match semantic-anchor corpus.")
+
+    for item_id, row in by_id.items():
+        missing = required - set(row)
+        if missing:
+            raise RuntimeError(f"{path}: id {item_id} missing fields: {sorted(missing)}")
+        source = canonical_by_id[item_id]
+        for field in ["animal", "value", "context"]:
+            if row[field] != source[field]:
+                raise RuntimeError(f"{path}: id {item_id} field {field!r} differs from semantic anchor")
+        if row["semantic_anchor"] != source["canonical"]:
+            raise RuntimeError(f"{path}: id {item_id} semantic_anchor differs from canonical corpus")
+        if row["language"] != language:
+            raise RuntimeError(f"{path}: id {item_id} expected language={language!r}")
+        if not isinstance(row["canonical"], str) or not row["canonical"].strip():
+            raise RuntimeError(f"{path}: id {item_id} has empty canonical text")
+    return path, rows, by_id
+
+
 def feature_files(data_root: Path) -> list[Path]:
     final_dir = data_root / "final"
     if not final_dir.exists():
@@ -137,7 +178,11 @@ def load_feature(
 ) -> tuple[Path, list[dict[str, Any]], dict[int, dict[str, Any]]]:
     path = data_root / "final" / f"{feature_name}.jsonl"
     rows = read_jsonl(path)
-    required = {"id", "feature", "language", "animal", "value", "context", "canonical", "feature_variant"}
+    required = {
+        "id", "feature", "manipulation_level", "canonical_language",
+        "feature_variant_language", "animal", "value", "context",
+        "semantic_anchor", "canonical", "feature_variant"
+    }
     by_id = _unique_by_id(rows, path)
 
     if set(by_id) != set(canonical_by_id):
@@ -154,11 +199,17 @@ def load_feature(
         source = canonical_by_id[item_id]
         if row["feature"] != feature_name:
             raise RuntimeError(f"{path}: id {item_id} has feature={row['feature']!r}")
-        for field in ["language", "animal", "value", "context", "canonical"]:
+        for field in ["animal", "value", "context"]:
             if row[field] != source[field]:
                 raise RuntimeError(
-                    f"{path}: id {item_id} field {field!r} differs from canonical corpus"
+                    f"{path}: id {item_id} field {field!r} differs from semantic-anchor corpus"
                 )
+        if row["semantic_anchor"] != source["canonical"]:
+            raise RuntimeError(f"{path}: id {item_id} semantic_anchor differs from canonical corpus")
+        if row["manipulation_level"] == "within_language" and row["canonical"] != source["canonical"]:
+            raise RuntimeError(
+                f"{path}: id {item_id} within-language canonical differs from canonical corpus"
+            )
         if not isinstance(row["feature_variant"], str) or not row["feature_variant"].strip():
             raise RuntimeError(f"{path}: id {item_id} has empty feature_variant")
 
@@ -295,10 +346,15 @@ def output_directory(
     condition: str,
     feature_name: str | None = None,
     feature_number: int | None = None,
+    control_language: str | None = None,
 ) -> Path:
     root = resolve_output_root(config)
     if condition == "canonical":
         return root / "canonical" / f"seed_{seed}"
+    if condition == "control":
+        if not control_language:
+            raise ValueError("Control output requires control_language.")
+        return root / "controls" / control_language / f"seed_{seed}"
     if not feature_name or feature_number is None:
         raise ValueError("Feature output requires feature_name and feature_number.")
     return root / "features" / f"{feature_name}_{feature_number:02d}" / f"seed_{seed}"
