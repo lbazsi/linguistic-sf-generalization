@@ -10,7 +10,7 @@ The initial canonical generation is stored in `data/canonical/generated.jsonl`. 
 
 `config/configs.yaml` contains model IDs, temperatures, concurrency, batch size, seeds, retry limits, dataset size, API settings, versions, and paths. `config/domains.yaml` defines the animal, welfare-value, and context dimensions used for training. `config/held_out_domains.yaml` is a reference-only specification for future generalization evals and is never read by the training-data generator.
 
-Each `features/<variable_name>.yaml` contains `name`, `description`, `language`, `definition`, `transformation`, `semantic_constraints`, and `examples`. The feature filename stem and `name` must match. The transformation contains `instructions`, `preferred_patterns`, and `avoid_patterns`; semantic constraints contain a `preserve` list; definitions and examples each contain `canonical` and `feature_variant`.
+Each `features/<variable_name>.yaml` contains `name`, `description`, `language`, `manipulation_level`, `languages`, `definition`, `transformation`, `semantic_constraints`, `examples`, and `cross_lingual_notes`. The feature filename stem and `name` must match. `manipulation_level` is one of `within_language`, `cross_linguistic`, or `covariate`. The current English LoRA generation pipeline automatically runs only `within_language` features; cross-linguistic features are retained for a separate translation-based pipeline, and covariates are retained for measurement/control rather than direct generation.
 
 OpenRouter calls use JSON-schema structured outputs. API credentials are read from `.env`. The default API roles are pinned to explicit upstream providers with provider fallback disabled:
 
@@ -51,7 +51,7 @@ python scripts/05_semantic_review.py
 python scripts/06_semantic_fix.py
 ```
 
-`01_generate.py` and the feature-processing scripts accept repeated `--feature <variable_name>` arguments where applicable. `review_canonical.py` can also be run independently to review the generated canonical artifact. Feature dataset files are named `<variable_name>.jsonl` at every feature-data stage. The reviewed source corpus is `data/canonical/corpus.jsonl`; downstream feature generation, validation, review, and repair use it as the source of truth. The held-out-domain file is not consumed by any generation script.
+`01_generate.py` and the feature-processing scripts accept repeated `--feature <variable_name>` arguments where applicable. Explicit requests for `cross_linguistic` or `covariate` features fail with a clear configuration error rather than accidentally treating them as English paraphrase interventions. `review_canonical.py` can also be run independently to review the generated canonical artifact. Feature dataset files are named `<variable_name>.jsonl` at every feature-data stage. The reviewed source corpus is `data/canonical/corpus.jsonl`; downstream feature generation, validation, review, and repair use it as the source of truth. The held-out-domain file is not consumed by any generation script.
 
 ## Design reference
 
@@ -162,7 +162,7 @@ paths:
   nondeterministic_issues: "data/issues/non-deterministic"
   manifests: "data/manifests"
 
-schema_version: "1.3"
+schema_version: "1.4"
 ```
 
 ### Issue JSONL schema
@@ -202,6 +202,9 @@ description: >
   <description of the linguistic feature>
 
 language: <language_code>
+manipulation_level: <within_language|cross_linguistic|covariate>
+languages:
+  - <ISO_639-1_code>
 
 definition:
   canonical: >
@@ -233,5 +236,8 @@ semantic_constraints:
 examples:
   - canonical: "<canonical example>"
     feature_variant: "<feature-enhanced example>"
+
+cross_lingual_notes: >
+  <cross-linguistic motivation or notes>
 ```
 
