@@ -9,6 +9,7 @@ from common import (
     load_canonical_corpus,
     resolve_path,
     select_features,
+    resolve_max_id,
     write_jsonl_atomic,
 )
 from validation import deterministic_review_file
@@ -17,6 +18,7 @@ from validation import deterministic_review_file
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Recheck repaired datasets deterministically.")
     parser.add_argument("--feature", action="append", help="Run only the named feature; repeatable.")
+    parser.add_argument("--max-id", type=int, help="Process only IDs 1..N.")
     return parser.parse_args()
 
 
@@ -24,7 +26,8 @@ def main() -> None:
     args = parse_args()
     config = load_config()
     ensure_directories(config)
-    canonical = load_canonical_corpus(config)
+    target_max_id = resolve_max_id(config, args.max_id)
+    canonical = load_canonical_corpus(config, target_max_id)
     selected = select_features(config, args.feature)
     feature_paths = [path for path, _ in selected]
 
@@ -46,7 +49,7 @@ def main() -> None:
                 source_path,
                 feature_spec=feature,
                 canonical=canonical,
-                dataset_size=config["dataset_size"],
+                dataset_size=target_max_id,
                 stage="deterministic_recheck",
             )
             issue_path = (
