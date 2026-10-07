@@ -6,15 +6,15 @@ Feature specification:
 Items:
 {{ITEMS_JSON}}
 
-Treat the canonical text and its animal, value, and context fields as the authoritative reference. The feature_variant must remain a faithful transformation of that exact canonical example even when the variant is rewritten during repair.
+The semantic_anchor field is the authoritative English semantic reference for every pair. The canonical field is the actual source-language training text and feature_variant is the actual feature-condition training text.
 
-Review for material issues including:
-- semantic or value-content differences between canonical and feature_variant;
-- drift to a different animal group, welfare principle, decision context, scenario, entities, quantities, stance, or factual claims;
-- failure to realize the target feature or insufficient contrast;
-- unintended linguistic, stylistic, emotional, epistemic, moral, or pragmatic confounds;
-- violations of the feature semantic constraints or avoid patterns;
-- unnatural, incoherent, or meaningfully ambiguous text.
+Requirements:
+- Preserve the assigned animal, welfare value, decision context, entities, quantities, factual claims, stance, and value content across semantic_anchor, canonical, and feature_variant.
+- For within-language features, canonical should match semantic_anchor exactly and feature_variant should change only the target linguistic realization.
+- For cross-linguistic features, canonical must be natural text in canonical_language and feature_variant must be natural text in feature_variant_language. Both must remain translation-equivalent to semantic_anchor while realizing the intended typological contrast through the two languages.
+- Flag mistranslation, semantic drift, changed normative intensity, changed factual claims, unintended register/style changes, or failure to realize the target feature.
+- Flag unnatural, incoherent, or meaningfully ambiguous text.
+- Do not penalize grammatical differences that are obligatory in the relevant language.
 
 Return only issues that require correction. Each issue must reference an item ID, identify an issue type, optionally identify a field, and give a concise reason. An item may have more than one issue. Return an empty issues list when no corrections are needed.
 
