@@ -1,0 +1,54 @@
+name: genericity
+description: >-
+  Controls whether a claim is stated about a category in general, an unspecified instance, or a particular
+  identifiable individual.
+language: en
+manipulation_level: within_language
+languages:
+- zh
+- ja
+definition:
+  canonical: >-
+    Neutral phrasing without systematically favoring generic or specific
+
+    reference.
+  feature_variant: >-
+    Express the same semantic content with generic (category-level)
+
+    reference rather than specific-instance reference.
+transformation:
+  instructions:
+  - Preserve the underlying proposition.
+  - Preserve entities, quantities, causal claims, and value judgments.
+  - Change only linguistic realization relevant to genericity/reference.
+  - Keep approximately similar length where possible.
+  preferred_patterns:
+  - replace definite/specific noun phrases with bare plural generics
+  - replace indefinite singular reference with generic plural reference
+  - remove individuating details that mark a specific instance
+  avoid_patterns:
+  - changing factual content
+  - adding emotional language
+  - increasing moral intensity
+  - changing politeness unless required by the feature
+  - changing topic or perspective
+semantic_constraints:
+  preserve:
+  - entities
+  - quantities
+  - stance
+  - factual_claims
+  - value_content
+examples:
+- canonical: The hen in the battery cage suffers.
+  feature_variant: Hens suffer in battery cages.
+- canonical: A hen suffers in a battery cage.
+  feature_variant: Hens suffer in battery cages.
+cross_lingual_notes: >-
+  Generic reference is the linguistic mechanism for asserting something at the category level; training
+  data that only ever describes specific instances may generalize differently than data phrased generically.
+  Mandarin Chinese has no articles, relying instead on word order, classifiers, and context to signal
+  genericity, e.g. “一只母鸡在笼中受苦” vs. 母鸡们在笼中受苦.” Japanese also lacks articles but achieves a related distinction
+  through topic markers (Japanese は wa vs. が ga), which is useful for testing whether it is the marking
+  itself that matters, or the underlying distinction, regardless of how a given language encodes it, e.g.
+  “一羽の雌鶏は、檻の中で苦しんでいる” vs. “雌鶏たちが、檻の中で苦しんでいる.”
