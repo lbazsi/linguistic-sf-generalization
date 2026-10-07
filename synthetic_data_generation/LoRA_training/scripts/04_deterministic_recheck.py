@@ -49,7 +49,8 @@ def main() -> None:
                 source_path,
                 feature_spec=feature,
                 canonical=canonical,
-                dataset_size=target_max_id,
+                dataset_size=config["dataset_size"],
+                active_max_id=target_max_id,
                 stage="deterministic_recheck",
             )
             issue_path = (
