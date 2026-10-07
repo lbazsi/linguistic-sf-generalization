@@ -1,0 +1,48 @@
+name: conditionality
+description: >-
+  Controls whether a claim is expressed as categorical/generic or as contingent on a stated condition.
+language: en
+manipulation_level: within_language
+languages:
+- de
+- ja
+definition:
+  canonical: >-
+    Neutral phrasing with no systematic bias toward conditional or
+
+    categorical framing.
+  feature_variant: >-
+    Express the same semantic content as a conditional/hypothetical claim.
+transformation:
+  instructions:
+  - Preserve the underlying proposition.
+  - Preserve entities, quantities, causal claims, and value judgments.
+  - Change only linguistic realization relevant to conditionality.
+  - Keep approximately similar length where possible.
+  preferred_patterns:
+  - introduce an "if"/"when" clause stating the condition
+  - use conditional mood or conditional markers
+  - mark the claim as contingent rather than asserted outright
+  avoid_patterns:
+  - changing factual content
+  - adding emotional language
+  - increasing moral intensity
+  - changing politeness unless required by the feature
+  - changing topic or perspective
+  - changing the truth value of the stated condition
+semantic_constraints:
+  preserve:
+  - entities
+  - quantities
+  - stance
+  - factual_claims
+  - value_content
+examples:
+- canonical: Confined hens suffer.
+  feature_variant: If hens are confined, then they suffer.
+cross_lingual_notes: >-
+  A conditional frame ("if confined, hens suffer") logically leaves open whether the claim holds outside
+  the stated condition, while a categorical or generic statement asserts it flatly. German marks this
+  with a separate "if" clause, e.g. “Eingesperrte Hennen leiden” vs. “Wenn Hennen eingesperrt sind, dann
+  leiden sie.” Japanese has four distinct conditional markers (たら tara, ば ba, と to, なら nara), each carrying
+  a different shade of hypotheticality or certainty, e.g. “閉じ込められた鶏は苦しみます” vs. “鶏が閉じ込められれば、苦しむことになります.”
