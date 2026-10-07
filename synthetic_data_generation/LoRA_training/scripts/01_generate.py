@@ -23,6 +23,7 @@ from common import (
     render_prompt,
     resolve_path,
     select_features,
+    resolve_max_id,
     write_jsonl_atomic,
 )
 from schemas import (
@@ -40,6 +41,7 @@ def parse_args() -> argparse.Namespace:
         description="Generate, review, and transform semantic-anchor and linguistic-feature datasets."
     )
     parser.add_argument("--feature", action="append", help="Run only the named feature; repeatable.")
+    parser.add_argument("--max-id", type=int, help="Process only IDs 1..N while retaining the full dataset plan.")
     return parser.parse_args()
 
 
@@ -48,8 +50,10 @@ async def generate_canonical_corpus(
     client: OpenRouterClient,
     config: dict,
     domains: dict[str, list[str]],
+    max_id: int | None = None,
 ) -> tuple[dict[int, dict], dict]:
     dataset_size = config["dataset_size"]
+    target_max_id = resolve_max_id(config, max_id)
     language = config["canonical_language"]
     plan = domain_plan(domains, dataset_size, int(config["seeds"]["generator"]))
     output_path = generated_canonical_path(config)
@@ -69,7 +73,7 @@ async def generate_canonical_corpus(
         ):
             completed.add(item_id)
 
-    missing_ids = sorted(set(range(1, dataset_size + 1)) - completed)
+    missing_ids = sorted(set(range(1, target_max_id + 1)) - completed)
     domain_batches = batches_by_domain(missing_ids, plan, config["batch_size"])
     write_lock = asyncio.Lock()
 
@@ -112,7 +116,7 @@ async def generate_canonical_corpus(
 
     candidates = index_items(output_path)
     corpus: dict[int, dict] = {}
-    for item_id in range(1, dataset_size + 1):
+    for item_id in range(1, target_max_id + 1):
         valid = [
             row for row in candidates.get(item_id, [])
             if not list(validator.iter_errors(row))
@@ -125,9 +129,19 @@ async def generate_canonical_corpus(
             raise RuntimeError(f"Canonical corpus has no valid row for ID {item_id}.")
         corpus[item_id] = valid[-1]
 
-    write_jsonl_atomic(output_path, [corpus[item_id] for item_id in range(1, dataset_size + 1)])
+    retained = [
+        candidates[item_id][-1]
+        for item_id in sorted(candidates)
+        if item_id > target_max_id and item_id <= dataset_size
+    ]
+    write_jsonl_atomic(
+        output_path,
+        [corpus[item_id] for item_id in range(1, target_max_id + 1)] + retained,
+    )
     return corpus, {
         "dataset_size": dataset_size,
+        "processed_max_id": target_max_id,
+        "processed_max_id": target_max_id,
         "resumed_items": len(completed),
         "generated_items": sum(counts),
         "batches": len(domain_batches),
@@ -141,8 +155,10 @@ async def generate_language_control(
     config: dict,
     language: str,
     semantic_anchor: dict[int, dict],
+    max_id: int | None = None,
 ) -> tuple[dict[int, dict], dict]:
     dataset_size = config["dataset_size"]
+    target_max_id = resolve_max_id(config, max_id)
     output_path = language_control_path(config, language)
     generated_path = output_path.with_name(f"{language}.generated.jsonl")
 
@@ -153,7 +169,7 @@ async def generate_language_control(
         if rows and rows[-1].get("language") == language
         and rows[-1].get("semantic_anchor") == semantic_anchor[item_id]["canonical"]
     }
-    missing_ids = sorted(set(range(1, dataset_size + 1)) - completed)
+    missing_ids = sorted(set(range(1, target_max_id + 1)) - completed)
     write_lock = asyncio.Lock()
 
     async def generate_batch(ids: list[int]) -> int:
@@ -203,10 +219,10 @@ async def generate_language_control(
     )
 
     candidates = index_items(generated_path)
-    generated_rows = [candidates[item_id][-1] for item_id in range(1, dataset_size + 1)]
+    generated_rows = [candidates[item_id][-1] for item_id in range(1, target_max_id + 1)]
     write_jsonl_atomic(generated_path, generated_rows)
 
-    review_batches = batches(range(1, dataset_size + 1), config["batch_size"])
+    review_batches = batches(range(1, target_max_id + 1), config["batch_size"])
 
     async def review_batch(ids: list[int]) -> list[dict]:
         items = [candidates[item_id][-1] for item_id in ids]
@@ -236,7 +252,13 @@ async def generate_language_control(
     reviewed_batches = await asyncio.gather(*(review_batch(ids) for ids in review_batches))
     rows = [row for batch in reviewed_batches for row in batch]
     rows.sort(key=lambda row: row["id"])
-    write_jsonl_atomic(output_path, rows)
+    existing_final = index_items(output_path)
+    retained_final = [
+        existing_final[item_id][-1]
+        for item_id in sorted(existing_final)
+        if item_id > target_max_id and item_id <= dataset_size
+    ]
+    write_jsonl_atomic(output_path, rows + retained_final)
 
     return {row["id"]: row for row in rows}, {
         "language": language,
@@ -253,9 +275,11 @@ async def generate_feature(
     feature: dict,
     semantic_anchor: dict[int, dict],
     language_controls: dict[str, dict[int, dict]],
+    max_id: int | None = None,
 ) -> dict:
     feature_name = feature["name"]
     dataset_size = config["dataset_size"]
+    target_max_id = resolve_max_id(config, max_id)
     output_path = resolve_path(config, "raw") / f"{feature_name}.jsonl"
     manipulation = feature["manipulation_level"]
 
@@ -297,7 +321,7 @@ async def generate_feature(
                 completed.add(item_id)
                 break
 
-    missing_ids = sorted(set(range(1, dataset_size + 1)) - completed)
+    missing_ids = sorted(set(range(1, target_max_id + 1)) - completed)
     item_batches = batches(missing_ids, config["batch_size"])
     write_lock = asyncio.Lock()
 
@@ -352,8 +376,17 @@ async def generate_feature(
 
     counts = await asyncio.gather(*(run_batch(ids) for ids in item_batches))
     candidates = index_items(output_path)
-    canonicalized = [candidates[item_id][-1] for item_id in range(1, dataset_size + 1)]
-    write_jsonl_atomic(output_path, canonicalized)
+    canonicalized = [
+        candidates[item_id][-1]
+        for item_id in range(1, target_max_id + 1)
+        if candidates.get(item_id)
+    ]
+    retained = [
+        candidates[item_id][-1]
+        for item_id in sorted(candidates)
+        if item_id > target_max_id and item_id <= dataset_size
+    ]
+    write_jsonl_atomic(output_path, canonicalized + retained)
 
     return {
         "feature": feature_name,
@@ -393,10 +426,12 @@ async def async_main() -> None:
 
     try:
         client = OpenRouterClient(config)
+        target_max_id = resolve_max_id(config, args.max_id)
         semantic_anchor, canonical_stats = await generate_canonical_corpus(
             client=client,
             config=config,
             domains=domains,
+            max_id=target_max_id,
         )
         print(
             f"[canonical] generated {canonical_stats['generated_items']} "
@@ -406,6 +441,7 @@ async def async_main() -> None:
         semantic_anchor, review_stats = await review_canonical_corpus(
             client=client,
             config=config,
+            max_id=target_max_id,
         )
         print(
             f"[canonical-review] reviewed {review_stats['reviewed_items']} items; "
@@ -426,6 +462,7 @@ async def async_main() -> None:
                 config=config,
                 language=language,
                 semantic_anchor=semantic_anchor,
+                max_id=target_max_id,
             )
             language_controls[language] = control
             control_stats.append(stats)
@@ -439,6 +476,7 @@ async def async_main() -> None:
                 feature=feature,
                 semantic_anchor=semantic_anchor,
                 language_controls=language_controls,
+                max_id=target_max_id,
             )
             feature_stats.append(stats)
             print(
