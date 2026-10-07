@@ -99,18 +99,35 @@ def validate_item(
         )
 
     source = canonical.get(raw_id)
-    expected_language = source["language"] if source else feature_spec["language"]
-    if item.get("language") != expected_language:
-        issues.append(
-            make_issue(
-                feature=feature_name,
-                stage=stage,
-                issue_type="language_mismatch",
-                field="language",
-                message=f"Expected language '{expected_language}'.",
-                item_id=raw_id,
+    manipulation = feature_spec["manipulation_level"]
+    expected_canonical_language = (
+        feature_spec["canonical_language"]
+        if manipulation == "cross_linguistic"
+        else feature_spec["language"]
+    )
+    expected_variant_language = (
+        feature_spec["feature_variant_language"]
+        if manipulation == "cross_linguistic"
+        else feature_spec["language"]
+    )
+
+    expected_metadata = {
+        "manipulation_level": manipulation,
+        "canonical_language": expected_canonical_language,
+        "feature_variant_language": expected_variant_language,
+    }
+    for field, expected in expected_metadata.items():
+        if item.get(field) != expected:
+            issues.append(
+                make_issue(
+                    feature=feature_name,
+                    stage=stage,
+                    issue_type=f"{field}_mismatch",
+                    field=field,
+                    message=f"Expected {field} '{expected}'.",
+                    item_id=raw_id,
+                )
             )
-        )
 
     if source is not None:
         for field in ["animal", "value", "context"]:
@@ -122,18 +139,29 @@ def validate_item(
                         stage=stage,
                         issue_type=f"{field}_mismatch",
                         field=field,
-                        message=f"Expected canonical {field} '{expected}'.",
+                        message=f"Expected semantic-anchor {field} '{expected}'.",
                         item_id=raw_id,
                     )
                 )
-        if item.get("canonical") != source["canonical"]:
+        if item.get("semantic_anchor") != source["canonical"]:
+            issues.append(
+                make_issue(
+                    feature=feature_name,
+                    stage=stage,
+                    issue_type="semantic_anchor_mismatch",
+                    field="semantic_anchor",
+                    message="semantic_anchor must exactly match the reviewed English canonical corpus.",
+                    item_id=raw_id,
+                )
+            )
+        if manipulation == "within_language" and item.get("canonical") != source["canonical"]:
             issues.append(
                 make_issue(
                     feature=feature_name,
                     stage=stage,
                     issue_type="canonical_mismatch",
                     field="canonical",
-                    message="canonical must exactly match the shared canonical corpus.",
+                    message="Within-language canonical must exactly match the reviewed English canonical corpus.",
                     item_id=raw_id,
                 )
             )
