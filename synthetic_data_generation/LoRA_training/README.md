@@ -53,7 +53,7 @@ python scripts/06_semantic_fix.py
 python scripts/07_measure_lexical_diversity.py
 ```
 
-`01_generate.py` and the feature-processing scripts accept repeated `--feature <variable_name>` arguments where applicable. Explicit requests for `covariate` features fail with a clear configuration error because covariates are measured rather than fine-tuned as interventions. Cross-linguistic features are generated through the multilingual path. `review_canonical.py` can also be run independently to review the generated canonical artifact. Feature dataset files are named `<variable_name>.jsonl` at every feature-data stage. The reviewed source corpus is `data/canonical/corpus.jsonl`; downstream feature generation, validation, review, and repair use it as the source of truth. The held-out-domain file is not consumed by any generation script.
+`01_generate.py` and the feature-processing scripts accept repeated `--feature <variable_name>` arguments where applicable. They also accept `--max-id N` for resumable pilot runs. `dataset_size` remains 5,000, so pilot IDs use the exact final domain assignment; rerunning later without `--max-id` resumes and fills the remaining IDs. Explicit requests for `covariate` features fail with a clear configuration error because covariates are measured rather than fine-tuned as interventions. Cross-linguistic features are generated through the multilingual path. `review_canonical.py` can also be run independently to review the generated canonical artifact. Feature dataset files are named `<variable_name>.jsonl` at every feature-data stage. The reviewed source corpus is `data/canonical/corpus.jsonl`; downstream feature generation, validation, review, and repair use it as the source of truth. The held-out-domain file is not consumed by any generation script.
 
 ## Design reference
 
@@ -269,3 +269,19 @@ The Mandarin control corpus is generated once from the reviewed English semantic
 `lexical_diversity` is a measured covariate rather than its own fine-tuning condition. After final dataset construction, `07_measure_lexical_diversity.py` measures each training text with the same Gemma tokenizer used by the model. MATTR is the primary lexical-diversity measure because it is less sensitive to document length than raw TTR.
 
 All languages are measured. Same-language feature/control shifts are suitable for the primary confound analysis. Cross-language shifts are retained descriptively but are not treated as directly comparable in the primary lexical-diversity correlation because changing language also changes the tokenizer-level lexical distribution.
+
+
+### Resumable pilot
+
+To test the complete generation/review/fix chain on the first 10 IDs of one feature without changing the 5,000-example experiment plan:
+
+```bash
+python scripts/01_generate.py --feature voice --max-id 10
+python scripts/02_deterministic_review.py --feature voice --max-id 10
+python scripts/03_deterministic_fix.py --feature voice --max-id 10
+python scripts/04_deterministic_recheck.py --feature voice --max-id 10
+python scripts/05_semantic_review.py --feature voice --max-id 10
+python scripts/06_semantic_fix.py --feature voice --max-id 10
+```
+
+Do not change `dataset_size` for a pilot. After inspection, run the normal commands without `--max-id`; valid pilot rows are reused and the remaining IDs are generated. Lexical-diversity measurement is intended for the completed datasets rather than the partial pilot.
