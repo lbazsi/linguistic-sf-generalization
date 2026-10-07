@@ -1,0 +1,38 @@
+name: lexical_diversity
+description: >-
+  Type-token ratio / lexical diversity of a passage. Treated as a measured covariate rather than a directly
+  manipulated feature, since it is known to independently affect model behavior and can confound other
+  manipulations.
+language: en
+manipulation_level: covariate
+languages:
+- en
+- ko
+definition:
+  canonical: >-
+    Baseline type-token ratio of the unmodified document.
+  feature_variant: >-
+    Not applicable — this feature is measured, not deliberately varied.
+transformation:
+  instructions:
+  - Do not deliberately manipulate lexical diversity when generating variants for other features.
+  - Measure type-token ratio on both canonical and feature_variant text for every other feature's transformation
+    pairs.
+  - Flag and regenerate any transformation pair whose type-token ratio diverges beyond a pre-registered
+    threshold, since that divergence is a confound rather than the intended manipulation.
+  preferred_patterns: []
+  avoid_patterns:
+  - treating raw type-token ratio as comparable across languages without first normalizing for morphological
+    type
+semantic_constraints:
+  preserve:
+  - entities
+  - quantities
+  - stance
+  - factual_claims
+  - value_content
+examples: []
+cross_lingual_notes: >-
+  Morphologically rich languages (e.g. Korean) produce higher type-token ratios than English simply because
+  inflection generates any unique word forms from the same lemma. Raw TTR should be examined relative
+  to the language's morphological type before being used as a confound check.
