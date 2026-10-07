@@ -81,7 +81,8 @@ async def judge_file(
         )
 
     seed_key = f"response_judge_{judge_number}"
-    rng = random.Random(int(config["seeds"][seed_key]))
+    shuffle_seed = int(config["judging"]["shuffle_seeds"][f"judge_{judge_number}"])
+    rng = random.Random(shuffle_seed)
     rng.shuffle(items)
 
     batch_size = int(config["judging"]["batch_size"])
