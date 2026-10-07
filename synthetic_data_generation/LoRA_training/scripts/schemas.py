@@ -230,7 +230,7 @@ def _batch_schema(item_schema: dict, expected_ids: Iterable[int]) -> dict:
             "maximum": ids[0],
         }
     else:
-        schema["properties"]["id"] = {"type": "integer", "enum": ids}
+        schema["properties"]["id"] = {"type": "integer", "minimum": 1}
     return {
         "type": "object",
         "additionalProperties": False,
