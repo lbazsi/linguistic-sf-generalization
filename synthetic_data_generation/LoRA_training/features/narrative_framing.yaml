@@ -1,0 +1,48 @@
+name: narrative_framing
+description: >-
+  Controls whether content is presented as a specific narrative about a particular individual/event, or
+  as a generic, expository statement about a category.
+language: en
+manipulation_level: within_language
+languages:
+- fr
+- ja
+definition:
+  canonical: >-
+    Neutral expository phrasing with no systematic narrative framing.
+  feature_variant: >-
+    Express the same semantic content as a specific narrative about a
+
+    particular individual or event.
+transformation:
+  instructions:
+  - Preserve the underlying proposition.
+  - Preserve entities, quantities, causal claims, and value judgments.
+  - Change only linguistic realization relevant to narrative framing.
+  - Keep approximately similar length where possible.
+  preferred_patterns:
+  - introduce a named or individuated participant
+  - sequence events temporally rather than stating a general pattern
+  - use past-tense narrative rather than generic present-tense description
+  avoid_patterns:
+  - changing factual content
+  - adding emotional language beyond what narrativization itself implies
+  - increasing moral intensity
+  - changing politeness unless required by the feature
+  - changing topic or perspective
+semantic_constraints:
+  preserve:
+  - entities
+  - quantities
+  - stance
+  - factual_claims
+  - value_content
+examples:
+- canonical: Caged hens exhibit stereotypic pacing behavior.
+  feature_variant: A hen named Clover paced her cage for hours.
+cross_lingual_notes: >-
+  French has a dedicated literary narrative past tense (passé simple) distinct from its conversational
+  past (passé composé), so narrative register is grammatically marked rather than purely stylistic, e.g.
+  “Les poules en cage présentèrent un comportement stéréotypé de va-et-vient” vs. “Une poule nommée Clover
+  faisait les cent pas dans sa cage pendant des heures.” Japanese narrative chaining via connective endings
+  is also a grammatical marker of narrative sequencing, e.g. “ケージで飼育されている雌鶏は、常同的な歩き回り行動を示します” vs. “クローバーという名の雌鶏は、何時間もケージの中を行ったり来たりしていました.”
