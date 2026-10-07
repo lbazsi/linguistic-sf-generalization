@@ -3,17 +3,17 @@ Repair the flagged feature transformations.
 Feature specification:
 {{FEATURE_YAML}}
 
-Flagged IDs, immutable canonical sources, source candidates, and deterministic issues:
+Flagged IDs, immutable English semantic anchors, source candidates, and deterministic issues:
 {{PROBLEMS_JSON}}
 
 Requirements:
 - Return exactly one corrected item for every flagged ID and no other IDs.
 - Return only the ID and corrected feature_variant.
-- Treat canonical_source as immutable.
-- Preserve the canonical source's exact animal, welfare value, decision context, semantic and value content, entities, quantities, stance, and factual claims.
-- Repair or regenerate only feature_variant.
-- Make feature_variant express only the target linguistic feature.
-- Do not change to another animal, welfare principle, scenario, or primary context.
+- Treat semantic_anchor as the immutable semantic reference.
+- Treat the provided canonical source-language text as fixed.
+- Preserve the exact animal, welfare value, decision context, semantic and value content, entities, quantities, stance, and factual claims.
+- For cross-linguistic features, write feature_variant naturally in feature_variant_language and preserve translation equivalence with both semantic_anchor and canonical.
+- For within-language features, change only the target linguistic feature.
 - Respect the feature transformation instructions, semantic constraints, preferred patterns, and avoid patterns.
 - Produce natural text and no commentary.
 
