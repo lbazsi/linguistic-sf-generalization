@@ -4,7 +4,7 @@ This directory builds paired synthetic JSONL datasets for controlled linguistic-
 
 ## Data contract
 
-The initial canonical generation is stored in `data/canonical/generated.jsonl`. The reviewed authoritative corpus is stored in `data/canonical/corpus.jsonl` and contains `id`, `language`, `animal`, `value`, `context`, and `canonical`. `config/domains.yaml` defines the training animals, welfare values, and decision contexts. The generator uses the Cartesian product of these dimensions and distributes examples uniformly across domain cells before deterministically shuffling their IDs. With the default 5 × 4 × 5 domain design and 5,000 examples, each of the 100 cells receives exactly 50 examples. Each feature dataset inherits the exact domain metadata and canonical text from the authoritative corpus.
+The initial canonical generation is stored in `data/canonical/generated.jsonl`. The reviewed authoritative corpus is stored in `data/canonical/corpus.jsonl` and contains `id`, `language`, `animal`, `value`, `context`, and `canonical`. `config/domains.yaml` defines the training animals, welfare values, and decision contexts. The generator uses the Cartesian product of these dimensions and distributes examples uniformly across domain cells before deterministically shuffling their IDs. With the default 5 × 4 × 5 domain design and 5,000 examples, each of the 100 cells receives exactly 50 examples. Each feature dataset inherits the exact semantic IDs and domain metadata from the authoritative corpus. Within-language datasets also reuse its canonical text exactly; cross-linguistic datasets use a reviewed source-language control text while retaining the English canonical as `semantic_anchor`.
 
 ## Configuration
 
@@ -164,6 +164,8 @@ paths:
   features: "features"
   prompts: "prompts"
   canonical: "data/canonical"
+  language_controls: "data/language_controls"
+  lexical_diversity: "data/metrics/lexical_diversity"
   raw: "data/raw"
   first_review: "data/first_review"
   final: "data/final"
@@ -171,7 +173,7 @@ paths:
   nondeterministic_issues: "data/issues/non-deterministic"
   manifests: "data/manifests"
 
-schema_version: "1.4"
+schema_version: "1.5"
 ```
 
 ### Issue JSONL schema
