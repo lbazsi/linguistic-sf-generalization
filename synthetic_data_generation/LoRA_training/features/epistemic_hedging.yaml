@@ -1,0 +1,49 @@
+name: epistemic_hedging
+description: >-
+  Controls the degree of certainty with which a claim is presented, from hedged to boosted.
+language: en
+manipulation_level: within_language
+languages:
+- en
+- bo
+definition:
+  canonical: >-
+    Neutral phrasing with no systematic hedging or boosting markers.
+  feature_variant: >-
+    Express the same semantic content with epistemic hedging (reduced
+
+    certainty marking).
+transformation:
+  instructions:
+  - Preserve the underlying proposition.
+  - Preserve entities, quantities, causal claims, and value judgments.
+  - Change only linguistic realization relevant to epistemic certainty.
+  - Keep approximately similar length where possible.
+  preferred_patterns:
+  - add hedges ("it is likely that", "it seems", "may")
+  - add boosters ("definitely", "clearly", "undoubtedly") for the boosted variant
+  - remove certainty markers entirely for the bare-assertion variant
+  avoid_patterns:
+  - changing factual content
+  - adding emotional language
+  - increasing moral intensity
+  - changing politeness unless required by the feature
+  - changing topic or perspective
+semantic_constraints:
+  preserve:
+  - entities
+  - quantities
+  - stance
+  - factual_claims
+  - value_content
+examples:
+- canonical: Hens suffer.
+  feature_variant: It is likely that hens suffer.
+- canonical: Hens suffer.
+  feature_variant: Hens definitely suffer.
+cross_lingual_notes: >-
+  In English, hedging is optional and lexical. Tibetan grammaticalizes evidentiality, meaning the speaker
+  is obligated to mark whether a claim is witnessed, inferred, or reported every time, which is a strong
+  test of whether a hedging-strength effect persists when some evidential marking is compulsory regardless
+  of the writer's intent, e.g. “བྱི་ལའི་སྡུག་བསྔལ།” vs. “བྱ་མོ་སྡུག་བསྔལ་མྱོང་གི་འདུག.” (this information
+  is witnessed)
