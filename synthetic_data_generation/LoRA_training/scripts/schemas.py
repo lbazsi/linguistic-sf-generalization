@@ -289,3 +289,27 @@ def review_batch_schema(expected_ids: Iterable[int]) -> dict:
         "required": ["issues"],
         "properties": {"issues": {"type": "array", "items": issue}},
     }
+
+
+def ordered_text_batch_schema(field: str, count: int) -> dict:
+    if field not in {"canonical", "feature_variant"}:
+        raise ValueError(f"Unsupported ordered text field: {field}")
+    item = {
+        "type": "object",
+        "additionalProperties": False,
+        "required": [field],
+        "properties": {field: {"type": "string", "minLength": 1}},
+    }
+    return {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["items"],
+        "properties": {
+            "items": {
+                "type": "array",
+                "minItems": count,
+                "maxItems": count,
+                "items": item,
+            }
+        },
+    }
