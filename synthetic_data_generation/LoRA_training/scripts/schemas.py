@@ -84,15 +84,27 @@ FEATURE_SCHEMA = {
         "name",
         "description",
         "language",
+        "manipulation_level",
+        "languages",
         "definition",
         "transformation",
         "semantic_constraints",
         "examples",
+        "cross_lingual_notes",
     ],
     "properties": {
         "name": {"type": "string", "minLength": 1, "pattern": "^[A-Za-z0-9_-]+$"},
         "description": {"type": "string", "minLength": 1},
         "language": {"type": "string", "minLength": 1},
+        "manipulation_level": {
+            "type": "string",
+            "enum": ["within_language", "cross_linguistic", "covariate"],
+        },
+        "languages": {
+            "type": "array",
+            "minItems": 1,
+            "items": {"type": "string", "minLength": 2},
+        },
         "definition": {
             "type": "object",
             "additionalProperties": False,
@@ -136,7 +148,6 @@ FEATURE_SCHEMA = {
         },
         "examples": {
             "type": "array",
-            "minItems": 1,
             "items": {
                 "type": "object",
                 "additionalProperties": False,
@@ -147,7 +158,23 @@ FEATURE_SCHEMA = {
                 },
             },
         },
+        "cross_lingual_notes": {"type": "string", "minLength": 1},
     },
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "manipulation_level": {"const": "covariate"}
+                }
+            },
+            "then": {},
+            "else": {
+                "properties": {
+                    "examples": {"minItems": 1}
+                }
+            },
+        }
+    ],
 }
 
 
