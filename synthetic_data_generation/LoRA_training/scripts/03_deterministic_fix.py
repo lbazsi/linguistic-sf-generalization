@@ -20,6 +20,7 @@ from common import (
     render_prompt,
     resolve_path,
     select_features,
+    resolve_max_id,
     write_jsonl_atomic,
 )
 from schemas import variant_batch_schema
@@ -29,6 +30,7 @@ from validation import validate_item
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Repair deterministic validation failures.")
     parser.add_argument("--feature", action="append", help="Run only the named feature; repeatable.")
+    parser.add_argument("--max-id", type=int, help="Process only IDs 1..N.")
     return parser.parse_args()
 
 
@@ -38,9 +40,11 @@ async def fix_feature(
     config: dict,
     feature: dict,
     canonical: dict[int, dict],
+    max_id: int | None = None,
 ) -> dict:
     feature_name = feature["name"]
     dataset_size = config["dataset_size"]
+    target_max_id = resolve_max_id(config, max_id)
     manipulation = feature["manipulation_level"]
     canonical_language = (
         feature["canonical_language"] if manipulation == "cross_linguistic"
@@ -53,7 +57,7 @@ async def fix_feature(
     source_rows = (
         canonical
         if canonical_language == config["canonical_language"]
-        else load_language_control(config, canonical_language)
+        else load_language_control(config, canonical_language, target_max_id)
     )
 
     raw_path = resolve_path(config, "raw") / f"{feature_name}.jsonl"
@@ -67,14 +71,17 @@ async def fix_feature(
 
     raw_candidates = index_items(raw_path)
     issues = load_issues(issue_path)
-    grouped_issues = issues_by_id(issues)
+    grouped_issues = {
+        item_id: rows for item_id, rows in issues_by_id(issues).items()
+        if 1 <= item_id <= target_max_id
+    }
     flagged_ids = set(grouped_issues)
 
     existing_candidates = index_items(output_path)
     output: dict[int, dict] = {}
     resumed_fixed = 0
 
-    for item_id in range(1, dataset_size + 1):
+    for item_id in range(1, target_max_id + 1):
         if item_id not in flagged_ids:
             candidates = raw_candidates.get(item_id, [])
             if candidates:
@@ -93,7 +100,15 @@ async def fix_feature(
                 resumed_fixed += 1
                 break
 
-    write_jsonl_atomic(output_path, [output[item_id] for item_id in sorted(output)])
+    retained_existing = [
+        rows[-1]
+        for item_id, rows in sorted(existing_candidates.items())
+        if item_id > target_max_id and item_id <= dataset_size and rows
+    ]
+    write_jsonl_atomic(
+        output_path,
+        [output[item_id] for item_id in sorted(output)] + retained_existing,
+    )
     pending_ids = sorted(flagged_ids - set(output))
     item_batches = batches(pending_ids, config["batch_size"])
     write_lock = asyncio.Lock()
@@ -149,11 +164,16 @@ async def fix_feature(
 
     final_candidates = index_items(output_path)
     canonicalized: list[dict] = []
-    for item_id in range(1, dataset_size + 1):
+    for item_id in range(1, target_max_id + 1):
         candidates = final_candidates.get(item_id, [])
         if candidates:
             canonicalized.append(candidates[-1])
-    write_jsonl_atomic(output_path, canonicalized)
+    retained_final = [
+        final_candidates[item_id][-1]
+        for item_id in sorted(final_candidates)
+        if item_id > target_max_id and item_id <= dataset_size
+    ]
+    write_jsonl_atomic(output_path, canonicalized + retained_final)
 
     return {
         "feature": feature_name,
@@ -170,7 +190,8 @@ async def async_main() -> None:
     args = parse_args()
     config = load_config()
     ensure_directories(config)
-    canonical = load_canonical_corpus(config)
+    target_max_id = resolve_max_id(config, args.max_id)
+    canonical = load_canonical_corpus(config, target_max_id)
     selected = select_features(config, args.feature)
     feature_paths = [path for path, _ in selected]
 
@@ -191,6 +212,7 @@ async def async_main() -> None:
                 config=config,
                 feature=feature,
                 canonical=canonical,
+                max_id=target_max_id,
             )
             feature_stats.append(stats)
             print(
