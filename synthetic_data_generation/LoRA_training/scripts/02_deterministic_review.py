@@ -49,7 +49,8 @@ def main() -> None:
                 raw_path,
                 feature_spec=feature,
                 canonical=canonical,
-                dataset_size=target_max_id,
+                dataset_size=config["dataset_size"],
+                active_max_id=target_max_id,
                 stage="deterministic_review",
             )
             issue_path = resolve_path(config, "deterministic_issues") / f"{feature_name}.jsonl"
