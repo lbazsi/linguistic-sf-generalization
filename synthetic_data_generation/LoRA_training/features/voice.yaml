@@ -1,0 +1,44 @@
+name: voice
+description: >-
+  Controls whether the agent of an action is foregrounded (active) or backgrounded/omitted (passive).
+language: en
+manipulation_level: within_language
+languages:
+- en
+- zh
+definition:
+  canonical: >-
+    Neutral phrasing without systematically favoring active or passive voice.
+  feature_variant: >-
+    Express the same semantic content in passive voice, backgrounding the agent.
+transformation:
+  instructions:
+  - Preserve the underlying proposition.
+  - Preserve entities, quantities, causal claims, and value judgments.
+  - Change only linguistic realization relevant to voice.
+  - Keep approximately similar length where possible.
+  preferred_patterns:
+  - convert active constructions to passive constructions
+  - demote the agent to a by-phrase or omit it entirely
+  - use "be + past participle" constructions
+  avoid_patterns:
+  - changing factual content
+  - adding emotional language
+  - increasing moral intensity
+  - changing politeness unless required by the feature
+  - changing topic or perspective
+semantic_constraints:
+  preserve:
+  - entities
+  - quantities
+  - stance
+  - factual_claims
+  - value_content
+examples:
+- canonical: Farmers confine the hens.
+  feature_variant: The hens are confined by farmers.
+cross_lingual_notes: >-
+  English passives are fairly neutral. In Mandarin Chinese, the passive marker 被 (bèi) is not neutral
+  and carries an "adversative"/ unfortunate connotation by default, e.g. “农民将母鸡关养” vs. “母鸡被农民关养.” This
+  is useful for testing whether agent-backgrounding effects hold when the passive form itself is not affectively
+  neutral.
