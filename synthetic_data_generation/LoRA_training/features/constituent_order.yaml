@@ -1,0 +1,46 @@
+name: constituent_order
+description: >-
+  Controls the canonical ordering of subject, verb, and object constituents in a clause.
+language: en
+manipulation_level: cross_linguistic
+languages:
+- en
+- ja
+definition:
+  canonical: >-
+    Text generated in a language with canonical SVO (subject-verb-object)
+
+    constituent order.
+  feature_variant: >-
+    The same semantic content generated/translated into a language with a
+
+    different canonical constituent order (SOV), holding the
+
+    proposition fixed via translation equivalence rather than paraphrase.
+transformation:
+  instructions:
+  - Preserve the underlying proposition across translation.
+  - Preserve entities, quantities, causal claims, and value judgments.
+  - Use professional-quality translation/back-translation to verify semantic equivalence rather than literal
+    word-for-word mapping.
+  - This feature is manipulated by choice of target language, not by rewriting within a single language.
+  preferred_patterns:
+  - pair documents with verified translation equivalence across an SVO and SOV
+  avoid_patterns:
+  - changing factual content during translation
+  - adding emotional language
+  - increasing moral intensity
+  - introducing register or formality shifts not present in the source
+semantic_constraints:
+  preserve:
+  - entities
+  - quantities
+  - stance
+  - factual_claims
+  - value_content
+examples:
+- canonical: Farmers confine hens.
+  feature_variant: 農家は雌鶏を閉じ込める.
+cross_lingual_notes: >-
+  Testing the same content across these three word-order families tests whether an effect tracks a specific
+  construction or something more abstract about structural/emphasis differences in general.
