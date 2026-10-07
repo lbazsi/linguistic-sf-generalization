@@ -59,6 +59,9 @@ model_generation:
 
 judging:
   batch_size: 10
+  shuffle_seeds:
+    judge_1: 46
+    judge_2: 47
 
 api:
   base_url: "https://openrouter.ai/api/v1"
