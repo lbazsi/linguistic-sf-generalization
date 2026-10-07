@@ -1,8 +1,8 @@
 # Fine-tuning
 
-This directory trains one canonical LoRA adapter and one LoRA adapter for each linguistic-feature dataset produced by the synthetic data pipeline.
+This directory trains the English canonical LoRA, any required source-language control LoRAs, and one LoRA adapter for each generated linguistic-feature dataset.
 
-All runs start from the same pretrained base-model family and use the same training configuration and seed. The canonical adapter is trained on the shared canonical corpus. Each feature adapter is trained on the corresponding transformed text from `data/final/<feature>.jsonl`.
+All runs start from the same pretrained base-model family and use the same training configuration and seed. The English canonical adapter is trained on the shared canonical corpus. Source-language controls are trained from `data/language_controls/<language>.jsonl`. Each feature adapter is trained on the corresponding `feature_variant` text from `data/final/<feature>.jsonl`.
 
 ## Input data contract
 
@@ -14,6 +14,8 @@ Expected input structure:
 data/
 ├── canonical/
 │   └── corpus.jsonl
+├── language_controls/
+│   └── <language>.jsonl
 └── final/
     ├── <feature_a>.jsonl
     ├── <feature_b>.jsonl
@@ -33,18 +35,21 @@ The canonical corpus must contain:
 }
 ```
 
-Each final feature dataset must contain the same IDs and must preserve the canonical `language`, `animal`, `value`, `context`, and `canonical` fields exactly:
+Each final feature dataset contains the same semantic IDs and records both training-side languages explicitly:
 
 ```json
 {
   "id": 1,
   "feature": "<feature_name>",
-  "language": "en",
+  "manipulation_level": "<within_language_or_cross_linguistic>",
+  "canonical_language": "<source_language>",
+  "feature_variant_language": "<feature_language>",
   "animal": "<same animal domain>",
   "value": "<same welfare value>",
   "context": "<same decision context>",
-  "canonical": "<same canonical text>",
-  "feature_variant": "<transformed text>"
+  "semantic_anchor": "<same reviewed English semantic anchor>",
+  "canonical": "<source-language control text>",
+  "feature_variant": "<feature-condition text>"
 }
 ```
 
@@ -133,6 +138,12 @@ outputs/
 │       ├── midpoint_adapter/
 │       ├── adapter/
 │       └── training_summary.json
+├── controls/
+│   └── <language>/
+│       └── seed_42/
+│           ├── midpoint_adapter/
+│           ├── adapter/
+│           └── training_summary.json
 └── features/
     ├── <feature_name>_01/
     │   └── seed_42/
@@ -249,3 +260,24 @@ fine_tuning/
     └── features/
         └── .gitkeep
 ```
+
+
+## Multilingual comparison controls
+
+Cross-linguistic feature adapters are compared against source-language controls rather than automatically against the English canonical adapter. The training summary records `training_language` and `comparison_control` for every feature.
+
+Current comparisons are:
+
+- `constituent_order` (Japanese) − English canonical;
+- `inflectional_synthesis` (Korean) − Mandarin control;
+- `fusion` (Latin) − Mandarin control.
+
+The Mandarin control is trained once and shared by both Mandarin-source experiments. The same 50 semantic IDs are held out for validation in every language and every feature condition.
+
+Train one control with:
+
+```bash
+python scripts/train.py --control zh
+```
+
+`python scripts/train.py --all` trains the English canonical model, every available source-language control, and every final feature dataset.
