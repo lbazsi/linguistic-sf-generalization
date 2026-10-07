@@ -1,0 +1,47 @@
+name: nominalization
+description: >-
+  Controls whether a process/event is expressed verbally (experiential, agentive) or as a nominalized
+  abstract entity (clinical, informational).
+language: en
+manipulation_level: within_language
+languages:
+- de
+- ko
+definition:
+  canonical: >-
+    Neutral phrasing without systematically favoring verbal or nominalized
+
+    constructions.
+  feature_variant: >-
+    Express the same semantic content with increased nominalization.
+transformation:
+  instructions:
+  - Preserve the underlying proposition.
+  - Preserve entities, quantities, causal claims, and value judgments.
+  - Change only linguistic realization relevant to nominalization.
+  - Keep approximately similar length where possible.
+  preferred_patterns:
+  - convert verbs to derived nominal forms ("suffer" -> "suffering")
+  - convert clauses to noun phrases headed by a nominalization
+  - shift from experiential/agentive phrasing to abstract/clinical phrasing
+  avoid_patterns:
+  - changing factual content
+  - adding emotional language
+  - increasing moral intensity
+  - changing politeness unless required by the feature
+  - changing topic or perspective
+semantic_constraints:
+  preserve:
+  - entities
+  - quantities
+  - stance
+  - factual_claims
+  - value_content
+examples:
+- canonical: Hens suffer when confined.
+  feature_variant: The suffering of confined hens is well documented.
+cross_lingual_notes: >-
+  German has highly productive nominal compounding and nominalization, e.g. “Hennen leiden, wenn sie eingesperrt
+  sind” vs. “Das Leiden eingesperrter Hennen ist gut dokumentiert.” Korean has dedicated nominalizing
+  particles (기 gi, (으)ㅁ eum, 는 것 neun geot) that are used far more freely in everyday writing, e.g. “암탉은
+  갇혀 지낼 때 고통을 겪습니다” vs. “얽매임 속에서 암탉이 겪는 고통은 이미 널리 입증된 사실이예요.”
