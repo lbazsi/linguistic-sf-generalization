@@ -8,7 +8,7 @@ Source-language canonical items:
 
 Requirements:
 - Return exactly one transformation for every supplied ID and no other IDs.
-- Return only the ID and feature_variant.
+- Do not return IDs. Return only the feature_variant field for each output item.
 - Translate into the feature_variant_language specified by the feature.
 - Preserve exact semantic equivalence with both canonical and semantic_anchor: animal, welfare value, decision context, entities, quantities, factual claims, stance, and value content.
 - Produce natural native-quality target-language text rather than literal word-for-word translation.
