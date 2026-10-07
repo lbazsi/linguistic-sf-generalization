@@ -8,7 +8,7 @@ Semantic anchors:
 
 Requirements:
 - Return exactly one item for every supplied ID and no other IDs.
-- Return only the ID and translated canonical text.
+- Do not return IDs. Return only the translated canonical text field for each output item.
 - Preserve the exact subject matter, animal, welfare value, decision context, entities, quantities, factual claims, stance, and value content.
 - Produce natural native-quality text rather than literal word-for-word translation.
 - Do not systematically introduce any target linguistic feature beyond what is grammatically required by the target language.
