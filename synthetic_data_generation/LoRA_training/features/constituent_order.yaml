@@ -2,6 +2,8 @@ name: constituent_order
 description: >-
   Controls the canonical ordering of subject, verb, and object constituents in a clause.
 language: en
+canonical_language: en
+feature_variant_language: ja
 manipulation_level: cross_linguistic
 languages:
 - en
