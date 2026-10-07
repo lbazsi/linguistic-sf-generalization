@@ -1,0 +1,19 @@
+Review the supplied source-language control translations against their English semantic anchors.
+
+Target language:
+{{TARGET_LANGUAGE}}
+
+Items:
+{{ITEMS_JSON}}
+
+Requirements:
+- Return exactly one result for every supplied ID and no other IDs.
+- Return only the ID and reviewed canonical text.
+- Preserve exact semantic equivalence with semantic_anchor: animal, welfare value, decision context, entities, quantities, factual claims, stance, and value content.
+- If the translation is already natural and equivalent, return it unchanged.
+- Repair mistranslations, omissions, additions, unnatural wording, or unintended changes in intensity/register.
+- Keep the target-language text natural and independently understandable.
+- Do not deliberately introduce a separate linguistic manipulation.
+- Do not add commentary.
+
+The response must conform to the JSON schema supplied with the API request.
