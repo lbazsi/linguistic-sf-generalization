@@ -83,6 +83,8 @@ def resolve_path(config: dict, key: str) -> Path:
 def ensure_directories(config: dict) -> None:
     for key in [
         "canonical",
+        "language_controls",
+        "lexical_diversity",
         "raw",
         "first_review",
         "final",
@@ -140,7 +142,7 @@ def select_features(config: dict, requested: Iterable[str] | None = None) -> lis
     runnable = [
         (path, feature)
         for path, feature in loaded
-        if feature["manipulation_level"] == "within_language"
+        if feature["manipulation_level"] in {"within_language", "cross_linguistic"}
     ]
 
     requested_set = set(requested or [])
@@ -158,11 +160,11 @@ def select_features(config: dict, requested: Iterable[str] | None = None) -> lis
         feature["name"]
         for _, feature in loaded
         if feature["name"] in requested_set
-        and feature["manipulation_level"] != "within_language"
+        and feature["manipulation_level"] == "covariate"
     )
     if unsupported:
         raise ConfigError(
-            "The current English LoRA pipeline supports only within_language features. "
+            "Covariates are measured rather than generated as training conditions. "
             f"Unsupported requested features: {', '.join(unsupported)}"
         )
 
@@ -178,12 +180,16 @@ def feature_yaml_text(feature: dict) -> str:
         "name",
         "description",
         "language",
+        "manipulation_level",
+        "languages",
+        "canonical_language",
+        "feature_variant_language",
         "definition",
         "transformation",
         "semantic_constraints",
         "examples",
     ]
-    operational = {key: feature[key] for key in operational_keys}
+    operational = {key: feature[key] for key in operational_keys if key in feature}
     return yaml.safe_dump(operational, sort_keys=False, allow_unicode=True).strip()
 
 
