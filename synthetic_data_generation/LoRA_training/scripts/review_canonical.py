@@ -91,6 +91,7 @@ async def review_canonical_corpus(
             prompt=prompt,
             schema=canonical_text_batch_schema(ids),
             schema_name="reviewed_canonical_corpus",
+            expected_ids=ids,
         )
         reviewed = {row["id"]: row["canonical"] for row in response["items"]}
         return [
