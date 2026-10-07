@@ -184,6 +184,7 @@ def load_feature(
         "semantic_anchor", "canonical", "feature_variant"
     }
     by_id = _unique_by_id(rows, path)
+    source_controls: dict[str, dict[int, dict[str, Any]]] = {}
 
     if set(by_id) != set(canonical_by_id):
         missing = sorted(set(canonical_by_id) - set(by_id))
@@ -206,9 +207,21 @@ def load_feature(
                 )
         if row["semantic_anchor"] != source["canonical"]:
             raise RuntimeError(f"{path}: id {item_id} semantic_anchor differs from canonical corpus")
-        if row["manipulation_level"] == "within_language" and row["canonical"] != source["canonical"]:
+        if row["manipulation_level"] == "within_language":
+            expected_canonical = source["canonical"]
+        else:
+            source_language = row["canonical_language"]
+            if source_language == source["language"]:
+                expected_canonical = source["canonical"]
+            else:
+                if source_language not in source_controls:
+                    _, _, source_controls[source_language] = load_language_control(
+                        data_root, source_language, canonical_by_id
+                    )
+                expected_canonical = source_controls[source_language][item_id]["canonical"]
+        if row["canonical"] != expected_canonical:
             raise RuntimeError(
-                f"{path}: id {item_id} within-language canonical differs from canonical corpus"
+                f"{path}: id {item_id} canonical differs from registered source-language control"
             )
         if not isinstance(row["feature_variant"], str) or not row["feature_variant"].strip():
             raise RuntimeError(f"{path}: id {item_id} has empty feature_variant")
