@@ -213,8 +213,10 @@ def deterministic_review_file(
     canonical: dict[int, dict],
     dataset_size: int,
     stage: str,
+    active_max_id: int | None = None,
 ) -> tuple[dict[int, list[dict]], list[dict]]:
     feature_name = feature_spec["name"]
+    expected_max_id = active_max_id if active_max_id is not None else dataset_size
     parsed, parse_errors = read_jsonl_tolerant(path)
     issues: list[dict] = []
     by_id: dict[int, list[dict]] = defaultdict(list)
@@ -232,6 +234,14 @@ def deterministic_review_file(
         )
 
     for line_number, item in parsed:
+        if (
+            active_max_id is not None
+            and isinstance(item, dict)
+            and isinstance(item.get("id"), int)
+            and item["id"] > active_max_id
+            and item["id"] <= dataset_size
+        ):
+            continue
         item_issues = validate_item(
             item,
             feature_spec=feature_spec,
@@ -243,10 +253,10 @@ def deterministic_review_file(
 
         if isinstance(item, dict) and isinstance(item.get("id"), int):
             item_id = item["id"]
-            if 1 <= item_id <= dataset_size:
+            if 1 <= item_id <= expected_max_id:
                 by_id[item_id].append(item)
 
-    for item_id in range(1, dataset_size + 1):
+    for item_id in range(1, expected_max_id + 1):
         candidates = by_id.get(item_id, [])
         if not candidates:
             issues.append(
@@ -289,6 +299,7 @@ def clean_singletons(
     canonical: dict[int, dict],
     dataset_size: int,
     stage: str,
+    active_max_id: int | None = None,
 ) -> dict[int, dict]:
     by_id, _ = deterministic_review_file(
         path,
@@ -296,6 +307,7 @@ def clean_singletons(
         canonical=canonical,
         dataset_size=dataset_size,
         stage=stage,
+        active_max_id=active_max_id,
     )
     clean: dict[int, dict] = {}
     for item_id, candidates in by_id.items():
