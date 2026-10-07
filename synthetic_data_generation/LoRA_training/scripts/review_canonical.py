@@ -125,10 +125,11 @@ async def review_canonical_corpus(
     corpus = {row["id"]: row for row in ordered}
     return corpus, {
         "dataset_size": dataset_size,
+        "processed_max_id": target_max_id,
         "reviewed_items": len(pending_ids),
-        "resumed_items": dataset_size - len(pending_ids),
+        "resumed_items": target_max_id - len(pending_ids),
         "changed_items": changed,
-        "unchanged_items": dataset_size - changed,
+        "unchanged_items": target_max_id - changed,
         "source": str(source_path),
         "output": str(output_path),
     }
