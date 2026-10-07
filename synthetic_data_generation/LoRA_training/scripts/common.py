@@ -269,6 +269,30 @@ def load_canonical_corpus(config: dict) -> dict[int, dict]:
     return corpus
 
 
+def language_control_path(config: dict, language: str) -> Path:
+    return resolve_path(config, "language_controls") / f"{language}.jsonl"
+
+
+def load_language_control(config: dict, language: str) -> dict[int, dict]:
+    path = language_control_path(config, language)
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Missing {language} language control: {path}. Run scripts/01_generate.py first."
+        )
+    candidates = index_items(path)
+    dataset_size = config["dataset_size"]
+    result: dict[int, dict] = {}
+    for item_id in range(1, dataset_size + 1):
+        rows = candidates.get(item_id, [])
+        if len(rows) != 1:
+            raise RuntimeError(
+                f"Language control {language} must contain exactly one row for ID "
+                f"{item_id}; found {len(rows)}."
+            )
+        result[item_id] = rows[0]
+    return result
+
+
 def batches(ids: Iterable[int], batch_size: int) -> list[list[int]]:
     ordered = sorted(ids)
     return [ordered[start : start + batch_size] for start in range(0, len(ordered), batch_size)]
