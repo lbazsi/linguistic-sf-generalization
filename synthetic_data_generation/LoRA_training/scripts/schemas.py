@@ -11,6 +11,8 @@ CANONICAL_SCHEMA = {
     "properties": {
         "id": {"type": "integer", "minimum": 1},
         "language": {"type": "string", "minLength": 1},
+        "canonical_language": {"type": "string", "minLength": 2},
+        "feature_variant_language": {"type": "string", "minLength": 2},
         "animal": {"type": "string", "minLength": 1},
         "value": {"type": "string", "minLength": 1},
         "context": {"type": "string", "minLength": 1},
@@ -38,26 +40,56 @@ VARIANT_SCHEMA = {
     },
 }
 
+CONTROL_TEXT_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["id", "canonical"],
+    "properties": {
+        "id": {"type": "integer", "minimum": 1},
+        "canonical": {"type": "string", "minLength": 1},
+    },
+}
+
+CROSS_PAIR_TEXT_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["id", "canonical", "feature_variant"],
+    "properties": {
+        "id": {"type": "integer", "minimum": 1},
+        "canonical": {"type": "string", "minLength": 1},
+        "feature_variant": {"type": "string", "minLength": 1},
+    },
+}
+
 PAIR_SCHEMA = {
     "type": "object",
     "additionalProperties": False,
     "required": [
         "id",
         "feature",
-        "language",
+        "manipulation_level",
+        "canonical_language",
+        "feature_variant_language",
         "animal",
         "value",
         "context",
+        "semantic_anchor",
         "canonical",
         "feature_variant",
     ],
     "properties": {
         "id": {"type": "integer", "minimum": 1},
         "feature": {"type": "string", "minLength": 1},
-        "language": {"type": "string", "minLength": 1},
+        "manipulation_level": {
+            "type": "string",
+            "enum": ["within_language", "cross_linguistic"],
+        },
+        "canonical_language": {"type": "string", "minLength": 2},
+        "feature_variant_language": {"type": "string", "minLength": 2},
         "animal": {"type": "string", "minLength": 1},
         "value": {"type": "string", "minLength": 1},
         "context": {"type": "string", "minLength": 1},
+        "semantic_anchor": {"type": "string", "minLength": 1},
         "canonical": {"type": "string", "minLength": 1},
         "feature_variant": {"type": "string", "minLength": 1},
     },
@@ -164,6 +196,16 @@ FEATURE_SCHEMA = {
         {
             "if": {
                 "properties": {
+                    "manipulation_level": {"const": "cross_linguistic"}
+                }
+            },
+            "then": {
+                "required": ["canonical_language", "feature_variant_language"]
+            }
+        },
+        {
+            "if": {
+                "properties": {
                     "manipulation_level": {"const": "covariate"}
                 }
             },
@@ -207,6 +249,14 @@ def canonical_text_batch_schema(expected_ids: Iterable[int]) -> dict:
 
 def variant_batch_schema(expected_ids: Iterable[int]) -> dict:
     return _batch_schema(VARIANT_SCHEMA, expected_ids)
+
+
+def control_text_batch_schema(expected_ids: Iterable[int]) -> dict:
+    return _batch_schema(CONTROL_TEXT_SCHEMA, expected_ids)
+
+
+def cross_pair_text_batch_schema(expected_ids: Iterable[int]) -> dict:
+    return _batch_schema(CROSS_PAIR_TEXT_SCHEMA, expected_ids)
 
 
 def pair_batch_schema(expected_ids: Iterable[int]) -> dict:
