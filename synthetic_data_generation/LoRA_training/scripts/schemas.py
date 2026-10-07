@@ -11,8 +11,6 @@ CANONICAL_SCHEMA = {
     "properties": {
         "id": {"type": "integer", "minimum": 1},
         "language": {"type": "string", "minLength": 1},
-        "canonical_language": {"type": "string", "minLength": 2},
-        "feature_variant_language": {"type": "string", "minLength": 2},
         "animal": {"type": "string", "minLength": 1},
         "value": {"type": "string", "minLength": 1},
         "context": {"type": "string", "minLength": 1},
@@ -128,6 +126,8 @@ FEATURE_SCHEMA = {
         "name": {"type": "string", "minLength": 1, "pattern": "^[A-Za-z0-9_-]+$"},
         "description": {"type": "string", "minLength": 1},
         "language": {"type": "string", "minLength": 1},
+        "canonical_language": {"type": "string", "minLength": 2},
+        "feature_variant_language": {"type": "string", "minLength": 2},
         "manipulation_level": {
             "type": "string",
             "enum": ["within_language", "cross_linguistic", "covariate"],
