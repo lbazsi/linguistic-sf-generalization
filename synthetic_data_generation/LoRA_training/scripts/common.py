@@ -250,16 +250,25 @@ def canonical_corpus_path(config: dict) -> Path:
     return resolve_path(config, "canonical") / "corpus.jsonl"
 
 
-def load_canonical_corpus(config: dict) -> dict[int, dict]:
+def resolve_max_id(config: dict, max_id: int | None) -> int:
+    dataset_size = int(config["dataset_size"])
+    if max_id is None:
+        return dataset_size
+    if max_id < 1 or max_id > dataset_size:
+        raise ConfigError(f"--max-id must be in 1..{dataset_size}; got {max_id}.")
+    return int(max_id)
+
+
+def load_canonical_corpus(config: dict, max_id: int | None = None) -> dict[int, dict]:
     path = canonical_corpus_path(config)
     if not path.exists():
         raise FileNotFoundError(
             f"Missing canonical corpus: {path}. Run scripts/01_generate.py first."
         )
     candidates = index_items(path)
-    dataset_size = config["dataset_size"]
+    target_max_id = resolve_max_id(config, max_id)
     corpus: dict[int, dict] = {}
-    for item_id in range(1, dataset_size + 1):
+    for item_id in range(1, target_max_id + 1):
         rows = candidates.get(item_id, [])
         if len(rows) != 1:
             raise RuntimeError(
@@ -273,16 +282,20 @@ def language_control_path(config: dict, language: str) -> Path:
     return resolve_path(config, "language_controls") / f"{language}.jsonl"
 
 
-def load_language_control(config: dict, language: str) -> dict[int, dict]:
+def load_language_control(
+    config: dict,
+    language: str,
+    max_id: int | None = None,
+) -> dict[int, dict]:
     path = language_control_path(config, language)
     if not path.exists():
         raise FileNotFoundError(
             f"Missing {language} language control: {path}. Run scripts/01_generate.py first."
         )
     candidates = index_items(path)
-    dataset_size = config["dataset_size"]
+    target_max_id = resolve_max_id(config, max_id)
     result: dict[int, dict] = {}
-    for item_id in range(1, dataset_size + 1):
+    for item_id in range(1, target_max_id + 1):
         rows = candidates.get(item_id, [])
         if len(rows) != 1:
             raise RuntimeError(
