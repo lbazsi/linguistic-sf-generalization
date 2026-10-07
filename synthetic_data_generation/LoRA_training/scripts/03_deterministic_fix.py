@@ -16,6 +16,7 @@ from common import (
     load_config,
     load_issues,
     load_canonical_corpus,
+    load_language_control,
     render_prompt,
     resolve_path,
     select_features,
@@ -40,6 +41,20 @@ async def fix_feature(
 ) -> dict:
     feature_name = feature["name"]
     dataset_size = config["dataset_size"]
+    manipulation = feature["manipulation_level"]
+    canonical_language = (
+        feature["canonical_language"] if manipulation == "cross_linguistic"
+        else feature["language"]
+    )
+    variant_language = (
+        feature["feature_variant_language"] if manipulation == "cross_linguistic"
+        else feature["language"]
+    )
+    source_rows = (
+        canonical
+        if canonical_language == config["canonical_language"]
+        else load_language_control(config, canonical_language)
+    )
 
     raw_path = resolve_path(config, "raw") / f"{feature_name}.jsonl"
     issue_path = resolve_path(config, "deterministic_issues") / f"{feature_name}.jsonl"
@@ -114,11 +129,14 @@ async def fix_feature(
             {
                 "id": item_id,
                 "feature": feature_name,
-                "language": canonical[item_id]["language"],
+                "manipulation_level": manipulation,
+                "canonical_language": canonical_language,
+                "feature_variant_language": variant_language,
                 "animal": canonical[item_id]["animal"],
                 "value": canonical[item_id]["value"],
                 "context": canonical[item_id]["context"],
-                "canonical": canonical[item_id]["canonical"],
+                "semantic_anchor": canonical[item_id]["canonical"],
+                "canonical": source_rows[item_id]["canonical"],
                 "feature_variant": variants[item_id],
             }
             for item_id in ids
