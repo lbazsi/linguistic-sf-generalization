@@ -60,6 +60,7 @@ def discover_conditions(config: dict[str, Any]) -> list[dict[str, Any]]:
             "key": "base",
             "condition": "base",
             "feature": None,
+            "comparison_control": None,
             "adapter": None,
             "base_model": base,
         },
@@ -67,10 +68,32 @@ def discover_conditions(config: dict[str, Any]) -> list[dict[str, Any]]:
             "key": "canonical",
             "condition": "canonical",
             "feature": None,
+            "comparison_control": None,
             "adapter": canonical_dir / "adapter",
             "base_model": base,
         },
     ]
+
+    controls_root = root / "controls"
+    if controls_root.exists():
+        for language_dir in sorted(path for path in controls_root.iterdir() if path.is_dir()):
+            run_dir = language_dir / f"seed_{seed}"
+            summary_path = run_dir / "training_summary.json"
+            if not summary_path.exists():
+                continue
+            summary = load_summary(summary_path)
+            if summary["base_model"]["resolved_revision"] != base["resolved_revision"]:
+                raise RuntimeError(f"{summary_path}: base-model revision differs from canonical run.")
+            conditions.append(
+                {
+                    "key": f"control_{language_dir.name}",
+                    "condition": "control",
+                    "feature": None,
+                    "comparison_control": None,
+                    "adapter": run_dir / "adapter",
+                    "base_model": summary["base_model"],
+                }
+            )
 
     feature_root = root / "features"
     if feature_root.exists():
@@ -92,6 +115,7 @@ def discover_conditions(config: dict[str, Any]) -> list[dict[str, Any]]:
                     "key": feature,
                     "condition": "feature",
                     "feature": feature,
+                    "comparison_control": summary.get("comparison_control") or "canonical",
                     "adapter": run_dir / "adapter",
                     "base_model": summary["base_model"],
                 }
@@ -175,6 +199,7 @@ def generate_condition(
                     "scenario_id": scenario["id"],
                     "condition": spec["condition"],
                     "feature": spec["feature"],
+                    "comparison_control": spec.get("comparison_control"),
                     "training_seed": int(generation["training_seed"]),
                     "base_model_name": base["name"],
                     "base_model_revision": base["resolved_revision"],
