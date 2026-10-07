@@ -1,0 +1,19 @@
+Generate the target-language side of each cross-linguistic contrast pair.
+
+Feature specification:
+{{FEATURE_YAML}}
+
+Source-language canonical items:
+{{CANONICAL_ITEMS_JSON}}
+
+Requirements:
+- Return exactly one transformation for every supplied ID and no other IDs.
+- Return only the ID and feature_variant.
+- Translate into the feature_variant_language specified by the feature.
+- Preserve exact semantic equivalence with both canonical and semantic_anchor: animal, welfare value, decision context, entities, quantities, factual claims, stance, and value content.
+- Produce natural native-quality target-language text rather than literal word-for-word translation.
+- Realize the typological contrast described by the feature specification through the target language's ordinary grammar.
+- Do not introduce avoidable changes in formality, emotional intensity, epistemic force, politeness, narrative framing, or other stylistic dimensions.
+- Do not add commentary.
+
+The response must conform to the JSON schema supplied with the API request.
