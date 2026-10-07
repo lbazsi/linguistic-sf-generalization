@@ -1,0 +1,48 @@
+name: tense_aspect
+description: >-
+  Controls whether an event or state is framed as ongoing, completed, or presently relevant.
+language: en
+manipulation_level: within_language
+languages:
+- en
+- zh
+definition:
+  canonical: >-
+    Neutral phrasing without systematically favoring a particular
+
+    tense/aspect framing.
+  feature_variant: >-
+    Express the same semantic content with a different tense/aspect framing
+
+    (e.g. completed/narrative rather than ongoing).
+transformation:
+  instructions:
+  - Preserve the underlying proposition.
+  - Preserve entities, quantities, causal claims, and value judgments.
+  - Change only linguistic realization relevant to tense/aspect.
+  - Keep approximately similar length where possible.
+  preferred_patterns:
+  - shift progressive/ongoing framing to simple past/completed framing
+  - shift simple past to present perfect (present-relevant) framing
+  - adjust aspectual markers without changing the event described
+  avoid_patterns:
+  - changing factual content
+  - adding emotional language
+  - increasing moral intensity
+  - changing politeness unless required by the feature
+  - changing topic or perspective
+semantic_constraints:
+  preserve:
+  - entities
+  - quantities
+  - stance
+  - factual_claims
+  - value_content
+examples:
+- canonical: Hens are suffering.
+  feature_variant: Hens suffered.
+- canonical: Hens are suffering.
+  feature_variant: Hens have suffered.
+cross_lingual_notes: >-
+  Mandarin Chinese marks aspect through particles like 了 (le), 著 (zhe), and 過 (guo) largely instead of
+  tense, allowing aspect to be varied independent of tense, e.g. “母鸡正在遭受痛苦” vs. 母鸡遭受了痛苦.”
