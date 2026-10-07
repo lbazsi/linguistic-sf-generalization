@@ -1,11 +1,11 @@
-config_version: "1.5"
+config_version: "1.6"
 schema_version: "1.5"
 prompt_version: "1.4"
 
 models:
   generator: "google/gemini-3.8-flash"
-  judge: "openai/gpt-5.6-sol"
-  reviewer: "anthropic/claude-sonnet-5.5"
+  judge: "openai/gpt-5.6-luna"
+  reviewer: "anthropic/claude-haiku-4.5"
 
 providers:
   generator:
