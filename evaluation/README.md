@@ -102,7 +102,8 @@ The same scenarios, prompt template, decoding configuration, and batch structure
 It evaluates:
 
 - the exact base model used for fine-tuning;
-- the canonical LoRA adapter;
+- the English canonical LoRA adapter;
+- every available source-language control LoRA adapter;
 - every available linguistic-feature LoRA adapter.
 
 The exact base-model revision is read from the canonical training summary. Feature runs are required to use the same revision.
@@ -222,13 +223,13 @@ data/aggregated/
 └── delta_summary.json
 ```
 
-The primary feature comparison is calculated item-by-item:
+The primary feature comparison is calculated item-by-item against the feature's registered source-language control:
 
 ```text
-feature model - canonical model
+feature model - comparison control
 ```
 
-This measures the additional behavioral effect associated with the linguistic realization of the same fine-tuning semantics.
+Within-language English features and English→Japanese constituent-order use the English canonical control. Mandarin→Korean inflectional synthesis and Mandarin→Latin fusion use the shared Mandarin control adapter.
 
 The semantic fine-tuning effect is also calculated:
 
@@ -277,6 +278,7 @@ python scripts/02_review_scenarios.py
 python scripts/03_generate_responses.py
 python scripts/04_judge_responses.py
 python scripts/05_aggregate.py
+python scripts/06_lexical_diversity_analysis.py
 ```
 
 Individual model conditions can be generated with repeated `--condition` arguments. The response-judging script similarly supports condition selection and can run judge 1, judge 2, or both.
@@ -304,7 +306,8 @@ evaluation/
 │   ├── 02_review_scenarios.py
 │   ├── 03_generate_responses.py
 │   ├── 04_judge_responses.py
-│   └── 05_aggregate.py
+│   ├── 05_aggregate.py
+│   └── 06_lexical_diversity_analysis.py
 └── data/
     ├── scenarios/
     │   ├── raw/
@@ -314,4 +317,19 @@ evaluation/
     │   ├── judge_1/
     │   └── judge_2/
     └── aggregated/
+```
+
+
+## Lexical-diversity confound analysis
+
+After behavioral aggregation, `06_lexical_diversity_analysis.py` joins the feature-minus-control behavioral deltas with lexical-diversity shifts measured during dataset construction.
+
+The primary analysis correlates mean MATTR change with mean target-value-support change across same-language within-language features, overall and by generalization category. Cross-linguistic conditions are still reported, but they are excluded from this primary correlation because lexical diversity measured in tokenizer space is not directly comparable across different languages.
+
+Outputs are written to:
+
+```text
+data/aggregated/
+├── lexical_diversity_analysis.json
+└── lexical_diversity_analysis.csv
 ```
