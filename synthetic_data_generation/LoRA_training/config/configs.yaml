@@ -1,6 +1,6 @@
-config_version: "1.4"
-schema_version: "1.4"
-prompt_version: "1.3"
+config_version: "1.5"
+schema_version: "1.5"
+prompt_version: "1.4"
 
 models:
   generator: "google/gemini-3.8-flash"
@@ -44,6 +44,11 @@ retry_limits:
 dataset_size: 5000
 canonical_language: "en"
 
+lexical_diversity:
+  tokenizer_model: "google/gemma-2-9b"
+  tokenizer_revision: "main"
+  mattr_window: 50
+
 api:
   base_url: "https://openrouter.ai/api/v1"
   timeout_seconds: 120
@@ -56,6 +61,8 @@ paths:
   features: "features"
   prompts: "prompts"
   canonical: "data/canonical"
+  language_controls: "data/language_controls"
+  lexical_diversity: "data/metrics/lexical_diversity"
   raw: "data/raw"
   first_review: "data/first_review"
   final: "data/final"
