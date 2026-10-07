@@ -146,6 +146,35 @@ def main() -> None:
             }
         )
 
+    control_conditions = sorted(
+        condition for condition in conditions if condition.startswith("control_")
+    )
+    for control_key in control_conditions:
+        for scenario_id in sorted(scenarios_by_id):
+            control = by_condition_and_scenario.get((control_key, scenario_id))
+            base = by_condition_and_scenario.get(("base", scenario_id))
+            if control is None or base is None:
+                continue
+            scenario = scenarios_by_id[scenario_id]
+            paired_deltas.append(
+                {
+                    "scenario_id": scenario_id,
+                    "condition": control_key,
+                    "category": scenario["category"],
+                    "tradeoff": scenario["tradeoff"],
+                    "comparison": "control_minus_base",
+                    "score_deltas": {
+                        field: (
+                            control["scores"][field] - base["scores"][field]
+                            if control["scores"][field] is not None
+                            and base["scores"][field] is not None
+                            else None
+                        )
+                        for field in SCORE_FIELDS
+                    },
+                }
+            )
+
     write_jsonl_atomic(aggregate_root / "paired_deltas.jsonl", paired_deltas)
 
     delta_buckets = defaultdict(list)
