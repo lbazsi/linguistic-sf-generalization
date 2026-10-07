@@ -1,0 +1,18 @@
+Translate the supplied reviewed English semantic anchors into the requested target language.
+
+Target language:
+{{TARGET_LANGUAGE}}
+
+Semantic anchors:
+{{CANONICAL_ITEMS_JSON}}
+
+Requirements:
+- Return exactly one item for every supplied ID and no other IDs.
+- Return only the ID and translated canonical text.
+- Preserve the exact subject matter, animal, welfare value, decision context, entities, quantities, factual claims, stance, and value content.
+- Produce natural native-quality text rather than literal word-for-word translation.
+- Do not systematically introduce any target linguistic feature beyond what is grammatically required by the target language.
+- Do not add, strengthen, weaken, or remove substantive claims.
+- Do not add commentary.
+
+The response must conform to the JSON schema supplied with the API request.
