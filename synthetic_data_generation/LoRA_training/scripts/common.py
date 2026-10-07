@@ -527,6 +527,7 @@ class OpenRouterClient:
         prompt: str,
         schema: dict,
         schema_name: str,
+        expected_ids: Iterable[int] | None = None,
     ) -> dict:
         model = self._role_setting("models", role)
         temperature = self.config["temperatures"].get(role)
@@ -599,6 +600,23 @@ class OpenRouterClient:
                 Draft202012Validator(schema).validate(parsed)
                 if not isinstance(parsed, dict):
                     raise RuntimeError("Structured response root must be a JSON object.")
+
+                if expected_ids is not None:
+                    expected = list(expected_ids)
+                    items = parsed.get("items")
+                    if not isinstance(items, list):
+                        raise RuntimeError("Structured batch response must contain an items list.")
+                    returned = [item.get("id") for item in items if isinstance(item, dict)]
+                    if len(returned) != len(items):
+                        raise RuntimeError("Every structured batch item must be an object with an ID.")
+                    if len(returned) != len(set(returned)):
+                        raise RuntimeError(f"Structured batch returned duplicate IDs: {returned}")
+                    if set(returned) != set(expected):
+                        raise RuntimeError(
+                            f"Structured batch returned IDs {sorted(returned)}; "
+                            f"expected {sorted(expected)}."
+                        )
+
                 return parsed
 
             except (httpx.HTTPError, json.JSONDecodeError, KeyError, TypeError, ValidationError, RuntimeError) as exc:
