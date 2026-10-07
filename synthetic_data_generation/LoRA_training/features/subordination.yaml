@@ -1,0 +1,47 @@
+name: subordination
+description: >-
+  Controls how much content is packed into subordinate/embedded clauses vs. stated as separate simple
+  clauses.
+language: en
+manipulation_level: within_language
+languages:
+- fr
+- ko
+definition:
+  canonical: >-
+    Neutral phrasing without systematically increasing or decreasing clause
+
+    embedding.
+  feature_variant: >-
+    Express the same semantic content with increased subordination/clause-embedding.
+transformation:
+  instructions:
+  - Preserve the underlying proposition.
+  - Preserve entities, quantities, causal claims, and value judgments.
+  - Change only linguistic realization relevant to subordination.
+  - Keep approximately similar length where possible.
+  preferred_patterns:
+  - merge separate sentences into one via relative clauses
+  - use complementizers ("which", "that") or nominalized embedding
+  - reduce the number of independent sentences
+  avoid_patterns:
+  - changing factual content
+  - adding emotional language
+  - increasing moral intensity
+  - changing politeness unless required by the feature
+  - changing topic or perspective
+semantic_constraints:
+  preserve:
+  - entities
+  - quantities
+  - stance
+  - factual_claims
+  - value_content
+examples:
+- canonical: Hens are caged. This causes stress.
+  feature_variant: The caging of hens, which restricts natural movement, causes stress.
+cross_lingual_notes: >-
+  French embeds subordinate clauses mostly after the main clause via complementizers such as "which" or
+  "that". Korean does the opposite: relative clauses and embedded material are built before the noun they
+  modify via nominalization rather than a complementizer, e.g. "Des poules qui ont été élevées en cage
+  toute leur vie" (French) vs. "평생동안 우리에 갇혀 지낸 암탉들." (Korean)
