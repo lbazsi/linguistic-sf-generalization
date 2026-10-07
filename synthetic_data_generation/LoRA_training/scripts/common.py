@@ -137,19 +137,54 @@ def select_features(config: dict, requested: Iterable[str] | None = None) -> lis
         raise ConfigError(f"No feature YAML files found in {feature_dir}.")
 
     loaded = [(path, load_feature(path)) for path in paths]
+    runnable = [
+        (path, feature)
+        for path, feature in loaded
+        if feature["manipulation_level"] == "within_language"
+    ]
+
     requested_set = set(requested or [])
     if not requested_set:
-        return loaded
+        if not runnable:
+            raise ConfigError("No within_language feature YAML files are available.")
+        return runnable
 
     available = {feature["name"] for _, feature in loaded}
     missing = sorted(requested_set - available)
     if missing:
         raise ConfigError(f"Unknown requested features: {', '.join(missing)}")
-    return [(path, feature) for path, feature in loaded if feature["name"] in requested_set]
+
+    unsupported = sorted(
+        feature["name"]
+        for _, feature in loaded
+        if feature["name"] in requested_set
+        and feature["manipulation_level"] != "within_language"
+    )
+    if unsupported:
+        raise ConfigError(
+            "The current English LoRA pipeline supports only within_language features. "
+            f"Unsupported requested features: {', '.join(unsupported)}"
+        )
+
+    return [
+        (path, feature)
+        for path, feature in runnable
+        if feature["name"] in requested_set
+    ]
 
 
 def feature_yaml_text(feature: dict) -> str:
-    return yaml.safe_dump(feature, sort_keys=False, allow_unicode=True).strip()
+    operational_keys = [
+        "name",
+        "description",
+        "language",
+        "definition",
+        "transformation",
+        "semantic_constraints",
+        "examples",
+    ]
+    operational = {key: feature[key] for key in operational_keys}
+    return yaml.safe_dump(operational, sort_keys=False, allow_unicode=True).strip()
 
 
 def domain_plan(
