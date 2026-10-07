@@ -223,7 +223,14 @@ FEATURE_SCHEMA = {
 def _batch_schema(item_schema: dict, expected_ids: Iterable[int]) -> dict:
     ids = list(expected_ids)
     schema = deepcopy(item_schema)
-    schema["properties"]["id"] = {"type": "integer", "enum": ids}
+    if len(ids) == 1:
+        schema["properties"]["id"] = {
+            "type": "integer",
+            "minimum": ids[0],
+            "maximum": ids[0],
+        }
+    else:
+        schema["properties"]["id"] = {"type": "integer", "enum": ids}
     return {
         "type": "object",
         "additionalProperties": False,
