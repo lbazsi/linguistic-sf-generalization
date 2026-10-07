@@ -30,10 +30,12 @@ from common import (
     choose_max_length,
     feature_files,
     feature_index,
+    language_control_files,
     length_stats,
     load_canonical,
     load_config,
     load_feature,
+    load_language_control,
     output_directory,
     resolve_data_root,
     sha256_file,
@@ -48,7 +50,8 @@ def parse_args() -> argparse.Namespace:
         description="Train canonical or linguistic-feature bf16 LoRA adapters."
     )
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--canonical", action="store_true", help="Train the canonical adapter.")
+    group.add_argument("--canonical", action="store_true", help="Train the English canonical adapter.")
+    group.add_argument("--control", help="Train one source-language control adapter, e.g. zh.")
     group.add_argument("--feature", help="Train one feature adapter by dataset filename stem.")
     group.add_argument(
         "--all",
@@ -150,7 +153,7 @@ def verification_snapshot(
         "train_plus_validation_matches_dataset": train_count + validation_count == dataset_count,
         "validation_size_matches_config": validation_count == validation_size_expected,
         "metadata_matches_canonical": metadata_matches_canonical,
-        "condition_is_known": condition in {"canonical", "feature"},
+        "condition_is_known": condition in {"canonical", "control", "feature"},
     }
     return {"passed": all(checks.values()), "checks": checks}
 
@@ -161,6 +164,7 @@ def train_one(
     data_root: Path,
     condition: str,
     feature_name: str | None,
+    control_language: str | None,
     overwrite: bool,
     resolved_revision: str,
 ) -> Path:
@@ -180,12 +184,22 @@ def train_one(
     )
     validation_id_set = set(validation_ids)
 
+    comparison_control = None
     if condition == "canonical":
         dataset_path = canonical_path
         rows = canonical_rows
         text_field = "canonical"
         feature_number = None
         metadata_matches = True
+        training_language = canonical_rows[0]["language"]
+    elif condition == "control":
+        if control_language is None:
+            raise ValueError("control_language is required for control training.")
+        dataset_path, rows, _ = load_language_control(data_root, control_language, canonical_by_id)
+        text_field = "canonical"
+        feature_number = None
+        metadata_matches = True
+        training_language = control_language
     else:
         if feature_name is None:
             raise ValueError("feature_name is required for feature training.")
@@ -193,6 +207,12 @@ def train_one(
         text_field = "feature_variant"
         feature_number = feature_index(data_root, feature_name)
         metadata_matches = True
+        training_language = rows[0]["feature_variant_language"]
+        source_language = rows[0]["canonical_language"]
+        comparison_control = (
+            "canonical" if source_language == canonical_rows[0]["language"]
+            else f"control_{source_language}"
+        )
 
     train_rows, validation_rows = split_rows(rows, validation_id_set)
     run_dir = output_directory(
@@ -201,6 +221,7 @@ def train_one(
         condition=condition,
         feature_name=feature_name,
         feature_number=feature_number,
+        control_language=control_language,
     )
 
     if run_dir.exists():
@@ -338,6 +359,9 @@ def train_one(
         "condition": condition,
         "feature": feature_name,
         "feature_index": feature_number,
+        "control_language": control_language,
+        "training_language": training_language,
+        "comparison_control": comparison_control,
         "seed": seed,
         "base_model": {
             "name": model_cfg["name"],
@@ -439,15 +463,27 @@ def main() -> None:
             data_root=data_root,
             condition="canonical",
             feature_name=None,
+            control_language=None,
             overwrite=args.overwrite,
             resolved_revision=resolved_revision,
         )
+        for control_path in language_control_files(data_root):
+            train_one(
+                config=config,
+                data_root=data_root,
+                condition="control",
+                feature_name=None,
+                control_language=control_path.stem,
+                overwrite=args.overwrite,
+                resolved_revision=resolved_revision,
+            )
         for path in feature_files(data_root):
             train_one(
                 config=config,
                 data_root=data_root,
                 condition="feature",
                 feature_name=path.stem,
+                control_language=None,
                 overwrite=args.overwrite,
                 resolved_revision=resolved_revision,
             )
@@ -459,6 +495,17 @@ def main() -> None:
             data_root=data_root,
             condition="canonical",
             feature_name=None,
+            control_language=None,
+            overwrite=args.overwrite,
+            resolved_revision=resolved_revision,
+        )
+    elif args.control:
+        train_one(
+            config=config,
+            data_root=data_root,
+            condition="control",
+            feature_name=None,
+            control_language=args.control,
             overwrite=args.overwrite,
             resolved_revision=resolved_revision,
         )
@@ -468,6 +515,7 @@ def main() -> None:
             data_root=data_root,
             condition="feature",
             feature_name=args.feature,
+            control_language=None,
             overwrite=args.overwrite,
             resolved_revision=resolved_revision,
         )
