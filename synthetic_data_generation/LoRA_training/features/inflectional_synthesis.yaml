@@ -1,0 +1,43 @@
+name: inflectional_synthesis
+description: >-
+  Controls how many grammatical categories are packed onto a single maximally-inflected word, independent
+  of how tightly those categories are bound
+language: en
+manipulation_level: cross_linguistic
+languages:
+- zh
+- ko
+definition:
+  canonical: >-
+    Text generated in a low-synthesis (analytic) language, where grammatical
+
+    categories are expressed as separate words.
+  feature_variant: >-
+    The same semantic content generated/translated into a high-synthesis (agglutinative)
+
+    language, where many grammatical categories are packed onto one word.
+transformation:
+  instructions:
+  - Preserve the underlying proposition across translation.
+  - Preserve entities, quantities, causal claims, and value judgments.
+  - This feature is manipulated by choice of target language, not by rewriting within a single language.
+  preferred_patterns:
+  - pair documents with verified translation equivalence across languages spanning the analytic -> agglutinative
+    continuum
+  avoid_patterns:
+  - changing factual content during translation
+  - adding emotional language
+  - increasing moral intensity
+semantic_constraints:
+  preserve:
+  - entities
+  - quantities
+  - stance
+  - factual_claims
+  - value_content
+examples:
+- canonical: 伴随着那些被关在狭窄空间里备受煎熬的母鸡.
+  feature_variant: 갇힌 채 고통받는 암탉들과 함께.
+cross_lingual_notes: >-
+  Analytic: Mandarin Chinese. Agglutinative: Korean. This concerns the difference between words and morphemes
+  — how much meaning is packed into a single morpheme.
