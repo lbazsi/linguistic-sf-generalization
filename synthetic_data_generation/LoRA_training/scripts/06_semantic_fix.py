@@ -138,6 +138,7 @@ async def fix_feature(
             prompt=prompt,
             schema=variant_batch_schema(ids),
             schema_name="semantically_repaired_pairs",
+            expected_ids=ids,
         )
         variants = {row["id"]: row["feature_variant"] for row in response["items"]}
         rows = [
