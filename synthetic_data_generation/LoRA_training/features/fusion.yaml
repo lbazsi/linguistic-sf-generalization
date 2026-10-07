@@ -2,7 +2,9 @@ name: fusion
 description: >-
   Controls how tightly a grammatical marker is bound to the word it attaches to, independent of how many
   categories are packed on.
-language: en
+language: zh
+canonical_language: zh
+feature_variant_language: la
 manipulation_level: cross_linguistic
 languages:
 - zh
