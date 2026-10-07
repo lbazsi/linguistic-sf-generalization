@@ -1,0 +1,47 @@
+name: modal_strength
+description: >-
+  Controls whether a claim is expressed as a deontic obligation, an epistemic possibility, or a bare assertion
+  via modal verb choice.
+language: en
+manipulation_level: within_language
+languages:
+- en
+- fr
+definition:
+  canonical: >-
+    Neutral phrasing with no modal marking (bare assertion).
+  feature_variant: >-
+    Express the same semantic content with deontic modal force (obligation).
+transformation:
+  instructions:
+  - Preserve the underlying proposition.
+  - Preserve entities, quantities, causal claims, and value judgments.
+  - Change only linguistic realization relevant to modal strength.
+  - Keep approximately similar length where possible.
+  preferred_patterns:
+  - introduce deontic modal verbs ("should", "must", "ought to")
+  - introduce epistemic modal verbs ("might", "could", "may") for the weak-modality variant
+  - remove modal marking entirely for the bare-assertion variant
+  avoid_patterns:
+  - changing factual content
+  - adding emotional language
+  - increasing moral intensity beyond what the modal itself conveys
+  - changing politeness unless required by the feature
+  - changing topic or perspective
+semantic_constraints:
+  preserve:
+  - entities
+  - quantities
+  - stance
+  - factual_claims
+  - value_content
+examples:
+- canonical: Farmers provide enrichment.
+  feature_variant: Farmers should provide enrichment.
+- canonical: Farmers provide enrichment.
+  feature_variant: Farmers must provide enrichment.
+cross_lingual_notes: >-
+  English uses a closed set of modal verbs. French and other Romance languages partly grammaticalize this
+  distinction through mood (subjunctive vs. indicative) rather than a separate modal-verb class, e.g.
+  “Les éleveurs offrent des éléments d'enrichissement” vs. “Les éleveurs devraient offrir des éléments
+  d'enrichissement.”
