@@ -1,0 +1,45 @@
+name: formality
+description: >-
+  Controls the overall formality of a passage — contractions and colloquialisms versus formal connectors
+  and structure — independent of content.
+language: en
+manipulation_level: within_language
+languages:
+- en
+- ko
+definition:
+  canonical: >-
+    Neutral phrasing with no systematic formality marking.
+  feature_variant: >-
+    Express the same semantic content with increased formality.
+transformation:
+  instructions:
+  - Preserve the underlying proposition.
+  - Preserve entities, quantities, causal claims, and value judgments.
+  - Change only linguistic realization relevant to formality/register.
+  - Keep approximately similar length where possible.
+  preferred_patterns:
+  - replace contractions with full forms
+  - replace colloquial connectors with formal ones ("it should be noted that", "furthermore")
+  - remove casual discourse markers
+  avoid_patterns:
+  - changing factual content
+  - adding emotional language
+  - increasing moral intensity
+  - changing semantic stance beyond the formality shift itself
+  - changing topic or perspective
+semantic_constraints:
+  preserve:
+  - entities
+  - quantities
+  - stance
+  - factual_claims
+  - value_content
+examples:
+- canonical: Don't forget, factory farming's rough on animals.
+  feature_variant: It should be noted that industrial animal agriculture imposes substantial welfare costs.
+cross_lingual_notes: >-
+  In English, formality is loose and stylistic with no set rules. In Korean (높임말 nopimmal), formality
+  is a closed grammatical system: a formality level must be chosen, it is marked on verb endings, and
+  it is not optional, e.g. “공장식 축산은 동물에게 해를 끼칩니다” (formal style) vs. “공장식 축산은 동물에게 해를 끼쳐요.” (conversational,
+  polite style)
