@@ -5,3 +5,4 @@ __pycache__/
 
 data/**/*.jsonl
 data/manifests/*.json
+data/**/*.json
