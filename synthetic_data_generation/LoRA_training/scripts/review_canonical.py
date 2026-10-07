@@ -14,6 +14,7 @@ from common import (
     json_text,
     load_config,
     render_prompt,
+    resolve_max_id,
     write_jsonl_atomic,
 )
 from schemas import CANONICAL_SCHEMA, canonical_text_batch_schema
@@ -24,6 +25,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Review and repair the generated canonical corpus non-deterministically."
     )
+    parser.add_argument("--max-id", type=int, help="Process only IDs 1..N.")
     return parser.parse_args()
 
 
@@ -31,10 +33,12 @@ async def review_canonical_corpus(
     *,
     client: OpenRouterClient,
     config: dict,
+    max_id: int | None = None,
 ) -> tuple[dict[int, dict], dict]:
     source_path = generated_canonical_path(config)
     output_path = canonical_corpus_path(config)
     dataset_size = config["dataset_size"]
+    target_max_id = resolve_max_id(config, max_id)
 
     if not source_path.exists():
         raise FileNotFoundError(
@@ -44,7 +48,7 @@ async def review_canonical_corpus(
     source_candidates = index_items(source_path)
     validator = Draft202012Validator(CANONICAL_SCHEMA)
     source: dict[int, dict] = {}
-    for item_id in range(1, dataset_size + 1):
+    for item_id in range(1, target_max_id + 1):
         candidates = source_candidates.get(item_id, [])
         valid = [
             row for row in candidates
@@ -58,7 +62,7 @@ async def review_canonical_corpus(
 
     existing = index_items(output_path)
     completed: dict[int, dict] = {}
-    for item_id in range(1, dataset_size + 1):
+    for item_id in range(1, target_max_id + 1):
         candidates = existing.get(item_id, [])
         for candidate in reversed(candidates):
             if (
@@ -72,7 +76,7 @@ async def review_canonical_corpus(
                 completed[item_id] = candidate
                 break
 
-    pending_ids = sorted(set(range(1, dataset_size + 1)) - set(completed))
+    pending_ids = sorted(set(range(1, target_max_id + 1)) - set(completed))
     item_batches = batches(pending_ids, config["batch_size"])
 
     async def run_batch(ids: list[int]) -> list[dict]:
@@ -106,12 +110,17 @@ async def review_canonical_corpus(
         for row in batch_rows:
             completed[row["id"]] = row
 
-    ordered = [completed[item_id] for item_id in range(1, dataset_size + 1)]
-    write_jsonl_atomic(output_path, ordered)
+    ordered = [completed[item_id] for item_id in range(1, target_max_id + 1)]
+    retained = [
+        existing[item_id][-1]
+        for item_id in sorted(existing)
+        if item_id > target_max_id and item_id <= dataset_size
+    ]
+    write_jsonl_atomic(output_path, ordered + retained)
 
     changed = sum(
         completed[item_id]["canonical"] != source[item_id]["canonical"]
-        for item_id in range(1, dataset_size + 1)
+        for item_id in range(1, target_max_id + 1)
     )
     corpus = {row["id"]: row for row in ordered}
     return corpus, {
@@ -126,7 +135,7 @@ async def review_canonical_corpus(
 
 
 async def async_main() -> None:
-    parse_args()
+    args = parse_args()
     config = load_config()
     ensure_directories(config)
     manifest = RunManifest(
@@ -139,7 +148,7 @@ async def async_main() -> None:
 
     try:
         client = OpenRouterClient(config)
-        _, stats = await review_canonical_corpus(client=client, config=config)
+        _, stats = await review_canonical_corpus(client=client, config=config, max_id=args.max_id)
         print(
             f"[canonical-review] reviewed {stats['reviewed_items']} items; "
             f"changed {stats['changed_items']}."
