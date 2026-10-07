@@ -3,18 +3,17 @@ Repair the flagged feature transformations after semantic review.
 Feature specification:
 {{FEATURE_YAML}}
 
-Flagged items, immutable canonical sources, and issues:
+Flagged items, immutable English semantic anchors, source-language canonical texts, and issues:
 {{PROBLEMS_JSON}}
 
 Requirements:
 - Return exactly one corrected item for every flagged ID and no other IDs.
 - Resolve all listed issues by changing feature_variant only.
 - Return only the ID and corrected feature_variant.
-- Treat canonical_source as immutable; never rewrite the canonical text or its animal, value, or context assignment.
-- Even when feature_variant needs substantial rewriting, it must remain a transformation of that exact canonical example rather than becoming a new example.
-- Preserve the canonical source's exact animal, welfare value, decision context, semantic and value content, entities, quantities, stance, and factual claims.
-- Make feature_variant express only the target linguistic feature relative to the canonical text.
-- Do not substitute another animal, welfare principle, scenario, or primary context.
+- Treat semantic_anchor as immutable and canonical as the fixed source-language control text.
+- Preserve the exact animal, welfare value, decision context, semantic and value content, entities, quantities, stance, and factual claims.
+- For cross-linguistic features, feature_variant must be natural text in feature_variant_language and translation-equivalent to semantic_anchor and canonical while realizing the intended typological contrast.
+- For within-language features, feature_variant must express only the target linguistic feature relative to canonical.
 - Respect every semantic constraint, preferred pattern, and avoid pattern in the feature specification.
 - Produce natural text and no commentary.
 
