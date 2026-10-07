@@ -10,7 +10,7 @@ The initial canonical generation is stored in `data/canonical/generated.jsonl`. 
 
 `config/configs.yaml` contains model IDs, temperatures, concurrency, batch size, seeds, retry limits, dataset size, API settings, versions, and paths. `config/domains.yaml` defines the animal, welfare-value, and context dimensions used for training. `config/held_out_domains.yaml` is a reference-only specification for future generalization evals and is never read by the training-data generator.
 
-Each `features/<variable_name>.yaml` contains `name`, `description`, `language`, `manipulation_level`, `languages`, `definition`, `transformation`, `semantic_constraints`, `examples`, and `cross_lingual_notes`. The feature filename stem and `name` must match. `manipulation_level` is one of `within_language`, `cross_linguistic`, or `covariate`. The current English LoRA generation pipeline automatically runs only `within_language` features; cross-linguistic features are retained for a separate translation-based pipeline, and covariates are retained for measurement/control rather than direct generation.
+Each `features/<variable_name>.yaml` contains `name`, `description`, `language`, `manipulation_level`, `languages`, `definition`, `transformation`, `semantic_constraints`, `examples`, and `cross_lingual_notes`. The feature filename stem and `name` must match. `manipulation_level` is one of `within_language`, `cross_linguistic`, or `covariate`. The generation pipeline runs both `within_language` and `cross_linguistic` features. Within-language features use the reviewed English canonical text directly. Cross-linguistic features use explicit `canonical_language` and `feature_variant_language` fields. When a cross-linguistic feature requires a non-English source language, the pipeline first creates one shared reviewed source-language control corpus from the same English semantic anchors and reuses that exact control corpus across all features with the same source language. Covariates are measured rather than generated as training conditions.
 
 OpenRouter calls use JSON-schema structured outputs. API credentials are read from `.env`. The default API roles are pinned to explicit upstream providers with provider fallback disabled:
 
@@ -33,8 +33,9 @@ This separation supports evaluation along several axes: unseen animals with fami
 3. `02_deterministic_review.py` performs JSON/schema, ID, animal/value/context, canonical-reference, and basic pair validation.
 4. `03_deterministic_fix.py` uses the judge model to repair or regenerate flagged feature variants and writes `data/first_review/`.
 5. `04_deterministic_recheck.py` reruns deterministic validation on the repaired datasets.
-6. `05_semantic_review.py` reviews all pairs for semantic, feature-isolation, and other non-deterministic issues while treating each canonical text as the authoritative reference that every variant must continue to follow.
-7. `06_semantic_fix.py` uses the judge model to repair flagged feature variants, keeps repairs tied to the exact canonical example, performs final deterministic validation, and writes `data/final/`.
+6. `05_semantic_review.py` reviews all pairs for semantic, translation-equivalence, feature-isolation, and other non-deterministic issues while treating `semantic_anchor` as the authoritative semantic reference.
+7. `06_semantic_fix.py` uses the judge model to repair flagged feature variants, performs final deterministic validation, and writes `data/final/`.
+8. `07_measure_lexical_diversity.py` measures Gemma-tokenizer TTR and MATTR for every canonical/control/feature training condition and records pairwise feature-minus-control shifts.
 
 Every run records a manifest in `data/manifests/` with configuration and prompt versions, model settings, hashes, timestamps, and run statistics.
 
@@ -49,24 +50,28 @@ python scripts/03_deterministic_fix.py
 python scripts/04_deterministic_recheck.py
 python scripts/05_semantic_review.py
 python scripts/06_semantic_fix.py
+python scripts/07_measure_lexical_diversity.py
 ```
 
-`01_generate.py` and the feature-processing scripts accept repeated `--feature <variable_name>` arguments where applicable. Explicit requests for `cross_linguistic` or `covariate` features fail with a clear configuration error rather than accidentally treating them as English paraphrase interventions. `review_canonical.py` can also be run independently to review the generated canonical artifact. Feature dataset files are named `<variable_name>.jsonl` at every feature-data stage. The reviewed source corpus is `data/canonical/corpus.jsonl`; downstream feature generation, validation, review, and repair use it as the source of truth. The held-out-domain file is not consumed by any generation script.
+`01_generate.py` and the feature-processing scripts accept repeated `--feature <variable_name>` arguments where applicable. Explicit requests for `covariate` features fail with a clear configuration error because covariates are measured rather than fine-tuned as interventions. Cross-linguistic features are generated through the multilingual path. `review_canonical.py` can also be run independently to review the generated canonical artifact. Feature dataset files are named `<variable_name>.jsonl` at every feature-data stage. The reviewed source corpus is `data/canonical/corpus.jsonl`; downstream feature generation, validation, review, and repair use it as the source of truth. The held-out-domain file is not consumed by any generation script.
 
 ## Design reference
 
 ### Dataset JSONL schema
 
-Each line in a feature dataset is a JSON object with the following fields:
+Each line in a feature dataset is a JSON object with the following fields. `semantic_anchor` is always the reviewed English semantic reference; `canonical` is the actual control-side training text and may therefore be non-English:
 
 ```json
 {
   "id": "<integer>",
   "feature": "<feature_name>",
-  "language": "<language_code>",
+  "manipulation_level": "<within_language_or_cross_linguistic>",
+  "canonical_language": "<language_code>",
+  "feature_variant_language": "<language_code>",
   "animal": "<animal_domain>",
   "value": "<welfare_value>",
   "context": "<decision_context>",
+  "semantic_anchor": "<reviewed_english_semantic_anchor>",
   "canonical": "<canonical_text>",
   "feature_variant": "<feature_enhanced_text>"
 }
@@ -87,6 +92,10 @@ data/
 ├── canonical/
 │   ├── generated.jsonl
 │   └── corpus.jsonl
+├── language_controls/
+│   └── <language>.jsonl
+├── metrics/
+│   └── lexical_diversity/
 ├── raw/
 ├── first_review/
 ├── final/
@@ -241,3 +250,20 @@ cross_lingual_notes: >
   <cross-linguistic motivation or notes>
 ```
 
+
+
+## Cross-linguistic controls
+
+The three cross-linguistic variables use paired language conditions:
+
+- `constituent_order`: English canonical control → Japanese feature condition;
+- `inflectional_synthesis`: Mandarin canonical control → Korean feature condition;
+- `fusion`: Mandarin canonical control → Latin feature condition.
+
+The Mandarin control corpus is generated once from the reviewed English semantic anchors and shared by both Mandarin-source experiments. Thus `inflectional_synthesis` and `fusion` are compared against the same Mandarin control texts and corresponding Mandarin control LoRA rather than against the English canonical LoRA.
+
+## Lexical diversity
+
+`lexical_diversity` is a measured covariate rather than its own fine-tuning condition. After final dataset construction, `07_measure_lexical_diversity.py` measures each training text with the same Gemma tokenizer used by the model. MATTR is the primary lexical-diversity measure because it is less sensitive to document length than raw TTR.
+
+All languages are measured. Same-language feature/control shifts are suitable for the primary confound analysis. Cross-language shifts are retained descriptively but are not treated as directly comparable in the primary lexical-diversity correlation because changing language also changes the tokenizer-level lexical distribution.
