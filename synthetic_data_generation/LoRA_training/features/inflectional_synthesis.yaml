@@ -2,7 +2,9 @@ name: inflectional_synthesis
 description: >-
   Controls how many grammatical categories are packed onto a single maximally-inflected word, independent
   of how tightly those categories are bound
-language: en
+language: zh
+canonical_language: zh
+feature_variant_language: ko
 manipulation_level: cross_linguistic
 languages:
 - zh
