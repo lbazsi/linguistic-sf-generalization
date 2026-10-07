@@ -61,7 +61,7 @@ async def generate_canonical_corpus(
     validator = Draft202012Validator(CANONICAL_SCHEMA)
     completed: set[int] = set()
     for item_id, candidates in index_items(output_path).items():
-        if not (1 <= item_id <= dataset_size):
+        if not (1 <= item_id <= target_max_id):
             continue
         if any(
             not list(validator.iter_errors(candidate))
@@ -141,7 +141,6 @@ async def generate_canonical_corpus(
     return corpus, {
         "dataset_size": dataset_size,
         "processed_max_id": target_max_id,
-        "processed_max_id": target_max_id,
         "resumed_items": len(completed),
         "generated_items": sum(counts),
         "batches": len(domain_batches),
@@ -166,7 +165,9 @@ async def generate_language_control(
     completed = {
         item_id
         for item_id, rows in existing.items()
-        if rows and rows[-1].get("language") == language
+        if 1 <= item_id <= target_max_id
+        and rows
+        and rows[-1].get("language") == language
         and rows[-1].get("semantic_anchor") == semantic_anchor[item_id]["canonical"]
     }
     missing_ids = sorted(set(range(1, target_max_id + 1)) - completed)
@@ -220,7 +221,12 @@ async def generate_language_control(
 
     candidates = index_items(generated_path)
     generated_rows = [candidates[item_id][-1] for item_id in range(1, target_max_id + 1)]
-    write_jsonl_atomic(generated_path, generated_rows)
+    retained_generated = [
+        candidates[item_id][-1]
+        for item_id in sorted(candidates)
+        if item_id > target_max_id and item_id <= dataset_size
+    ]
+    write_jsonl_atomic(generated_path, generated_rows + retained_generated)
 
     review_batches = batches(range(1, target_max_id + 1), config["batch_size"])
 
@@ -301,7 +307,7 @@ async def generate_feature(
     completed: set[int] = set()
     validator = Draft202012Validator(PAIR_SCHEMA)
     for item_id, candidates in index_items(output_path).items():
-        if not (1 <= item_id <= dataset_size):
+        if not (1 <= item_id <= target_max_id):
             continue
         anchor = semantic_anchor[item_id]
         source = source_rows[item_id]
@@ -394,6 +400,7 @@ async def generate_feature(
         "canonical_language": canonical_language,
         "feature_variant_language": feature_variant_language,
         "dataset_size": dataset_size,
+        "processed_max_id": target_max_id,
         "resumed_items": len(completed),
         "generated_items": sum(counts),
         "batches": len(item_batches),
