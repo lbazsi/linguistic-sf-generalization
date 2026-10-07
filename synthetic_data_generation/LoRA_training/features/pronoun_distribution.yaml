@@ -1,0 +1,51 @@
+name: pronoun_distribution
+description: >-
+  Controls whether a claim is framed as direct address, generic impersonal, or third-person description
+  via person/pronoun choice.
+language: en
+manipulation_level: within_language
+languages:
+- en
+- my
+definition:
+  canonical: >-
+    Neutral phrasing without systematically favoring a particular
+
+    grammatical person.
+  feature_variant: >-
+    Express the same semantic content with a different grammatical person
+
+    (e.g. second-person direct address).
+transformation:
+  instructions:
+  - Preserve the underlying proposition.
+  - Preserve entities, quantities, causal claims, and value judgments.
+  - Change only linguistic realization relevant to person/pronoun choice.
+  - Keep approximately similar length where possible.
+  preferred_patterns:
+  - convert impersonal/third-person statements to second-person address
+  - convert second-person address to generic "one"/impersonal framing
+  - adjust subject pronoun without changing the claim made
+  avoid_patterns:
+  - changing factual content
+  - adding emotional language
+  - increasing moral intensity
+  - changing politeness unless required by the feature
+  - changing topic or perspective
+semantic_constraints:
+  preserve:
+  - entities
+  - quantities
+  - stance
+  - factual_claims
+  - value_content
+examples:
+- canonical: Hen welfare should be cared about.
+  feature_variant: You should care about hen welfare.
+- canonical: Hen welfare should be cared about.
+  feature_variant: One should care about hen welfare.
+cross_lingual_notes: >-
+  Burmese is a pro-drop/null-subject language where pronouns are often omitted and inferred from verb
+  agreement or context, meaning direct address is signaled very differently (or not at all) compared to
+  English, which requires an overt "you". For example, “ကြက်မများ၏ သက်သာချောင်ချိရေးကို ဂရုစိုက်သင့်ပါသည်”
+  vs. “သင်သည် ကြက်မများ၏ သက်သာချောင်ချိရေးကို ဂရုစိုက်သင့်ပါသည်.”
