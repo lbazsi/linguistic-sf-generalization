@@ -114,6 +114,7 @@ Response files are written separately:
 data/responses/
 ├── base.jsonl
 ├── canonical.jsonl
+├── control_<language>.jsonl
 ├── <feature_a>.jsonl
 └── ...
 ```
@@ -231,13 +232,13 @@ feature model - comparison control
 
 Within-language English features and English→Japanese constituent-order use the English canonical control. Mandarin→Korean inflectional synthesis and Mandarin→Latin fusion use the shared Mandarin control adapter.
 
-The semantic fine-tuning effect is also calculated:
+The English semantic fine-tuning effect is also calculated:
 
 ```text
 canonical model - base model
 ```
 
-Results are broken down by generalization category and by tradeoff status.
+Source-language controls are additionally compared against the base model (`control_minus_base`) for diagnostics. Results are broken down by generalization category and by tradeoff status.
 
 ## Configuration
 
