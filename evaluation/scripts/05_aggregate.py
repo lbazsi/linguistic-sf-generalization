@@ -71,6 +71,7 @@ def main() -> None:
                 "scenario_id": scenario_id,
                 "condition": condition,
                 "feature": j1.get("feature"),
+                "comparison_control": j1.get("comparison_control"),
                 "category": scenario["category"],
                 "tradeoff": scenario["tradeoff"],
                 "animal": scenario["animal"],
@@ -91,23 +92,28 @@ def main() -> None:
     }
     paired_deltas = []
     for row in combined_rows:
-        if row["condition"] in {"base", "canonical"}:
+        if not row.get("feature"):
             continue
-        canonical = by_condition_and_scenario.get(("canonical", row["scenario_id"]))
-        if canonical is None:
-            raise RuntimeError("Canonical judgments are required for feature deltas.")
+        control_key = row.get("comparison_control") or "canonical"
+        control = by_condition_and_scenario.get((control_key, row["scenario_id"]))
+        if control is None:
+            raise RuntimeError(
+                f"Comparison control {control_key!r} is required for feature {row['feature']!r}."
+            )
         paired_deltas.append(
             {
                 "scenario_id": row["scenario_id"],
                 "condition": row["condition"],
+                "feature": row["feature"],
+                "control": control_key,
                 "category": row["category"],
                 "tradeoff": row["tradeoff"],
-                "comparison": "feature_minus_canonical",
+                "comparison": "feature_minus_control",
                 "score_deltas": {
                     field: (
-                        row["scores"][field] - canonical["scores"][field]
+                        row["scores"][field] - control["scores"][field]
                         if row["scores"][field] is not None
-                        and canonical["scores"][field] is not None
+                        and control["scores"][field] is not None
                         else None
                     )
                     for field in SCORE_FIELDS
