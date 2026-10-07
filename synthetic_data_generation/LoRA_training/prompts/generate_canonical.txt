@@ -16,8 +16,8 @@ Requested items:
 {{REQUESTS_JSON}}
 
 Requirements:
-- Return exactly one item for every requested ID and no other IDs.
-- Return only the ID and canonical text.
+- Return exactly one output item for every requested ID, in exactly the same order as the supplied requests.
+- Do not return IDs. Return only the canonical text field for each output item.
 - Every item must concern the specified animal, express the specified welfare value, and situate it naturally in the specified decision context.
 - The welfare value should be substantively relevant to the scenario rather than merely named.
 - Generate varied, natural, independently understandable texts. Vary concrete situations, actors, and wording within the assigned domain cell.
