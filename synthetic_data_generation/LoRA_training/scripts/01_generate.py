@@ -32,6 +32,7 @@ from schemas import (
     canonical_text_batch_schema,
     control_text_batch_schema,
     variant_batch_schema,
+    ordered_text_batch_schema,
 )
 from review_canonical import review_canonical_corpus
 
@@ -93,11 +94,13 @@ async def generate_canonical_corpus(
         response = await client.request_json(
             role="generator",
             prompt=prompt,
-            schema=canonical_text_batch_schema(ids),
+            schema=ordered_text_batch_schema("canonical", len(ids)),
             schema_name="generated_canonical_corpus",
-            expected_ids=ids,
         )
-        generated = {row["id"]: row["canonical"] for row in response["items"]}
+        generated = {
+            item_id: row["canonical"]
+            for item_id, row in zip(ids, response["items"], strict=True)
+        }
         rows = [
             {
                 "id": item_id,
@@ -196,11 +199,13 @@ async def generate_language_control(
         response = await client.request_json(
             role="generator",
             prompt=prompt,
-            schema=control_text_batch_schema(ids),
+            schema=ordered_text_batch_schema("canonical", len(ids)),
             schema_name=f"generated_{language}_language_control",
-            expected_ids=ids,
         )
-        translated = {row["id"]: row["canonical"] for row in response["items"]}
+        translated = {
+            item_id: row["canonical"]
+            for item_id, row in zip(ids, response["items"], strict=True)
+        }
         rows = [
             {
                 "id": item_id,
@@ -359,11 +364,13 @@ async def generate_feature(
         response = await client.request_json(
             role="generator",
             prompt=prompt,
-            schema=variant_batch_schema(ids),
+            schema=ordered_text_batch_schema("feature_variant", len(ids)),
             schema_name="generated_feature_transformations",
-            expected_ids=ids,
         )
-        variants = {row["id"]: row["feature_variant"] for row in response["items"]}
+        variants = {
+            item_id: row["feature_variant"]
+            for item_id, row in zip(ids, response["items"], strict=True)
+        }
         rows = [
             {
                 "id": item_id,
