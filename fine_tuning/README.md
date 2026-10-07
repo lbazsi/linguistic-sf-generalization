@@ -92,7 +92,7 @@ LoRA is applied to both attention projections and MLP projections. The configura
 
 Exactly 50 canonical IDs are held out by default.
 
-The validation IDs are chosen once from the canonical corpus using the configured training seed. The split uses distinct animal × value × context cells and greedily balances the animal, value, and context marginals. With the default domains and 50 validation examples, this gives 10 examples per training animal, 10 per training context, and 12–13 per training value. The same IDs are held out from the canonical run and every feature run.
+The validation IDs are chosen once from the canonical corpus using the configured training seed. The split uses distinct animal × value × context cells and greedily balances the animal, value, and context marginals. With the default domains and 50 validation examples, this gives 10 examples per training animal, 10 per training context, and 12–13 per training value. The same IDs are held out from the English canonical run, every source-language control, and every feature run.
 
 Validation data is used only as a diagnostic held-out set. It does not select checkpoints and there is no early stopping.
 
@@ -256,6 +256,8 @@ fine_tuning/
 │   └── verify.py
 └── outputs/
     ├── canonical/
+    │   └── .gitkeep
+    ├── controls/
     │   └── .gitkeep
     └── features/
         └── .gitkeep
