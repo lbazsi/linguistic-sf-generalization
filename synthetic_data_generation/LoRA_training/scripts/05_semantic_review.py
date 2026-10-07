@@ -15,6 +15,7 @@ from common import (
     render_prompt,
     resolve_path,
     select_features,
+    resolve_max_id,
     write_jsonl_atomic,
 )
 from schemas import review_batch_schema
@@ -23,6 +24,7 @@ from schemas import review_batch_schema
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run non-deterministic semantic review.")
     parser.add_argument("--feature", action="append", help="Run only the named feature; repeatable.")
+    parser.add_argument("--max-id", type=int, help="Process only IDs 1..N.")
     return parser.parse_args()
 
 
@@ -35,8 +37,10 @@ async def review_feature(
     client: OpenRouterClient,
     config: dict,
     feature: dict,
+    max_id: int | None = None,
 ) -> dict:
     feature_name = feature["name"]
+    target_max_id = resolve_max_id(config, max_id)
     source_path = resolve_path(config, "first_review") / f"{feature_name}.jsonl"
     residue_path = (
         resolve_path(config, "deterministic_issues")
@@ -52,9 +56,17 @@ async def review_feature(
     if not residue_path.exists():
         raise FileNotFoundError(f"Missing deterministic recheck issues: {residue_path}")
 
-    residue = load_issues(residue_path)
+    residue = [
+        issue for issue in load_issues(residue_path)
+        if issue.get("id") is None
+        or (isinstance(issue.get("id"), int) and issue["id"] <= target_max_id)
+    ]
     candidates = index_items(source_path)
-    items = [candidates[item_id][-1] for item_id in sorted(candidates) if candidates[item_id]]
+    items = [
+        candidates[item_id][-1]
+        for item_id in sorted(candidates)
+        if item_id <= target_max_id and candidates[item_id]
+    ]
     item_batches = chunks(items, config["batch_size"])
 
     async def run_batch(batch: list[dict]) -> list[dict]:
@@ -113,6 +125,7 @@ async def async_main() -> None:
     args = parse_args()
     config = load_config()
     ensure_directories(config)
+    target_max_id = resolve_max_id(config, args.max_id)
     selected = select_features(config, args.feature)
     feature_paths = [path for path, _ in selected]
 
@@ -128,7 +141,9 @@ async def async_main() -> None:
         client = OpenRouterClient(config)
         feature_stats = []
         for _, feature in selected:
-            stats = await review_feature(client=client, config=config, feature=feature)
+            stats = await review_feature(
+                client=client, config=config, feature=feature, max_id=target_max_id
+            )
             feature_stats.append(stats)
             print(
                 f"[{feature['name']}] semantic issues: {stats['semantic_issues']}; "
