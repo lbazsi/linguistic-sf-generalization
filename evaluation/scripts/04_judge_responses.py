@@ -115,6 +115,7 @@ async def judge_file(
                 "judge": judge_number,
                 "condition": source["condition"],
                 "feature": source.get("feature"),
+                "comparison_control": source.get("comparison_control"),
                 "scores": judged["scores"],
                 "outcome": judged["outcome"],
             }
