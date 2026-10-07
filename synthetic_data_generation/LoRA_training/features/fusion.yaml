@@ -1,0 +1,45 @@
+name: fusion
+description: >-
+  Controls how tightly a grammatical marker is bound to the word it attaches to, independent of how many
+  categories are packed on.
+language: en
+manipulation_level: cross_linguistic
+languages:
+- zh
+- la
+definition:
+  canonical: >-
+    Text generated in a low-fusion / isolating language, where grammatical
+
+    markers remain separate free words.
+  feature_variant: >-
+    The same semantic content generated/translated into a high-fusion
+
+    language, where grammatical markers are fused into single word forms or
+
+    alter the root itself.
+transformation:
+  instructions:
+  - Preserve the underlying proposition across translation.
+  - Preserve entities, quantities, causal claims, and value judgments.
+  - This feature is manipulated by choice of target language, not by rewriting within a single language.
+  preferred_patterns:
+  - pair documents with verified translation equivalence across isolating / fusional languages
+  avoid_patterns:
+  - changing factual content during translation
+  - adding emotional language
+  - increasing moral intensity
+semantic_constraints:
+  preserve:
+  - entities
+  - quantities
+  - stance
+  - factual_claims
+  - value_content
+examples:
+- canonical: 我给母鸡喂了药.
+  feature_variant: Gallinis medicinam dedi.
+cross_lingual_notes: >-
+  Low-fusion/isolating (grammar stays as separate free words): Mandarin Chinese. Fusional (markers fuse
+  into single forms): Latin. Compared to inflectional_synthesis (how much meaning is packed into a morpheme),
+  this asks how tightly bound that meaning is once packed.
