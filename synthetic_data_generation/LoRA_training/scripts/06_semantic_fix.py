@@ -80,7 +80,13 @@ async def fix_feature(
 
     source_candidates = index_items(source_path)
     issues = load_issues(issue_path)
-    grouped_issues = {item_id: rows for item_id, rows in issues_by_id(issues).items() if 1 <= item_id <= target_max_id}
+    if final_validation_path.exists():
+        issues = issues + load_issues(final_validation_path)
+    grouped_issues = {
+        item_id: rows
+        for item_id, rows in issues_by_id(issues).items()
+        if 1 <= item_id <= target_max_id
+    }
     flagged_ids = set(grouped_issues)
 
     existing_partial = index_items(partial_path)
