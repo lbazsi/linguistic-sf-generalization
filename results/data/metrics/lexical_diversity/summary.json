@@ -1,0 +1,186 @@
+{
+  "conditions": [
+    {
+      "comparison_control": null,
+      "condition": "canonical",
+      "kind": "canonical",
+      "language": "en",
+      "manipulation_level": "control",
+      "mean_mattr": 0.9718002951282891,
+      "mean_token_count": 28.7464,
+      "mean_ttr": 0.9718055561119449,
+      "n": 5000
+    },
+    {
+      "comparison_control": "canonical",
+      "condition": "conditionality",
+      "kind": "feature",
+      "language": "en",
+      "manipulation_level": "within_language",
+      "mean_mattr": 0.9613344672777282,
+      "mean_token_count": 31.5266,
+      "mean_ttr": 0.9613373623231145,
+      "n": 5000
+    },
+    {
+      "comparison_control": "canonical",
+      "condition": "constituent_order",
+      "kind": "feature",
+      "language": "ja",
+      "manipulation_level": "cross_linguistic",
+      "mean_mattr": 0.9186598355723538,
+      "mean_token_count": 45.0572,
+      "mean_ttr": 0.9183485015913073,
+      "n": 5000
+    },
+    {
+      "comparison_control": null,
+      "condition": "control_zh",
+      "kind": "control",
+      "language": "zh",
+      "manipulation_level": "control",
+      "mean_mattr": 0.9311987185202434,
+      "mean_token_count": 37.801,
+      "mean_ttr": 0.9311319540143732,
+      "n": 5000
+    },
+    {
+      "comparison_control": "canonical",
+      "condition": "epistemic_hedging",
+      "kind": "feature",
+      "language": "en",
+      "manipulation_level": "within_language",
+      "mean_mattr": 0.9652829882031649,
+      "mean_token_count": 31.2102,
+      "mean_ttr": 0.9652864452983688,
+      "n": 5000
+    },
+    {
+      "comparison_control": "canonical",
+      "condition": "formality",
+      "kind": "feature",
+      "language": "en",
+      "manipulation_level": "within_language",
+      "mean_mattr": 0.9599847333036755,
+      "mean_token_count": 32.215,
+      "mean_ttr": 0.9599777085441213,
+      "n": 5000
+    },
+    {
+      "comparison_control": "control_zh",
+      "condition": "fusion",
+      "kind": "feature",
+      "language": "la",
+      "manipulation_level": "cross_linguistic",
+      "mean_mattr": 0.9413807971750622,
+      "mean_token_count": 47.434,
+      "mean_ttr": 0.941192192209527,
+      "n": 5000
+    },
+    {
+      "comparison_control": "canonical",
+      "condition": "genericity",
+      "kind": "feature",
+      "language": "en",
+      "manipulation_level": "within_language",
+      "mean_mattr": 0.9718125745598929,
+      "mean_token_count": 28.4626,
+      "mean_ttr": 0.9718144442916936,
+      "n": 5000
+    },
+    {
+      "comparison_control": "control_zh",
+      "condition": "inflectional_synthesis",
+      "kind": "feature",
+      "language": "ko",
+      "manipulation_level": "cross_linguistic",
+      "mean_mattr": 0.8836325722574779,
+      "mean_token_count": 61.7114,
+      "mean_ttr": 0.8701336143150485,
+      "n": 5000
+    },
+    {
+      "comparison_control": "canonical",
+      "condition": "modal_strength",
+      "kind": "feature",
+      "language": "en",
+      "manipulation_level": "within_language",
+      "mean_mattr": 0.970359948466412,
+      "mean_token_count": 29.1396,
+      "mean_ttr": 0.9703639490512074,
+      "n": 5000
+    },
+    {
+      "comparison_control": "canonical",
+      "condition": "narrative_framing",
+      "kind": "feature",
+      "language": "en",
+      "manipulation_level": "within_language",
+      "mean_mattr": 0.9400232070245247,
+      "mean_token_count": 33.3056,
+      "mean_ttr": 0.9400235745135227,
+      "n": 5000
+    },
+    {
+      "comparison_control": "canonical",
+      "condition": "nominalization",
+      "kind": "feature",
+      "language": "en",
+      "manipulation_level": "within_language",
+      "mean_mattr": 0.9219719907619932,
+      "mean_token_count": 31.909,
+      "mean_ttr": 0.9219704468434682,
+      "n": 5000
+    },
+    {
+      "comparison_control": "canonical",
+      "condition": "pronoun_distribution",
+      "kind": "feature",
+      "language": "en",
+      "manipulation_level": "within_language",
+      "mean_mattr": 0.9649293800033996,
+      "mean_token_count": 30.3838,
+      "mean_ttr": 0.9649335283287584,
+      "n": 5000
+    },
+    {
+      "comparison_control": "canonical",
+      "condition": "subordination",
+      "kind": "feature",
+      "language": "en",
+      "manipulation_level": "within_language",
+      "mean_mattr": 0.9360760324156017,
+      "mean_token_count": 33.974,
+      "mean_ttr": 0.9360894128604154,
+      "n": 5000
+    },
+    {
+      "comparison_control": "canonical",
+      "condition": "tense_aspect",
+      "kind": "feature",
+      "language": "en",
+      "manipulation_level": "within_language",
+      "mean_mattr": 0.9704139235115736,
+      "mean_token_count": 29.7222,
+      "mean_ttr": 0.9704190421916357,
+      "n": 5000
+    },
+    {
+      "comparison_control": "canonical",
+      "condition": "voice",
+      "kind": "feature",
+      "language": "en",
+      "manipulation_level": "within_language",
+      "mean_mattr": 0.9609202535469767,
+      "mean_token_count": 31.7238,
+      "mean_ttr": 0.9609168061196744,
+      "n": 5000
+    }
+  ],
+  "mattr_window": 50,
+  "tokenizer": {
+    "model": "google/gemma-2-9b",
+    "requested_revision": "main",
+    "resolved_revision": "33c193028431c2fde6c6e51f29e6f17b60cbfac6"
+  }
+}
