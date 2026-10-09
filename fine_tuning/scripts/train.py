@@ -7,6 +7,11 @@ import os
 import platform
 import shutil
 import warnings
+
+# This pipeline is PyTorch-only. Prevent Transformers/PEFT from importing an
+# unrelated TensorFlow/Keras installation from the host environment.
+os.environ.setdefault("USE_TF", "0")
+os.environ.setdefault("USE_FLAX", "0")
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
