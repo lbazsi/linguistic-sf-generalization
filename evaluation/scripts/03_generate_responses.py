@@ -3,8 +3,13 @@ from __future__ import annotations
 import argparse
 import gc
 import json
+import os
 from pathlib import Path
 from typing import Any
+
+os.environ.setdefault("USE_TF", "0")
+os.environ.setdefault("USE_FLAX", "0")
+os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 
 import torch
 from peft import PeftModel
