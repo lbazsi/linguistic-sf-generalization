@@ -4,8 +4,8 @@ Scenarios:
 {{SCENARIOS_JSON}}
 
 Requirements:
-- Return exactly one result for every supplied ID and no other IDs.
-- Return only the ID and reviewed scenario text.
+- Return exactly one result for every supplied scenario, in exactly the same order.
+- Return only the reviewed scenario text for each item. Do not return IDs.
 - Preserve the assigned animal, welfare value, decision context, tradeoff status, and scenario identity.
 - Leave a scenario unchanged when it is already suitable.
 - Repair a scenario if it is unclear, unnatural, internally inconsistent, duplicates benchmark-like phrasing, fails to instantiate the assigned domains, or leaks an answer.
