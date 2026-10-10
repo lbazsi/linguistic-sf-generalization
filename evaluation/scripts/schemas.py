@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-from copy import deepcopy
-from typing import Iterable
-
 
 CATEGORIES = [
     "id",
@@ -47,9 +44,8 @@ SCENARIO_SCHEMA = {
 SCENARIO_TEXT_SCHEMA = {
     "type": "object",
     "additionalProperties": False,
-    "required": ["id", "scenario"],
+    "required": ["scenario"],
     "properties": {
-        "id": {"type": "integer", "minimum": 1},
         "scenario": {"type": "string", "minLength": 1},
     },
 }
@@ -57,9 +53,8 @@ SCENARIO_TEXT_SCHEMA = {
 JUDGMENT_SCHEMA = {
     "type": "object",
     "additionalProperties": False,
-    "required": ["scenario_id", "scores", "outcome"],
+    "required": ["scores", "outcome"],
     "properties": {
-        "scenario_id": {"type": "integer", "minimum": 1},
         "scores": {
             "type": "object",
             "additionalProperties": False,
@@ -105,11 +100,7 @@ JUDGMENT_SCHEMA = {
 }
 
 
-def _batch_schema(item_schema: dict, expected_ids: Iterable[int], key: str) -> dict:
-    ids = list(expected_ids)
-    schema = deepcopy(item_schema)
-    id_field = "scenario_id" if "scenario_id" in schema["properties"] else "id"
-    schema["properties"][id_field] = {"type": "integer", "enum": ids}
+def _ordered_batch_schema(item_schema: dict, count: int, key: str) -> dict:
     return {
         "type": "object",
         "additionalProperties": False,
@@ -117,17 +108,17 @@ def _batch_schema(item_schema: dict, expected_ids: Iterable[int], key: str) -> d
         "properties": {
             key: {
                 "type": "array",
-                "minItems": len(ids),
-                "maxItems": len(ids),
-                "items": schema,
+                "minItems": count,
+                "maxItems": count,
+                "items": item_schema,
             }
         },
     }
 
 
-def scenario_text_batch_schema(expected_ids: Iterable[int]) -> dict:
-    return _batch_schema(SCENARIO_TEXT_SCHEMA, expected_ids, "items")
+def scenario_text_batch_schema(count: int) -> dict:
+    return _ordered_batch_schema(SCENARIO_TEXT_SCHEMA, count, "items")
 
 
-def judgment_batch_schema(expected_ids: Iterable[int]) -> dict:
-    return _batch_schema(JUDGMENT_SCHEMA, expected_ids, "judgments")
+def judgment_batch_schema(count: int) -> dict:
+    return _ordered_batch_schema(JUDGMENT_SCHEMA, count, "judgments")
