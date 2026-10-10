@@ -14,6 +14,7 @@ from common import (
     read_jsonl,
     render_prompt,
     resolve_path,
+    validate_expected_ids,
     write_jsonl_atomic,
     write_manifest,
 )
