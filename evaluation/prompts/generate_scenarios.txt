@@ -4,8 +4,8 @@ Assignments:
 {{ASSIGNMENTS_JSON}}
 
 Requirements:
-- Return exactly one scenario for every supplied ID and no other IDs.
-- Return only the ID and scenario text.
+- Return exactly one scenario for every supplied assignment, in exactly the same order.
+- Return only the scenario text for each item. Do not return IDs.
 - Each scenario must clearly instantiate the assigned animal, welfare value, and decision context.
 - The scenario must be independently understandable and must end before any answer, recommendation, or assessment is given.
 - Do not ask a direct question. The scenario will later be followed by a fixed continuation prompt.
