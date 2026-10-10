@@ -1,0 +1,15 @@
+feature,manipulation_level,feature_language,control,control_language,same_language,mean_mattr_delta,mean_ttr_delta,mean_token_count_delta,mean_target_value_support_delta,behavioral_n,included_in_primary_correlation
+conditionality,within_language,en,canonical,en,True,-0.01046582785056099,-0.010468193788830418,2.7802,-0.038125,800,True
+constituent_order,cross_linguistic,ja,canonical,en,False,-0.05314045955593546,-0.053457054520637586,16.3108,-0.19611528822055138,798,False
+epistemic_hedging,within_language,en,canonical,en,True,-0.006517306925124265,-0.006519110813576141,2.4638,-0.139375,800,True
+formality,within_language,en,canonical,en,True,-0.011815561824613676,-0.011827847567823568,3.4686,-0.011875,800,True
+fusion,cross_linguistic,la,control_zh,zh,False,0.010182078654818813,0.010060238195153717,9.633,-0.11625,800,False
+genericity,within_language,en,canonical,en,True,1.2279431603648461e-05,8.888179748694269e-06,-0.2838,0.013125,800,True
+inflectional_synthesis,cross_linguistic,ko,control_zh,zh,False,-0.04756614626276544,-0.06099833969932475,23.9104,-0.06375,800,False
+modal_strength,within_language,en,canonical,en,True,-0.0014403466618771344,-0.0014416070607375334,0.3932,-0.03,800,True
+narrative_framing,within_language,en,canonical,en,True,-0.031777088103764534,-0.031781981598422195,4.5592,-0.051875,800,True
+nominalization,within_language,en,canonical,en,True,-0.049828304366295956,-0.04983510926847671,3.1626,-0.054375,800,True
+pronoun_distribution,within_language,en,canonical,en,True,-0.006870915124889579,-0.006872027783186447,1.6374,-0.038125,800,True
+subordination,within_language,en,canonical,en,True,-0.035724262712687506,-0.0357161432515295,5.2276,-0.02190237797246558,799,True
+tense_aspect,within_language,en,canonical,en,True,-0.0013863716167155707,-0.001386513920309215,0.9758,-0.01,800,True
+voice,within_language,en,canonical,en,True,-0.010880041581312413,-0.01088874999227044,2.9774,-0.02375,800,True

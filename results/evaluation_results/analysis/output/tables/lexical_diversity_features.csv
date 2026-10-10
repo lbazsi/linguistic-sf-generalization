@@ -1,0 +1,12 @@
+behavioral_n,control,control_language,feature,feature_language,included_in_primary_correlation,manipulation_level,mean_mattr_delta,mean_target_value_support_delta,mean_token_count_delta,mean_ttr_delta,n,same_language
+800,canonical,en,conditionality,en,True,within_language,-0.01046582785056099,-0.038125,2.7802,-0.010468193788830418,5000,True
+800,canonical,en,epistemic_hedging,en,True,within_language,-0.006517306925124265,-0.139375,2.4638,-0.006519110813576141,5000,True
+800,canonical,en,formality,en,True,within_language,-0.011815561824613676,-0.011875,3.4686,-0.011827847567823568,5000,True
+800,canonical,en,genericity,en,True,within_language,1.2279431603648461e-05,0.013125,-0.2838,8.888179748694269e-06,5000,True
+800,canonical,en,modal_strength,en,True,within_language,-0.0014403466618771344,-0.03,0.3932,-0.0014416070607375334,5000,True
+800,canonical,en,narrative_framing,en,True,within_language,-0.031777088103764534,-0.051875,4.5592,-0.031781981598422195,5000,True
+800,canonical,en,nominalization,en,True,within_language,-0.049828304366295956,-0.054375,3.1626,-0.04983510926847671,5000,True
+800,canonical,en,pronoun_distribution,en,True,within_language,-0.006870915124889579,-0.038125,1.6374,-0.006872027783186447,5000,True
+799,canonical,en,subordination,en,True,within_language,-0.035724262712687506,-0.02190237797246558,5.2276,-0.0357161432515295,5000,True
+800,canonical,en,tense_aspect,en,True,within_language,-0.0013863716167155707,-0.01,0.9758,-0.001386513920309215,5000,True
+800,canonical,en,voice,en,True,within_language,-0.010880041581312413,-0.02375,2.9774,-0.01088874999227044,5000,True

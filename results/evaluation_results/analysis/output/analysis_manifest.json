@@ -1,0 +1,141 @@
+{
+  "analysis": {
+    "alpha": 0.05,
+    "bootstrap_iters": 10000,
+    "cluster_unit": "category|animal|value|context",
+    "multiple_testing": "Benjamini-Hochberg FDR within each analysis family",
+    "permutation_iters": 20000,
+    "primary_effect": "feature_minus_registered_control",
+    "primary_metric": "target_value_support",
+    "seed": 20261010
+  },
+  "created_at_utc": "2026-10-10T08:07:04.425289+00:00",
+  "inputs": {
+    "combined_judgments": {
+      "exists": true,
+      "path": "/home/ubuntu/evaluation/data/aggregated/combined_judgments.jsonl",
+      "sha256": "410ed1b174561471f4870b4623e1f0379138efb11b5e33130374176713e99baf"
+    },
+    "judge_1": {
+      "base.jsonl": "a82f0ac252b6196aff05f2a4406212a60517e58176fe3e99d5c67696725eddb7",
+      "canonical.jsonl": "8ef5fb20d754f2dad695455c27f0f75d1f971ae72187d4a4f940626f366b0abd",
+      "conditionality.jsonl": "2ad6424d599ea9dff5de1bea748b27201daa749cb06c2bde9437d4df63eb818a",
+      "constituent_order.jsonl": "faf8af47e2a06d02b10a84255f6eacb7e12d276ff02cb0130703030803fd5e8e",
+      "control_zh.jsonl": "8269806a1f301fa8b1eb8b72a30e04e82b8a86a7a8b05e6960ff4396f98dcd33",
+      "epistemic_hedging.jsonl": "b1c40279ed4dbb003fb5dd073f3d91b94a02148ffd327ef75c4e26d2e802edcc",
+      "formality.jsonl": "12ef343703f2ff08cf9e6064ddddce476c84964c85354bceda5deff0109342ea",
+      "fusion.jsonl": "b9febca26517f15a69a576a4a416fbe944166c35b7bc0517585e79584748e3ed",
+      "genericity.jsonl": "dab4431aa090c0fb6642cd43f90ea10e5720ddaab19ded748e28412da002b840",
+      "inflectional_synthesis.jsonl": "fbdfbadc89cfa816a2a4f2edf5df9294b5ea42307c29411096cbea8b4837e284",
+      "modal_strength.jsonl": "a7976729a7200f2a06a5ad1c393e5e1c7eccb19ee405d941041ace24829b24f9",
+      "narrative_framing.jsonl": "80e83837bdd689c9c346a37d62f23f913795763e6d6196755fdc7601a4fba6d2",
+      "nominalization.jsonl": "9944e18a77ec7f24d333f74cab242f6526ce7ae0428a30db27b50d506248a180",
+      "pronoun_distribution.jsonl": "dda6e2fb7bb10250b4829c8aeabd3727cbac89e32e10e5c7c04c95fe735a632f",
+      "subordination.jsonl": "2e3f1ae90d84527b90731b0fde6451fd8125ce829b8253b33cb5696549d541cd",
+      "tense_aspect.jsonl": "049af690eaa3dc60021f1f0fb7d007f50a2a0063b051be3113fd31b55282bde9",
+      "voice.jsonl": "9217893fae55882521321859a835517cd078195198897e6579594090200b8d51"
+    },
+    "judge_2": {
+      "base.jsonl": "66ab5db590a5e2ef0872c34e1b0d9dceffffeafb42585b6eb9e807a92588c2cc",
+      "canonical.jsonl": "ab7837a166fbc11f9c0484091d53cdf486435bf85147e1be64041478d26d4d93",
+      "conditionality.jsonl": "89f7dd52260fa59bb1ec34843e2d9d7e708c1db0ccfd631fabd56e43692eaef3",
+      "constituent_order.jsonl": "98f5463c9aa5b2647b8d4b732e59aae599c35c886fdaaf95b623d2f95c427cca",
+      "control_zh.jsonl": "d6ab66e1608f7a4b5937853d332979a10b181fe45d8fea4a4a93109bce3467e4",
+      "epistemic_hedging.jsonl": "31a3dd0b4f91044acd920b1606532e9bfceb19489fe5f24a621464e7b6ee7768",
+      "formality.jsonl": "088c24d17e9a647d3e3b2dd59085d9d7636380aa27fc888c82ab8fbee42f2a84",
+      "fusion.jsonl": "fb71f1e770242d164425af33421bc48faf8dbeffcc56508b6e8620f36d772788",
+      "genericity.jsonl": "8c349d9bee3150a97bc7e0e74aaccc78737fd53767445ba1ce17879a61cdf7e1",
+      "inflectional_synthesis.jsonl": "28f4cf74d4df25df96a4c81993a43b6f06b2ac2278252c28267a113b7894ea84",
+      "modal_strength.jsonl": "4ebabbae5460c8529b33e748d1911eb4c532db7cdc8e90c94141df3485d9dca0",
+      "narrative_framing.jsonl": "415f0b14b1b0d67e24873a42a75bd434fea564cab812d280449608b417de61d4",
+      "nominalization.jsonl": "4cbad1ed08d8175912b3dd57fe13ad909f868f57a83a0f3752a9c8cb8c0f5a66",
+      "pronoun_distribution.jsonl": "0c079ac37833eb075468c488127a121f778ba3d3e1ddc3df8acce9f29aa36eda",
+      "subordination.jsonl": "0ba87204c808d20f5576da87b93ddfec35348579a225b3a75282ac87ace74dc1",
+      "tense_aspect.jsonl": "a87dfe124bba999e64dedaf8f44b4cf26c9e112171af43b6222c8989614eccd8",
+      "voice.jsonl": "3a0226f134a223d1bb2c16cb4242e540844d768be27a90dca698b129a02de59a"
+    },
+    "lexical_diversity_analysis": {
+      "exists": true,
+      "path": "/home/ubuntu/evaluation/data/aggregated/lexical_diversity_analysis.json",
+      "sha256": "80e8b9f973b7a2c14b134ca37ff0389bd8ef8bb3e95fa1d5fe5352e53465b944"
+    },
+    "paired_deltas": {
+      "exists": true,
+      "path": "/home/ubuntu/evaluation/data/aggregated/paired_deltas.jsonl",
+      "sha256": "e4fdac465d3b263633acb773bf3ac5fee44ba37a1677b6928ec7093cd151a22a"
+    },
+    "scenarios": {
+      "exists": true,
+      "path": "/home/ubuntu/evaluation/data/scenarios/final/scenarios.jsonl",
+      "sha256": "5db7e8c67c7c43c8498a59a3e8bcdc1b1f7fb37cdbaf2fcdeb4f7eaa2f83d5fc"
+    }
+  },
+  "integrity": {
+    "canonical_minus_base_rows": 800,
+    "category_counts": {
+      "animal": 100,
+      "animal_context": 100,
+      "animal_value": 100,
+      "animal_value_context": 100,
+      "context": 100,
+      "id": 100,
+      "value": 100,
+      "value_context": 100
+    },
+    "combined_complete": true,
+    "combined_rows": 13600,
+    "combined_unique_condition_scenario_pairs": 13600,
+    "condition_count": 17,
+    "conditions": [
+      "base",
+      "canonical",
+      "conditionality",
+      "constituent_order",
+      "control_zh",
+      "epistemic_hedging",
+      "formality",
+      "fusion",
+      "genericity",
+      "inflectional_synthesis",
+      "modal_strength",
+      "narrative_framing",
+      "nominalization",
+      "pronoun_distribution",
+      "subordination",
+      "tense_aspect",
+      "voice"
+    ],
+    "control_minus_base_rows": 800,
+    "expected_condition_scenario_pairs": 13600,
+    "feature_delta_rows": 11200,
+    "judge_1_pairs": 13600,
+    "judge_2_pairs": 13600,
+    "judges_complete": true,
+    "paired_delta_rows": 12800,
+    "scenario_count": 800,
+    "tradeoff_counts": {
+      "animal_context|False": 50,
+      "animal_context|True": 50,
+      "animal_value_context|False": 50,
+      "animal_value_context|True": 50,
+      "animal_value|False": 50,
+      "animal_value|True": 50,
+      "animal|False": 50,
+      "animal|True": 50,
+      "context|False": 50,
+      "context|True": 50,
+      "id|False": 50,
+      "id|True": 50,
+      "value_context|False": 50,
+      "value_context|True": 50,
+      "value|False": 50,
+      "value|True": 50
+    }
+  },
+  "runtime": {
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "platform": "Linux-6.8.0-1046-nvidia-x86_64-with-glibc2.35",
+    "python": "3.10.12"
+  }
+}
