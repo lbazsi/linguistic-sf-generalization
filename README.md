@@ -199,6 +199,7 @@ There is currently no dedicated activation-probing, mechanistic-analysis, or cau
 | [Fine-tuning](fine_tuning/README.md) | Input contracts, validation split, training settings, verification, and adapter outputs |
 | [Evaluation](evaluation/README.md) | Scenario categories, continuation format, judging rubric, aggregation, and analysis commands |
 | [Further research directions](further_research_directions/generalization_from_linguistics.md) | Proposed domain-general linguistic fine-tuning experiment |
+| [Linguistic feature interactions](further_research_directions/linguistic_feature_interactions.md) | Proposed study of combined feature effects, amplification, and cancellation |
 
 This README describes the research question, design, and interpretation. Component READMEs provide the detailed execution procedures and artifact schemas. Configuration files specify the active parameters.
 
@@ -225,5 +226,7 @@ The generation pipeline supports resumable pilots through `--feature` and `--max
 ## Further research
 
 The documented follow-up in [Generalization from linguistic fine-tuning](further_research_directions/generalization_from_linguistics.md) would apply linguistic transformations to a broad, domain-general corpus and then evaluate animal-welfare behavior. That design tests cross-domain behavioral transfer without directly teaching animal-welfare values in the fine-tuning corpus.
+
+A separate proposal, [Interactions between linguistic features and value generalization](further_research_directions/linguistic_feature_interactions.md), would test whether combining or reducing features creates additive, amplifying, or counteracting behavioral effects, using matched single-feature and combined-feature fine-tunes.
 
 Future empirical reports can be organized by experiment, with each report identifying its hypothesis, configuration, dataset and model artifacts, controls, analysis, results, and limitations. The shared semantic IDs, feature registry, training summaries, and evaluation interfaces provide the basis for extending the project while retaining comparable provenance.
