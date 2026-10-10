@@ -14,7 +14,6 @@ from common import (
     read_jsonl,
     render_prompt,
     resolve_path,
-    validate_expected_ids,
     write_jsonl_atomic,
     write_manifest,
 )
@@ -128,17 +127,18 @@ async def judge_file(
             temperature_key=seed_key,
             seed_key=seed_key,
             prompt=prompt,
-            schema=judgment_batch_schema(ids),
+            schema=judgment_batch_schema(len(batch)),
             schema_name=f"response_judgments_{judge_number}",
         )
         rows = response["judgments"]
-        validate_expected_ids(
-            rows,
-            ids,
-            "scenario_id",
-            label=f"judge {judge_number} batch",
-        )
-        return rows
+        if len(rows) != len(batch):
+            raise RuntimeError(
+                f"judge {judge_number} batch: expected {len(batch)} judgments, got {len(rows)}"
+            )
+        return [
+            {"scenario_id": scenario_id, **judgment}
+            for scenario_id, judgment in zip(ids, rows, strict=True)
+        ]
 
     tasks = [
         asyncio.create_task(run_batch(batch))
