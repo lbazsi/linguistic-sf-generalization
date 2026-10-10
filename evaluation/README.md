@@ -125,7 +125,7 @@ The configured response-generation seed is reset consistently across conditions 
 
 Two independent judge models score every model continuation. Model identity is never included in the judge prompt.
 
-Items are shuffled before judging and batched only for API efficiency.
+Items are shuffled before judging and batched only for API efficiency. Judgment batches run concurrently up to the configured API concurrency limit. Each condition is checkpointed to a hidden partial JSONL file after every completed batch; rerunning the judge stage resumes unfinished conditions from that checkpoint. Batch responses are also validated to contain every expected scenario ID exactly once.
 
 Each judge returns:
 
