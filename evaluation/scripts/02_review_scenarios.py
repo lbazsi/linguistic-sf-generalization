@@ -11,7 +11,6 @@ from common import (
     read_jsonl,
     render_prompt,
     resolve_path,
-    validate_expected_ids,
     validate_scenarios,
     write_jsonl_atomic,
     write_manifest,
@@ -37,17 +36,18 @@ async def main() -> None:
             temperature_key="scenario_judge",
             seed_key="scenario_judge",
             prompt=prompt,
-            schema=scenario_text_batch_schema(ids),
+            schema=scenario_text_batch_schema(len(batch)),
             schema_name="reviewed_eval_scenarios",
         )
-        validate_expected_ids(
-            response["items"],
-            ids,
-            "id",
-            label="scenario review batch",
-        )
-        text_by_id = {row["id"]: row["scenario"] for row in response["items"]}
-        return [{**row, "scenario": text_by_id[row["id"]]} for row in batch]
+        items = response["items"]
+        if len(items) != len(batch):
+            raise RuntimeError(
+                f"scenario review batch: expected {len(batch)} items, got {len(items)}"
+            )
+        return [
+            {**row, "scenario": item["scenario"]}
+            for row, item in zip(batch, items, strict=True)
+        ]
 
     try:
         results = await asyncio.gather(
