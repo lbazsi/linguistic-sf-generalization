@@ -14,6 +14,7 @@ from common import (
     read_jsonl,
     render_prompt,
     resolve_path,
+    validate_expected_ids,
     write_jsonl_atomic,
     write_manifest,
 )
@@ -57,13 +58,21 @@ async def judge_file(
     out_dir = resolve_path(config, "judgments") / f"judge_{judge_number}"
     out_dir.mkdir(parents=True, exist_ok=True)
     output_path = out_dir / response_path.name
+    partial_path = out_dir / f".{response_path.stem}.partial.jsonl"
 
-    if output_path.exists() and not overwrite:
-        raise FileExistsError(f"{output_path} already exists. Use --overwrite to replace it.")
+    if output_path.exists():
+        if not overwrite:
+            raise FileExistsError(f"{output_path} already exists. Use --overwrite to replace it.")
+        output_path.unlink()
+        partial_path.unlink(missing_ok=True)
 
     responses = read_jsonl(response_path)
     if not responses:
         raise RuntimeError(f"{response_path} contains no responses.")
+
+    source_by_id = {int(row["scenario_id"]): row for row in responses}
+    if len(source_by_id) != len(responses):
+        raise RuntimeError(f"{response_path}: duplicate scenario IDs.")
 
     items = []
     for row in responses:
@@ -85,11 +94,31 @@ async def judge_file(
     rng = random.Random(shuffle_seed)
     rng.shuffle(items)
 
-    batch_size = int(config["judging"]["batch_size"])
-    judgments: list[dict] = []
+    expected_ids = [int(row["scenario_id"]) for row in responses]
+    expected_id_set = set(expected_ids)
 
-    for batch in batches(items, batch_size):
-        ids = [row["scenario_id"] for row in batch]
+    judgments_by_id: dict[int, dict] = {}
+    if partial_path.exists():
+        partial_rows = read_jsonl(partial_path)
+        partial_ids = [int(row["scenario_id"]) for row in partial_rows]
+        if len(partial_ids) != len(set(partial_ids)):
+            raise RuntimeError(f"{partial_path}: duplicate scenario IDs.")
+        unexpected = sorted(set(partial_ids) - expected_id_set)
+        if unexpected:
+            raise RuntimeError(f"{partial_path}: unexpected scenario IDs: {unexpected}")
+        judgments_by_id = {int(row["scenario_id"]): row for row in partial_rows}
+        print(
+            f"[judge {judge_number}] {response_path.stem}: "
+            f"resuming {len(judgments_by_id)}/{len(expected_ids)} judgments."
+        )
+
+    pending_items = [
+        row for row in items if int(row["scenario_id"]) not in judgments_by_id
+    ]
+    batch_size = int(config["judging"]["batch_size"])
+
+    async def run_batch(batch: list[dict]) -> list[dict]:
+        ids = [int(row["scenario_id"]) for row in batch]
         prompt = render_prompt(
             "judge_response.txt",
             {"ITEMS_JSON": json_text(batch)},
@@ -102,13 +131,50 @@ async def judge_file(
             schema=judgment_batch_schema(ids),
             schema_name=f"response_judgments_{judge_number}",
         )
-        judgments.extend(response["judgments"])
+        rows = response["judgments"]
+        validate_expected_ids(
+            rows,
+            ids,
+            "scenario_id",
+            label=f"judge {judge_number} batch",
+        )
+        return rows
 
-    by_id = {int(row["scenario_id"]): row for row in judgments}
-    source_by_id = {int(row["scenario_id"]): row for row in responses}
+    tasks = [
+        asyncio.create_task(run_batch(batch))
+        for batch in batches(pending_items, batch_size)
+    ]
+    try:
+        for completed in asyncio.as_completed(tasks):
+            batch_rows = await completed
+            for row in batch_rows:
+                judgments_by_id[int(row["scenario_id"])] = row
+            write_jsonl_atomic(
+                partial_path,
+                [judgments_by_id[key] for key in sorted(judgments_by_id)],
+            )
+            print(
+                f"[judge {judge_number}] {response_path.stem}: "
+                f"checkpoint {len(judgments_by_id)}/{len(expected_ids)}"
+            )
+    except Exception:
+        for task in tasks:
+            if not task.done():
+                task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
+        raise
+
+    judgments = [judgments_by_id[key] for key in sorted(judgments_by_id)]
+    validate_expected_ids(
+        judgments,
+        expected_ids,
+        "scenario_id",
+        label=f"judge {judge_number} {response_path.stem}",
+    )
+
     output = []
-    for scenario_id in sorted(by_id):
-        judged = by_id[scenario_id]
+    for judged in judgments:
+        scenario_id = int(judged["scenario_id"])
         source = source_by_id[scenario_id]
         output.append(
             {
@@ -123,6 +189,7 @@ async def judge_file(
         )
 
     write_jsonl_atomic(output_path, output)
+    partial_path.unlink(missing_ok=True)
     print(f"[judge {judge_number}] {response_path.stem}: wrote {len(output)} judgments.")
 
 
