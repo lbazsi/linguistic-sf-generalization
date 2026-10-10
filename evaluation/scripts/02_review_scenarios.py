@@ -11,6 +11,7 @@ from common import (
     read_jsonl,
     render_prompt,
     resolve_path,
+    validate_expected_ids,
     validate_scenarios,
     write_jsonl_atomic,
     write_manifest,
@@ -38,6 +39,12 @@ async def main() -> None:
             prompt=prompt,
             schema=scenario_text_batch_schema(ids),
             schema_name="reviewed_eval_scenarios",
+        )
+        validate_expected_ids(
+            response["items"],
+            ids,
+            "id",
+            label="scenario review batch",
         )
         text_by_id = {row["id"]: row["scenario"] for row in response["items"]}
         return [{**row, "scenario": text_by_id[row["id"]]} for row in batch]
