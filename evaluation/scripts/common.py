@@ -188,6 +188,40 @@ def batches(items: list[Any], batch_size: int) -> list[list[Any]]:
     return [items[i : i + batch_size] for i in range(0, len(items), batch_size)]
 
 
+def validate_expected_ids(
+    rows: list[dict[str, Any]],
+    expected_ids: Iterable[int],
+    id_key: str,
+    *,
+    label: str,
+) -> None:
+    expected = [int(value) for value in expected_ids]
+    actual: list[int] = []
+    for row in rows:
+        if id_key not in row:
+            raise RuntimeError(f"{label}: missing {id_key!r}.")
+        actual.append(int(row[id_key]))
+
+    if len(actual) != len(set(actual)):
+        seen: set[int] = set()
+        duplicates: set[int] = set()
+        for value in actual:
+            if value in seen:
+                duplicates.add(value)
+            seen.add(value)
+        raise RuntimeError(f"{label}: duplicate IDs: {sorted(duplicates)}")
+
+    expected_set = set(expected)
+    actual_set = set(actual)
+    if len(actual) != len(expected) or actual_set != expected_set:
+        missing = sorted(expected_set - actual_set)
+        extra = sorted(actual_set - expected_set)
+        raise RuntimeError(
+            f"{label}: ID mismatch; expected {len(expected)} unique IDs, "
+            f"got {len(actual)}. Missing={missing}, extra={extra}"
+        )
+
+
 def category_splits(category: str) -> tuple[str, str, str]:
     held = set(category.split("_")) if category != "id" else set()
     return (
