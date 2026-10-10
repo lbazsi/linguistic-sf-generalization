@@ -62,7 +62,11 @@ async def judge_file(
 
     if output_path.exists():
         if not overwrite:
-            raise FileExistsError(f"{output_path} already exists. Use --overwrite to replace it.")
+            print(
+                f"[judge {judge_number}] {response_path.stem}: "
+                f"already complete; skipping."
+            )
+            return
         output_path.unlink()
         partial_path.unlink(missing_ok=True)
 
