@@ -229,4 +229,6 @@ The documented follow-up in [Generalization from linguistic fine-tuning](further
 
 A separate proposal, [Interactions between linguistic features and value generalization](further_research_directions/linguistic_feature_interactions.md), would test whether combining or reducing features creates additive, amplifying, or counteracting behavioral effects, using matched single-feature and combined-feature fine-tunes.
 
+A third proposal, [Linguistic structure and value propagation in synthetic data generation](further_research_directions/linguistic_structure_in_synthetic_data_generation.md), would investigate whether linguistic effects influence the value content of generated datasets and potentially propagate through subsequent training rounds.
+
 Future empirical reports can be organized by experiment, with each report identifying its hypothesis, configuration, dataset and model artifacts, controls, analysis, results, and limitations. The shared semantic IDs, feature registry, training summaries, and evaluation interfaces provide the basis for extending the project while retaining comparable provenance.
