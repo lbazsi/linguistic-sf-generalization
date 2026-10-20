@@ -1,4 +1,4 @@
-# Linguistic Structure and Animal-Welfare Value Generalization
+# Investigating the Effects of Low-Level Linguistic Structures on Value Generalization in Animal Welfare Contexts
 
 ## Overview
 
