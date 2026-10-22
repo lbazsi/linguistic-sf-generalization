@@ -86,3 +86,45 @@ The model configuration expects existing independently trained checkpoint trees,
 ### Verification and current boundaries
 
 Unit smoke tests verify data parsing, grouped splits, key statistics and hook behavior without downloading large models. Full GPU validation must separately verify architecture hooks, PEFT adapter reassembly, CUDA memory use, Qwen/Mistral/Llama compatibility and agreement of generated continuations with the original evaluator. Probe metrics, model differences and LoRA geometry are descriptive; observed intervention effects are not an identification of training-time causation. The current steering screen ranks by welfare log-probability change; linguistic-manipulation and coherence diagnostics and matched random-direction controls require additional validation before strong causal interpretation. No judge stage is called automatically from analysis commands.
+
+
+## Complete local execution sequence
+
+`run_all.py` lists local experiments by default; `--execute` is required to launch them and `--resume` skips existing completed result files. This orchestration never invokes API judges.
+
+```bash
+cd mechanistic-interpretability
+pip install -r requirements.txt
+python -m pytest tests -q
+python run.py validate --check-screening
+
+# Preview each local workload before execution.
+python run_all.py --model gemma2 --stage difference
+python run_all.py --model gemma2 --stage probes
+python run_all.py --model gemma2 --stage lora
+python run_all.py --model gemma2 --stage steering
+
+# Run individual stages as GPU capacity permits:
+python run_all.py --model gemma2 --stage difference --execute --resume
+python run_all.py --model gemma2 --stage probes --execute --resume
+python run_all.py --model gemma2 --stage lora --execute --resume
+python run_all.py --model gemma2 --stage steering --execute --resume
+
+# One selected configuration per feature-adapter pair, across both token policies.
+python run.py steering-select --model gemma2
+python run.py steering-controls --model gemma2
+python run.py plots --model gemma2
+
+# Deliberately separate expensive judged evaluation.
+python run.py judge-plan --model gemma2
+python run.py judge-generate --model gemma2
+python run.py judge-run --model gemma2 --execute-judges
+python run.py judge-aggregate --model gemma2
+
+# Repeat on qwen3, llama31, and mistral after training/evaluation.
+python run.py synthesis
+```
+
+The standard judged budget is 14 features × two matched adapter conditions × 100 held-out scenarios = 2,800 continuations per model. At two judges and ten items per API request, this corresponds to 560 judging requests per model, excluding retries; token usage and actual prices determine monetary cost. Generation and judging are separately invoked. Direction extraction saves only small unit vectors and calibration scales, never token activations. The cross-family synthesis consumes original feature-minus-control evaluation effects and mechanical summaries when they become available.
+
+The implementation is intended for a single GPU with sequential base/adapter loading. Its numerical correctness, model-specific compatibility, observed memory use and full evaluation integration still require an end-to-end GPU pilot before interpreting research findings.
