@@ -153,21 +153,39 @@ async def judge(cfg,family,policy="prompt_last",execute=False):
     return out
 
 def aggregate(cfg,family,policy="prompt_last"):
+    """Paired steered-vs-unsteered welfare scores on identical held-out scenarios."""
+    from .stats import cluster_signflip
     source=judge_plan(cfg,family,policy)
     directory=run_dir(cfg,family,"activation-steering")/"judgments"
+    baseline_path=cfg["models"][family].get("judgments")
+    if baseline_path is None:
+        if family!="gemma2":
+            raise ValueError(f"Pin the model-specific original evaluation combined_judgments.jsonl in models.{family}.judgments")
+        baseline_path=str(location(cfg,"judgments"))
+    else:
+        path=Path(baseline_path)
+        baseline_path=str(path if path.is_absolute() else (Path(cfg["_config_file"]).parent.parent/path).resolve())
+    existing=read_data(Path(baseline_path))
+    baseline={(r["condition"],int(r["scenario_id"])):r["scores"]["target_value_support"]
+              for r in existing if r.get("scores") is not None}
     rows=[];scenario={int(r["id"]):r for r in load_scenarios(cfg)}
     for file in source:
         conditions=read_data(file)
-        j1={r["scenario_id"]:r for r in read_data(directory/"judge_1"/file.name)}
-        j2={r["scenario_id"]:r for r in read_data(directory/"judge_2"/file.name)}
+        j1={int(r["scenario_id"]):r for r in read_data(directory/"judge_1"/file.name)}
+        j2={int(r["scenario_id"]):r for r in read_data(directory/"judge_2"/file.name)}
         for r in conditions:
-            sid=r["scenario_id"]
+            sid=int(r["scenario_id"])
             judgments=[j1[sid],j2[sid]]
             vals=[j["scores"]["target_value_support"] for j in judgments
                   if j["scores"]["target_value_support"] is not None]
             value=sum(vals)/len(vals) if vals else None
+            base=baseline.get((r["adapter"],sid))
+            if base is None:
+                raise ValueError(f"Missing baseline score for {r['adapter']} scenario {sid}")
             s=scenario[sid];cell="|".join(map(str,(s["category"],s["animal"],s["value"],s["context"])))
-            rows.append({**r,"target_value_support":value,"semantic_cell":cell,
+            rows.append({**r,"target_value_support":value,"unsteered_score":base,
+                         "paired_delta":value-base if value is not None else None,
+                         "semantic_cell":cell,"category":s["category"],"tradeoff":s["tradeoff"],
                          "judge_1":j1[sid]["scores"],"judge_2":j2[sid]["scores"]})
     output=directory/"combined.jsonl"
     write_rows(output,rows)
@@ -175,9 +193,12 @@ def aggregate(cfg,family,policy="prompt_last"):
     grouped=defaultdict(list)
     for row in rows:grouped[(row["feature"],row["adapter"])].append(row)
     for (feature,condition),part in grouped.items():
-        usable=[r for r in part if r["target_value_support"] is not None]
-        summary.append({"feature":feature,"adapter":condition,
-            "score":cluster_interval([r["target_value_support"] for r in usable],
-                [r["semantic_cell"] for r in usable],cfg["seed"],cfg["stats"]["bootstrap_replicates"])})
+        usable=[r for r in part if r["paired_delta"] is not None]
+        delta=[r["paired_delta"] for r in usable];clusters=[r["semantic_cell"] for r in usable]
+        summary.append({"feature":feature,"adapter":condition,"n":len(usable),
+            "paired_delta":cluster_interval(delta,clusters,cfg["seed"],cfg["stats"]["bootstrap_replicates"]),
+            "p_value":cluster_signflip(delta,clusters,cfg["seed"],cfg["stats"]["permutations"])})
+    q=bh([item["p_value"] for item in summary])
+    for item,qv in zip(summary,q):item["q_value"]=qv
     write_json(directory/"summary.json",summary)
     return output
