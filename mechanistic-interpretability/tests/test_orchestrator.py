@@ -10,4 +10,4 @@ def test_complete_steering_coverage():
 def test_nonjudge_task_counts():
     assert len(plan("gemma2","difference"))==16
     assert len(plan("gemma2","lora"))==2
-    assert len(plan("gemma2","probes"))==17*(2+14)
+    assert len(plan("gemma2","probes"))==17*2 + 14*3
