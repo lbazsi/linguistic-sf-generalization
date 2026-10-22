@@ -62,8 +62,8 @@ def functional_analysis(cfg,family,checkpoint="final",samples=64):
                         for pooling,input_x in (("final",final),("mean",mean)):
                             projections={}
                             for condition,maps in weights.items():
-                                matrix=maps[key].to(input_x.device)
-                                output=input_x@matrix.T
+                                update=maps[key]
+                                output=update.apply(input_x)
                                 projections[condition]=output
                                 value=float(output.square().mean().sqrt().item())
                                 total=sums[(domain,condition,key,pooling,"rms")]
