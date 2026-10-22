@@ -70,6 +70,9 @@ def main():
             if candidate.exists():
                 print(f"Skipping existing {candidate}")
                 continue
-        execute(cfg,task)
+        result=execute(cfg,task)
+        if isinstance(result,(str,Path)) and Path(result).is_file():
+            from mechinterp.common import record_run
+            record_run(cfg,args.model,task["stage"],Path(result))
 
 if __name__=="__main__":main()
