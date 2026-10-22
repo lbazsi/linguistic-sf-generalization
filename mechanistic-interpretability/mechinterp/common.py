@@ -252,3 +252,26 @@ def provenance(cfg: dict, family: str, stage: str, inputs: list[Path]) -> dict:
         "config_sha256": digest(Path(cfg["_config_file"])),
         "input_hashes": {str(p): digest(p) for p in inputs if p.is_file()},
     }
+
+def record_run(cfg, family, stage, artifact: Path) -> Path:
+    """Write a compact provenance record without saving activations or weights."""
+    import platform
+    artifact=Path(artifact)
+    if not artifact.is_file():
+        return artifact
+    record=provenance(cfg,family,stage,[location(cfg,"general"),location(cfg,"concepts"),
+                                       location(cfg,"scenarios"),location(cfg,"steering")])
+    record["artifact"]={"path":str(artifact),"sha256":digest(artifact)}
+    record["python"]=platform.python_version()
+    try:
+        import torch
+        import transformers
+        import peft
+        record["runtime"]={"torch":torch.__version__,"cuda":torch.version.cuda,
+                           "transformers":transformers.__version__,"peft":peft.__version__,
+                           "gpu":torch.cuda.get_device_name(0) if torch.cuda.is_available() else None}
+    except ImportError:
+        pass
+    target=artifact.with_name(artifact.stem+"_manifest.json")
+    write_json(target,record)
+    return target
