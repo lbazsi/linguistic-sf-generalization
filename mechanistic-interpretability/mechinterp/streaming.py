@@ -122,7 +122,7 @@ def fit_all(model,tok,train,development,test,task,cfg,weights_path):
     torch.manual_seed(int(cfg["seed"]))
     for epoch in range(int(pcfg["epochs"])):
         for batch in batches(train,int(cfg["runtime"]["batch_size"])):
-            h=batch_grid(model,tok,batch,cfg,keys)
+            h=batch_grid(model,tok,batch,cfg,keys).clone()  # normal tensor for probe gradients
             y=torch.tensor([float(r["label"]) for r in batch],device=h.device)
             bank.train_batch(h,y)
     dev=evaluate_bank(bank,model,tok,development,cfg,keys)
