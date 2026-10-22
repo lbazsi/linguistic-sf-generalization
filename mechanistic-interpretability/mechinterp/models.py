@@ -68,7 +68,7 @@ def pool(hidden, mask, how):
     if how == "mean":
         return (hidden.float() * mask.unsqueeze(-1)).sum(1) / lengths.clamp_min(1).unsqueeze(-1)
     if how == "final":
-        indices = mask.long().cumsum(-1).argmax(-1) if False else mask.size(1)-1
+        indices = mask.size(1) - 1
         # Left padding is required; last token is the final nonpadding token.
         if not torch.all(mask[:, -1] == 1):
             raise ValueError("Final-token extraction requires left-padded inputs")
@@ -119,29 +119,43 @@ def steer(model, layer, site, vector, strength, token_policy="prompt_last"):
 @torch.inference_mode()
 def continuation_scores(model, tokenizer, prompts, supporting, opposing, layer, site,
                         direction, strength, policy, max_length=512):
-    """Length-mean token log likelihood of each candidate conditioned on the prompt."""
+    """Teacher-forced conditional continuation likelihood, with prompt-boundary steering.
+
+    prompt_last steers the token preceding the first candidate; generation also steers
+    subsequent candidate tokens. This mirrors cached generation while remaining efficient.
+    """
     scores = []
     for prompt, pos, neg in zip(prompts, supporting, opposing):
         result = []
+        ids_p = tokenizer(prompt, add_special_tokens=True)["input_ids"]
         for option in (pos, neg):
-            # Score token transitions of continuation only, respecting the exact text prefix.
-            ids_p = tokenizer(prompt, add_special_tokens=True)["input_ids"]
             ids_f = tokenizer(prompt + option, add_special_tokens=True)["input_ids"]
             if ids_f[:len(ids_p)] != ids_p:
-                # Prefix tokenization differs: score using explicit concatenation.
                 ids_f = ids_p + tokenizer(option, add_special_tokens=False)["input_ids"]
-            if len(ids_f) > max_length:
-                raise ValueError("Candidate exceeds maximum scoring length")
+            if len(ids_f)>max_length: raise ValueError("Candidate exceeds maximum scoring length")
+            if len(ids_f)<=len(ids_p):raise ValueError("Empty candidate tokenization")
             x = torch.tensor([ids_f], dtype=torch.long, device=model.device)
             mask = torch.ones_like(x)
-            with steer(model, layer, site, direction, strength, policy):
-                out = model(input_ids=x, attention_mask=mask, use_cache=False)
-            start = len(ids_p)
-            target = x[:, start:]
-            logits = out.logits[:, start-1:-1].float().log_softmax(-1)
-            score = logits.gather(-1, target.unsqueeze(-1)).squeeze(-1).mean().item()
-            result.append(score)
-        scores.append(result[0] - result[1])
+            start=len(ids_p)
+            def hook(_module, _inputs, output):
+                hidden=tensor_output(output)
+                shifted=hidden.clone()
+                offset=(strength*direction).to(hidden.device,dtype=hidden.dtype)
+                if policy=="prompt_last":
+                    shifted[:,start-1,:]+=offset
+                elif policy=="generation":
+                    shifted[:,start-1:,:]+=offset
+                else:raise ValueError(policy)
+                return replace_tensor_output(output,shifted)
+            handle=site_module(model,layer,site).register_forward_hook(hook)
+            try:
+                out=model(input_ids=x,attention_mask=mask,use_cache=False)
+            finally:
+                handle.remove()
+            target=x[:,start:]
+            logprobs=out.logits[:,start-1:-1].float().log_softmax(-1)
+            result.append(logprobs.gather(-1,target.unsqueeze(-1)).squeeze(-1).mean().item())
+        scores.append(result[0]-result[1])
     return scores
 
 def unload(model):
