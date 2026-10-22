@@ -27,7 +27,7 @@ Calibrate each site on a separate fixed, non-welfare development corpus, using i
 
 ```text
 h_steered = h + alpha * s[L,S] * unit_d
-alpha = [-4, -2, -1, -0.5, 0, 0.5, 1, 2, 4]
+alpha = [-2, -1, 0, 1, 2]
 ```
 
 Use the same convention for MLP-output and residual-stream sites, calibrating their scales separately. Log realized perturbation norm relative to baseline RMS and flag saturation/degradation at extreme alpha. Keep all settings including sign and strength identical within each model family; do not interpret equal alpha as an identical absolute intervention across architectures.
@@ -36,13 +36,13 @@ Use the same convention for MLP-output and residual-stream sites, calibrating th
 
 ## Layer/site screening
 
-Evaluate both residual and MLP-output sites across **every layer** and all features with a small validation-only scenario subset. Select 2–3 layers per feature using a predeclared score combining (a) independent linguistic manipulation success, (b) model coherence, and (c) absolute welfare-support change; define weights and failure constraints in the run configuration before viewing held-out test results. Prefer a Pareto analysis when these objectives disagree, retaining a deterministic tie-break rule. Keep primary test-set evaluation separate from layer/strength screening, and report the full layer screening map to avoid selection bias. Report final-token-only and generation-step steering conditions separately.
+Screen **all layers and both activation sites**, for every feature and both its registered control and feature adapter. Use the same 200 existing benchmark scenarios with paired welfare-supporting/opposing options: 20 initial screening scenarios, 80 independent validation scenarios and 100 held-out final-evaluation scenarios. Compute the length-normalized log-probability difference between the options, and compare each steered score to its same-scenario zero-strength baseline. Retain all screening results. On validation, select one nonzero layer/site/strength combination with the largest absolute mean proxy change **for every feature–adapter pair**, including null features; break ties deterministically. The selection does not restrict or remove full-layer screening results. The final held-out judged evaluation is a separate explicit command, using the original scoring and batching system. Report prompt-last-only and generation-step steering conditions separately. Configuration selection currently uses the proxy outcome and requires the manipulation/coherence diagnostics to be interpreted separately.
 
 ## Evaluation and controls
 
 Use the existing scenario prompt, continuation, two-judge rubric, aggregation, and statistics pipeline for **welfare outcome scoring**, including overall `target_value_support`, generalization categories, tradeoff effects and coherence. On a separate fixed sample, additionally assess **linguistic manipulation success** with feature-appropriate diagnostics; this is a manipulation check, not a substitute for welfare evaluation. For cross-language features, measure whether the intervention changes output language, since language switching would confound welfare results.
 
-For every selected feature/layer/site use: alpha=0 baseline, positive and negative alpha, norm-matched random direction(s) with fixed seed, and randomly swapped pair labels as a null-direction control. Include an unsteered canonical adapter and the matching feature adapter: does steering canonical toward the feature direction shift behavior toward the feature adapter's observed result? Also run steering on the pretrained base model to separate adapter-specific effects. Random-direction controls should be repeated as computational budget allows; one sampled random vector is a weak null distribution. Track refusal/invalid responses and incoherence. Test steering on the remaining welfare scenarios only **after** layer/strength selection, with scenario-ID and semantic-cell separation from development.
+For each feature/layer/site in screening, include alpha=0 and both positive and negative alpha. Norm-matched random directions and randomly swapped-label directions are planned negative-control diagnostics that must be implemented before drawing strong steering-specific conclusions. Include an unsteered canonical adapter and the matching feature adapter: does steering canonical toward the feature direction shift behavior toward the feature adapter's observed result? Also run steering on the pretrained base model to separate adapter-specific effects. Random-direction controls should be repeated as computational budget allows; one sampled random vector is a weak null distribution. Track refusal/invalid responses and incoherence. Test steering on the remaining welfare scenarios only **after** layer/strength selection, with scenario-ID and semantic-cell separation from development.
 
 ## Statistics and outputs
 
