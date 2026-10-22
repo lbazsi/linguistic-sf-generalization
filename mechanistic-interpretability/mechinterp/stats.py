@@ -60,3 +60,20 @@ def cluster_interval(values,clusters,seed=42,reps=2000):
 def paired_summary(rows,key="delta",cluster="cell",seed=42,reps=2000):
     data=[r for r in rows if r.get(key) is not None]
     return cluster_interval([r[key] for r in data],[r[cluster] for r in data],seed,reps)
+
+def cluster_signflip(values,clusters,seed=42,reps=2000):
+    """Two-sided cluster sign-flip p-value, with a +1 Monte Carlo correction."""
+    groups={}
+    for value,cluster in zip(values,clusters):
+        groups.setdefault(str(cluster),[]).append(float(value))
+    if not groups:return None
+    cluster_means=np.array([np.mean(v) for v in groups.values()])
+    cluster_weights=np.array([len(v) for v in groups.values()],dtype=float)
+    observed=abs(float(np.average(cluster_means,weights=cluster_weights)))
+    rng=np.random.default_rng(seed)
+    exceed=0
+    for _ in range(reps):
+        signs=rng.choice(np.array([-1.0,1.0]),size=len(groups))
+        perm=abs(float(np.average(cluster_means*signs,weights=cluster_weights)))
+        exceed+=perm>=observed-1e-12
+    return float((exceed+1)/(reps+1))
