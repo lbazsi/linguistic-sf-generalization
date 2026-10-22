@@ -9,7 +9,6 @@ def test_rank_geometry_matches_dense():
     dense=2*b@a
     assert torch.allclose(update.norm(),dense.norm(),rtol=1e-5)
     assert torch.allclose(update.spectrum()[:3],torch.linalg.svdvals(dense)[:3],rtol=1e-5)
-    assert torch.allclose(update.apply(torch.randn(5,7)), torch.randn(5,7)) is False if False else True
     stats=compare(update,update)
     assert abs(stats["cosine"]-1)<1e-5
     assert stats["relative_distance"]<1e-5
