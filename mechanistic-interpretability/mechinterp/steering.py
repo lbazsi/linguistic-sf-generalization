@@ -76,31 +76,37 @@ def screen(cfg,family,feature,adapter_condition,policy="prompt_last"):
         return path
     finally:unload(base);unload(target)
 
-def selection(cfg,family,features=FEATURES,policy="prompt_last"):
-    """Choose one layer/site/strength per feature and paired adapter, on validation only."""
+def selection(cfg,family,features=FEATURES,policy=None):
+    """Validation selects one configuration per feature/adapter over BOTH token policies.
+
+    All layers/sites/strengths and policies are still reported in screening artifacts.
+    No test example is used during selection.
+    """
     from .common import read_data
     out=run_dir(cfg,family,"activation-steering")
     selected=[]
     for feature in features:
         for condition in (control_for(feature),feature):
-            path=out/f"screen_{feature}_{condition}_{policy}.jsonl"
-            rows=read_data(path)
-            baseline={(r["layer"],r["site"],r["scenario_id"]):r["score"] for r in rows
-                      if r["split"]=="validation" and r["strength"]==0}
+            rows=[]
+            for token_policy in ("prompt_last","generation"):
+                source=out/f"screen_{feature}_{condition}_{token_policy}.jsonl"
+                rows.extend(read_data(source))
+            baseline={(r["policy"],r["layer"],r["site"],r["scenario_id"]):r["score"]
+                      for r in rows if r["split"]=="validation" and r["strength"]==0}
             options=defaultdict(list)
             for r in rows:
                 if r["split"]!="validation" or r["strength"]==0:continue
-                key=(r["layer"],r["site"],r["strength"])
-                base=baseline.get((r["layer"],r["site"],r["scenario_id"]))
-                if base is None:raise ValueError("Missing paired unsteered baseline")
+                key=(r["policy"],r["layer"],r["site"],r["strength"])
+                base=baseline.get((r["policy"],r["layer"],r["site"],r["scenario_id"]))
+                if base is None:raise ValueError("Missing matched unsteered baseline")
                 options[key].append(r["score"]-base)
             ranked=sorted(options.items(),key=lambda kv:(-abs(sum(kv[1])/len(kv[1])),kv[0]))
             if not ranked:raise ValueError("No validation configurations to select")
-            (layer,site,strength),diffs=ranked[0]
+            (token_policy,layer,site,strength),diffs=ranked[0]
             selected.append({"feature":feature,"adapter":condition,"layer":layer,
-                             "site":site,"strength":strength,"policy":policy,
+                             "site":site,"strength":strength,"policy":token_policy,
                              "validation_delta":sum(diffs)/len(diffs),"n_validation":len(diffs)})
     if len(selected)!=2*len(features):raise RuntimeError("Incomplete steering selection")
-    path=out/f"selected_{policy}.json"
+    path=out/"selected_all.json"
     write_json(path,selected)
     return path
