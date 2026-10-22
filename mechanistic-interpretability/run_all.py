@@ -17,7 +17,10 @@ def plan(model,stage):
         for condition in ("base","canonical","control_zh",*FEATURES):
             tasks.append({"stage":"probe","model":model,"task":"concept","condition":condition})
             tasks.append({"stage":"probe","model":model,"task":"behavior","condition":condition})
-            for feature in FEATURES:
+        # Linguistic probes compare the same feature over base, its control and
+        # its own feature adapter, not all unrelated feature-specific adapters.
+        for feature in FEATURES:
+            for condition in dict.fromkeys(("base",control_for(feature),feature)):
                 tasks.append({"stage":"probe","model":model,"task":"linguistic",
                               "condition":condition,"feature":feature})
         return tasks
