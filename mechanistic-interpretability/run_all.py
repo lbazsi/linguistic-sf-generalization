@@ -25,7 +25,9 @@ def plan(model,stage):
                               "condition":condition,"feature":feature})
         return tasks
     if stage=="lora":
-        return [{"stage":"lora","model":model},{"stage":"lora-functional","model":model}]
+        return [{"stage":"lora","model":model},
+                {"stage":"lora-functional","model":model,"checkpoint":"midpoint"},
+                {"stage":"lora-functional","model":model,"checkpoint":"final"}]
     if stage=="steering":
         return [{"stage":"steering-screen","model":model,
                  "feature":f,"condition":c,"policy":p}
@@ -41,7 +43,7 @@ def execute(cfg,task):
     if stage=="probe":
         return experiments.probing(cfg,model,task["condition"],task["task"],task.get("feature"))
     if stage=="lora":return experiments.lora_analysis(cfg,model)
-    if stage=="lora-functional":return functional_analysis(cfg,model)
+    if stage=="lora-functional":return functional_analysis(cfg,model,task["checkpoint"])
     if stage=="steering-screen":
         return steering.screen(cfg,model,task["feature"],task["condition"],task["policy"])
     raise ValueError(stage)
@@ -67,7 +69,7 @@ def main():
             elif task["stage"]=="probe":
                 candidate=outputs/"linear-probing"/f"{task['task']}_{task.get('feature') or 'all'}_{task['condition']}.jsonl"
             elif task["stage"]=="lora":candidate=outputs/"LoRA-analysis"/"module_geometry.jsonl"
-            elif task["stage"]=="lora-functional":candidate=outputs/"LoRA-analysis"/"functional_final.jsonl"
+            elif task["stage"]=="lora-functional":candidate=outputs/"LoRA-analysis"/("functional_"+task["checkpoint"]+".jsonl")
             else:
                 candidate=outputs/"activation-steering"/f"screen_{task['feature']}_{task['condition']}_{task['policy']}.jsonl"
             if candidate.exists():
