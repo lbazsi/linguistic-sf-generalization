@@ -52,7 +52,8 @@ def write_workload(cfg,family,policy="prompt_last"):
     return path
 
 def generate(cfg,family,policy="prompt_last"):
-    """Only use held-out 100 scenarios. Save generation metadata with every response."""
+    """Held-out judged generations; adapter and direction models never coexist."""
+    from .directions import load_direction_bundle
     selected=selected_conditions(cfg,family,policy)
     test=[r for r in load_screening(cfg) if r["split"]==cfg["steering"]["judged_split"]]
     if len(test)!=cfg["steering"]["judged_n"]:raise ValueError("Unexpected held-out scenario count")
@@ -61,35 +62,37 @@ def generate(cfg,family,policy="prompt_last"):
     grouped=defaultdict(list)
     for row in selected:grouped[row["adapter"]].append(row)
     for condition,specs in grouped.items():
+        # Direction preparation (if needed) runs before loading the adapted model.
+        bundles={entry["feature"]:load_direction_bundle(cfg,family,entry["feature"])
+                 for entry in specs}
         target,tok=load_model(cfg,family,condition)
-        base,_=load_model(cfg,family,"base")
         try:
+            generation=cfg["steering"]["generation"]
             for entry in specs:
                 feature=entry["feature"];layer=entry["layer"];site=entry["site"]
-                direction,_=direction_for(base,tok,feature_pairs(cfg,feature),layer,site,cfg)
-                scale=calibrate(base,tok,[r["prompt"] for r in load_general(cfg)[:cfg["runtime"]["calibration_n"]]],layer,site,cfg)
-                path=out/f"{feature}__{condition}__{entry[\'policy\']}.jsonl"
-                if path.exists():
-                    raise FileExistsError(f"Judged generation already exists: {path}")
+                direction,scale=bundles[feature](layer,site)
+                filepath=out/f"{feature}__{condition}__{entry['policy']}.jsonl"
+                if filepath.exists():
+                    raise FileExistsError(f"Judged generation already exists: {filepath}")
                 rows=[]
-                generation=cfg["steering"]["generation"]
-                for j,row in enumerate(test):
-                    # One scenario per batch for clear cache/padding and deterministic control.
-                    prompt=scenario_prompt(row["scenario"])
+                for item in test:
+                    prompt=scenario_prompt(item["scenario"])
                     tokens=encode(tok,[prompt],target.device,cfg["runtime"]["max_length"])
-                    torch.manual_seed(int(generation["seed"])+int(row["scenario_id"]))
-                    with torch.inference_mode(),steer(target,layer,site,direction*scale,entry["strength"],entry["policy"]):
+                    torch.manual_seed(int(generation["seed"])+int(item["scenario_id"]))
+                    with torch.inference_mode(),steer(target,layer,site,direction*scale,
+                                                      entry["strength"],entry["policy"]):
                         output=target.generate(**tokens,max_new_tokens=generation["max_new_tokens"],
                             do_sample=generation["do_sample"],temperature=generation["temperature"],
                             top_p=generation["top_p"],pad_token_id=tok.pad_token_id)
-                    continuation=tok.decode(output[0,tokens["input_ids"].shape[1]:],skip_special_tokens=True).strip()
-                    rows.append({"scenario_id":row["scenario_id"],"feature":feature,
+                    continuation=tok.decode(output[0,tokens["input_ids"].shape[1]:],
+                                            skip_special_tokens=True).strip()
+                    rows.append({"scenario_id":item["scenario_id"],"feature":feature,
                                  "adapter":condition,"layer":layer,"site":site,
                                  "strength":entry["strength"],"policy":entry["policy"],
-                                 "condition":f"{feature}__{condition}__{entry[\'policy\']}",
+                                 "condition":f"{feature}__{condition}__{entry['policy']}",
                                  "continuation":continuation,"prompt":prompt})
-                write_rows(path,rows)
-        finally:unload(target);unload(base)
+                write_rows(filepath,rows)
+        finally:unload(target)
     return out
 
 def judge_plan(cfg,family,policy="prompt_last"):
