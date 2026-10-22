@@ -51,3 +51,10 @@ Report signed paired change in target-value support versus unsteered, interval e
 ## Interpretation
 
 A contrastive activation direction need not correspond to a single linguistic concept. Steering can influence unrelated factors, and large alpha may cause off-distribution behavior. An observed welfare shift is evidence of intervention sensitivity, not proof that the fine-tuning-induced welfare difference was caused by the same direction. Null welfare effects despite successful linguistic manipulation are informative.
+
+
+## Implementation and separation of screening from judging
+
+Contrastive directions for all layers/sites are estimated together from the model's base checkpoint using matched semantic-ID training pairs. The only cached objects are small unit direction vectors, shuffled-label control directions, random unit control directions and per-site activation RMS calibration scales. Raw prompt/token activations are not saved. The screen uses the existing 200-scenario matched-option dataset: 20 `screen`, 80 `validation`, and 100 untouched `test` examples. Every feature is screened on its own feature adapter and its registered control, with residual/MLP intervention sites, every layer, both `prompt_last` and `generation` policies, and alpha in `[-2,-1,0,1,2]`. Scoring uses teacher-forced, length-normalized log-probability differences, without generating judge-bound responses.
+
+The selector retains full-layer screening outputs and chooses **one** layer/site/strength/token-policy combination per feature–adapter pair from the 80 validation scenarios. Selected configurations are checked against norm-matched random and shuffled-label direction controls. The full judged evaluation generates 100 held-out continuations per selection and uses the two original blind judges in batches of ten. Preview the number of continuations, judgments and requests with `python run.py judge-plan --model gemma2`. The separate `judge-run --execute-judges` command is the only stage that contacts the remote judge APIs; the program cannot silently advance from screening to judging. Original unsteered condition scores are used for paired evaluation differences.
