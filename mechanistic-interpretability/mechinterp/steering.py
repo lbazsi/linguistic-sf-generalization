@@ -109,3 +109,40 @@ def selection(cfg,family,features=FEATURES,policy=None):
     path=out/"selected_all.json"
     write_json(path,selected)
     return path
+
+def selected_controls(cfg,family):
+    """Held-out-validation control comparisons; no model generations or judge requests."""
+    import json
+    from .common import read_data
+    from .directions import load_direction_bundle
+    out=run_dir(cfg,family,"activation-steering")
+    selected=json.loads((out/"selected_all.json").read_text(encoding="utf-8"))
+    option_rows=[r for r in load_screening(cfg) if r["split"]=="validation"]
+    prompts=[scenario_prompt(r["scenario"]) for r in option_rows]
+    positive=[r["welfare_supporting"] for r in option_rows]
+    negative=[r["welfare_opposing"] for r in option_rows]
+    grouped=defaultdict(list)
+    for spec in selected:grouped[spec["adapter"]].append(spec)
+    results=[]
+    for condition,specs in grouped.items():
+        get={entry["feature"]:load_direction_bundle(cfg,family,entry["feature"])
+             for entry in specs}
+        model,tok=load_model(cfg,family,condition)
+        try:
+            for entry in specs:
+                layer,site=entry["layer"],entry["site"]
+                scale_strength=float(entry["strength"])
+                for kind in ("random","shuffled"):
+                    unit,scale=get[entry["feature"]](layer,site,kind)
+                    scores=continuation_scores(model,tok,prompts,positive,negative,
+                        layer,site,unit*scale,scale_strength,entry["policy"],
+                        cfg["runtime"]["max_length"])
+                    for row,value in zip(option_rows,scores):
+                        results.append({"feature":entry["feature"],"adapter":condition,
+                             "site":site,"layer":layer,"strength":scale_strength,
+                             "policy":entry["policy"],"control":kind,
+                             "scenario_id":row["scenario_id"],"score":value})
+        finally:unload(model)
+    path=out/"selected_controls.jsonl"
+    write_rows(path,results)
+    return path
