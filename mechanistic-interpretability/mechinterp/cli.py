@@ -67,6 +67,9 @@ def main():
     elif args.stage=="judge-aggregate":
         from .judged import aggregate
         result=aggregate(cfg,args.model,args.policy)
+    if args.stage not in ("judge-run",) and isinstance(result,(str,Path)) and Path(result).is_file():
+        from .common import record_run
+        record_run(cfg,args.model,args.stage,Path(result))
     print(result)
 
 if __name__=="__main__":
