@@ -14,9 +14,9 @@ Which linguistic features and animal-welfare concepts are linearly decodable fro
 
 Use the final prompt token and masked mean-pooled prompt token representations from **every residual-stream and MLP-output layer**, matching the model-difference stage. Fix the same probe model class, tuning procedure and preprocessing across features, layers and families:
 
-- Classification: L2-regularized logistic regression with balanced classes; standardize each activation dimension using training-fold statistics only.
-- Behavioral regression: L2-regularized ridge regression on the 0–4 outcome, with the same feature standardization.
-- Hyperparameters: fixed predeclared regularization grid (e.g. C or alpha ∈ {0.01,0.1,1,10,100}) chosen on grouped development data, not per-test-set optimization. Same grid and search protocol everywhere.
+- Classification: GPU-trained linear logistic classifier with weight decay, trained on balanced classes; standardize each activation dimension using streaming training-fold statistics only.
+- Behavioral regression: linear squared-error predictor with weight decay on the 0–4 outcome, with the same feature standardization.
+- Hyperparameters: a fixed training schedule, optimizer and regularization strength for all tasks, features, sites and model families; development scores are reported without per-task hyperparameter selection.
 - Primary splits: 70% train / 15% development / 15% test, grouped by semantic ID or scenario cluster; persist IDs and guarantee source/variant examples of each semantic ID occupy the same partition. The 800 scenarios provide limited independent semantic clusters; present uncertainty accordingly.
 - Primary scores: balanced accuracy and ROC-AUC (linguistic/concept classification); RMSE, MAE, held-out R² and correlation (behavioral regression). Include constant-majority/mean and simple lexical shortcut baselines.
 - Keep probes deliberately linear; no nonlinear MLP probe comparisons in the primary results.
@@ -27,7 +27,7 @@ Train probes separately for each model family, adapter condition, site, layer an
 
 1. Freeze all models; verify exact semantic-ID and scenario splits and label integrity.
 2. Run forward passes and collect one temporary batch of activations at a time. Fit standardized linear probes using GPU-resident or ephemeral batches/accumulated sufficient statistics as applicable, then release raw activations. Logistic regression may require repeated passes or a streaming optimizer; ensure it matches the fixed regularized logistic objective and preserves train/dev/test separation.
-3. Select regularization only on development partitions. Evaluate once on test partitions; report all layers, not just the maximum.
+3. Use fixed regularization and epochs, report development performance and evaluate once on test partitions; report all layers, not just the maximum.
 4. Compare linguistic probe generalization, welfare-concept detection and behavior-prediction profiles across base/control/feature adapters, separately for each model.
 5. Use semantic-cell bootstrap intervals for welfare-related held-out results, with multiple-comparison correction for predeclared feature/layer summary families.
 
