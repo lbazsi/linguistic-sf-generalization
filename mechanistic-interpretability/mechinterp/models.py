@@ -118,45 +118,77 @@ def steer(model, layer, site, vector, strength, token_policy="prompt_last"):
 
 @torch.inference_mode()
 def continuation_scores(model, tokenizer, prompts, supporting, opposing, layer, site,
-                        direction, strength, policy, max_length=512):
-    """Teacher-forced conditional continuation likelihood, with prompt-boundary steering.
+                        direction, strength, policy, max_length=512, batch_size=4):
+    """Length-normalized conditional log-probability gaps in small GPU batches.
 
-    prompt_last steers the token preceding the first candidate; generation also steers
-    subsequent candidate tokens. This mirrors cached generation while remaining efficient.
+    A model-generated response is never sampled and no API judge is contacted.
+    Candidate tokens are appended after the *fixed tokenized prefix*.  Paired
+    candidates receive the same intervention; all model outputs are transient.
     """
-    scores = []
-    for prompt, pos, neg in zip(prompts, supporting, opposing):
-        result = []
-        ids_p = tokenizer(prompt, add_special_tokens=True)["input_ids"]
-        for option in (pos, neg):
-            ids_f = tokenizer(prompt + option, add_special_tokens=True)["input_ids"]
-            if ids_f[:len(ids_p)] != ids_p:
-                ids_f = ids_p + tokenizer(option, add_special_tokens=False)["input_ids"]
-            if len(ids_f)>max_length: raise ValueError("Candidate exceeds maximum scoring length")
-            if len(ids_f)<=len(ids_p):raise ValueError("Empty candidate tokenization")
-            x = torch.tensor([ids_f], dtype=torch.long, device=model.device)
-            mask = torch.ones_like(x)
-            start=len(ids_p)
-            def hook(_module, _inputs, output):
-                hidden=tensor_output(output)
-                shifted=hidden.clone()
-                offset=(strength*direction).to(hidden.device,dtype=hidden.dtype)
-                if policy=="prompt_last":
-                    shifted[:,start-1,:]+=offset
-                elif policy=="generation":
-                    shifted[:,start-1:,:]+=offset
-                else:raise ValueError(policy)
-                return replace_tensor_output(output,shifted)
-            handle=site_module(model,layer,site).register_forward_hook(hook)
-            try:
-                out=model(input_ids=x,attention_mask=mask,use_cache=False)
-            finally:
-                handle.remove()
-            target=x[:,start:]
-            logprobs=out.logits[:,start-1:-1].float().log_softmax(-1)
-            result.append(logprobs.gather(-1,target.unsqueeze(-1)).squeeze(-1).mean().item())
-        scores.append(result[0]-result[1])
-    return scores
+    if not (len(prompts)==len(supporting)==len(opposing)):
+        raise ValueError("Mismatched prompt and option counts")
+    if policy not in ("prompt_last","generation"):
+        raise ValueError(policy)
+    all_scores=[]
+    pad=tokenizer.pad_token_id
+    if pad is None:raise ValueError("Tokenizer padding token not configured")
+    for start_batch in range(0,len(prompts),batch_size):
+        pairs=[]
+        for prompt,pos,neg in zip(prompts[start_batch:start_batch+batch_size],
+                                   supporting[start_batch:start_batch+batch_size],
+                                   opposing[start_batch:start_batch+batch_size]):
+            ids=tokenizer(prompt,add_special_tokens=True)["input_ids"]
+            if len(ids)<1:raise ValueError("Empty evaluation prefix")
+            for option in (pos,neg):
+                # Separate option encoding respects the causal prefix used at inference.
+                tail=tokenizer(option,add_special_tokens=False)["input_ids"]
+                if not tail:raise ValueError("Empty scoring continuation")
+                whole=ids+tail
+                if len(whole)>max_length:
+                    raise ValueError("Candidate exceeds maximum scoring length")
+                pairs.append((whole,len(ids)))
+        width=max(len(seq) for seq,_ in pairs)
+        batch_inputs=torch.full((len(pairs),width),pad,dtype=torch.long,device=model.device)
+        mask=torch.zeros_like(batch_inputs)
+        offsets=[]
+        scored=torch.zeros_like(batch_inputs,dtype=torch.bool)
+        for i,(seq,prefix_length) in enumerate(pairs):
+            left=width-len(seq)
+            batch_inputs[i,left:]=torch.tensor(seq,device=model.device)
+            mask[i,left:]=1
+            last_prompt=left+prefix_length-1
+            offsets.append(last_prompt)
+            scored[i,last_prompt+1:]=True
+        prompt_positions=torch.tensor(offsets,device=model.device)
+        vector=(strength*direction).to(device=model.device,dtype=next(model.parameters()).dtype)
+
+        def hook(_module,_inputs,output):
+            hidden=tensor_output(output)
+            changed=hidden.clone()
+            row_ids=torch.arange(len(pairs),device=hidden.device)
+            if policy=="prompt_last":
+                changed[row_ids,prompt_positions,:]+=vector
+            else:
+                index=torch.arange(width,device=hidden.device)[None,:]
+                region=(index>=prompt_positions[:,None]) & (mask.bool())
+                changed+=region.unsqueeze(-1).to(changed.dtype)*vector
+            return replace_tensor_output(output,changed)
+
+        handle=site_module(model,layer,site).register_forward_hook(hook)
+        try:
+            result=model(input_ids=batch_inputs,attention_mask=mask,use_cache=False)
+        finally:
+            handle.remove()
+        logits=result.logits[:,:-1].float()
+        target=batch_inputs[:,1:]
+        scores=(logits.gather(-1,target.unsqueeze(-1)).squeeze(-1) -
+                torch.logsumexp(logits,dim=-1))
+        token_mask=scored[:,1:]
+        means=(scores*token_mask).sum(-1)/token_mask.sum(-1).clamp_min(1)
+        values=means.detach().tolist()
+        all_scores.extend(values[i]-values[i+1] for i in range(0,len(values),2))
+        del result,logits,scores,means,batch_inputs,mask
+    return all_scores
 
 def unload(model):
     del model
