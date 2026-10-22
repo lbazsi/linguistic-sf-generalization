@@ -34,3 +34,10 @@ Train probes separately for each model family, adapter condition, site, layer an
 ## Outputs and interpretation
 
 Store data/split hashes, feature labels, normalization summaries, learned linear-probe coefficients (small relative to model weights), hyperparameters, test predictions/scores, aggregate layerwise reports and plotting data; do **not** save token activations. Coefficient vectors are coordinate-specific, so cross-family comparison is at the level of performance patterns, not cosine similarity of weights. Successful classification establishes that information is decodable, not that the model uses it when choosing a response.
+
+
+## Implementation
+
+The default linguistic-probe sample consists of 1,000 semantic-ID-matched canonical/variant pairs, balanced over the available animal × value × context cells; every pair remains in one split. The fixed GPU streaming procedure uses 4 optimizer epochs, AdamW (learning rate 0.01, weight decay 0.001) and identical training-fold standardization across conditions. One forward pass per batch supplies final/mean pooled representations from every layer and from residual/MLP sites to independent linear heads. Probe weights and standardization statistics are saved, but no activations are retained. Concept probes use all 1,000 matched examples; behavioral probes require each model family's own original two-judge scores. Linguistic probes run for the base model, a feature's registered control, and that feature's adapter, not unrelated feature adapters. Across-family comparisons use predictive performance, not coefficient alignment.
+
+The implementation outputs `linear-probing/*.jsonl` and small `*_weights.safetensors` files. Model-family-specific behavioral label files must be configured before replication. Direct application of probe coefficients to different model architectures is not defined.
