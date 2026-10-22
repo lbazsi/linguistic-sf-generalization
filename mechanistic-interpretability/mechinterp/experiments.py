@@ -92,6 +92,24 @@ def probe_dataset(cfg,task,feature=None,judgments_path=None,condition=None,famil
     if task=="linguistic":
         if feature is None:raise ValueError("Linguistic probe requires feature")
         raw=feature_pairs(cfg,feature)
+        # Fixed, balanced subset across animal/value/context semantic cells.
+        cap=int(cfg["probing"]["max_linguistic_pairs"])
+        if len(raw)>cap:
+            from collections import defaultdict
+            import random
+            grouped=defaultdict(list)
+            for r in raw:
+                key=(r.get("animal"),r.get("value"),r.get("context"))
+                grouped[key].append(r)
+            rng=random.Random(seed)
+            for members in grouped.values():rng.shuffle(members)
+            selection=[]
+            keys=sorted(grouped,key=str)
+            while len(selection)<cap and any(grouped.values()):
+                for key in keys:
+                    if grouped[key] and len(selection)<cap:
+                        selection.append(grouped[key].pop())
+            raw=selection
         parts=split_groups((r["id"] for r in raw),seed)
         result=[]
         for r in raw:
