@@ -37,3 +37,10 @@ Compact tables (model family, condition/control, step, domain, site, layer, pool
 ## Interpretation
 
 Low similarity does not identify a mechanism, and high similarity does not imply identical model behavior. MLP output similarity can differ from residual-stream similarity even at the same block. Across-family comparisons use normalized layer depth and comparable effect statistics, never hidden-vector coordinate alignment.
+
+
+## Implementation
+
+Comparison models are loaded **sequentially** on the GPU; every forward batch contributes only final-token and mean-pooled per-layer residual/MLP vectors. These pooled representations can remain temporarily on the accelerator for CKA/SVCCA computation, then are discarded. Neither full token activations nor pooled activation matrices are saved. The output includes whole-domain results and separate similarity estimates for each of the eight animal-welfare generalization categories, with layer, site, pooling and control condition attached. SVCCA is descriptive and uses the same observation sample for its PCA and canonical-correlation fit.
+
+Run `python run.py difference --model gemma2 --condition epistemic_hedging`; all registered controlled contrasts can be scheduled with `python run_all.py --model gemma2 --stage difference --execute --resume`.
