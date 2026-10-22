@@ -21,14 +21,13 @@ from .steering import direction_for,calibrate
 from .stats import cluster_interval,bh
 
 def selected_conditions(cfg,family,policy="prompt_last"):
-    path=run_dir(cfg,family,"activation-steering")/f"selected_{policy}.json"
+    path=run_dir(cfg,family,"activation-steering")/"selected_all.json"
     selected=json.loads(path.read_text(encoding="utf-8"))
     keys=[(r["feature"],r["adapter"]) for r in selected]
     if len(keys)!=len(set(keys)):raise ValueError("Duplicate selected steering conditions")
     for row in selected:
         if row["adapter"] not in (control_for(row["feature"]),row["feature"]):
             raise ValueError("Selected feature applied to unrelated adapter")
-        if row["policy"]!=policy:raise ValueError("Token policy mismatch")
     return selected
 
 def workload(cfg,family,policy="prompt_last"):
@@ -48,7 +47,7 @@ def workload(cfg,family,policy="prompt_last"):
 
 def write_workload(cfg,family,policy="prompt_last"):
     result=workload(cfg,family,policy)
-    path=run_dir(cfg,family,"activation-steering")/f"workload_{policy}.json"
+    path=run_dir(cfg,family,"activation-steering")/"workload_all.json"
     write_json(path,result)
     return path
 
@@ -69,7 +68,7 @@ def generate(cfg,family,policy="prompt_last"):
                 feature=entry["feature"];layer=entry["layer"];site=entry["site"]
                 direction,_=direction_for(base,tok,feature_pairs(cfg,feature),layer,site,cfg)
                 scale=calibrate(base,tok,[r["prompt"] for r in load_general(cfg)[:cfg["runtime"]["calibration_n"]]],layer,site,cfg)
-                path=out/f"{feature}__{condition}__{policy}.jsonl"
+                path=out/f"{feature}__{condition}__{entry[\'policy\']}.jsonl"
                 if path.exists():
                     raise FileExistsError(f"Judged generation already exists: {path}")
                 rows=[]
@@ -79,7 +78,7 @@ def generate(cfg,family,policy="prompt_last"):
                     prompt=scenario_prompt(row["scenario"])
                     tokens=encode(tok,[prompt],target.device,cfg["runtime"]["max_length"])
                     torch.manual_seed(int(generation["seed"])+int(row["scenario_id"]))
-                    with torch.inference_mode(),steer(target,layer,site,direction*scale,entry["strength"],policy):
+                    with torch.inference_mode(),steer(target,layer,site,direction*scale,entry["strength"],entry["policy"]):
                         output=target.generate(**tokens,max_new_tokens=generation["max_new_tokens"],
                             do_sample=generation["do_sample"],temperature=generation["temperature"],
                             top_p=generation["top_p"],pad_token_id=tok.pad_token_id)
@@ -87,7 +86,7 @@ def generate(cfg,family,policy="prompt_last"):
                     rows.append({"scenario_id":row["scenario_id"],"feature":feature,
                                  "adapter":condition,"layer":layer,"site":site,
                                  "strength":entry["strength"],"policy":policy,
-                                 "condition":f"{feature}__{condition}__{policy}",
+                                 "condition":f"{feature}__{condition}__{entry[\'policy\']}",
                                  "continuation":continuation,"prompt":prompt})
                 write_rows(path,rows)
         finally:unload(target);unload(base)
