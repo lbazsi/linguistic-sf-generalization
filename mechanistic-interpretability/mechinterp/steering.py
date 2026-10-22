@@ -41,40 +41,39 @@ def calibrate(model,tok,texts,layer,site,cfg):
     return scalar/max(n,1)
 
 def screen(cfg,family,feature,adapter_condition,policy="prompt_last"):
+    """Screen every layer, site and alpha; paired-option likelihood requires no judges."""
     if adapter_condition not in (control_for(feature),feature):
         raise ValueError("Feature direction may only be applied to its own adapter or control")
-    pairs=feature_pairs(cfg,feature)
-    rows=load_screening(cfg)
-    scenarios=[r for r in rows if r["split"] in cfg["steering"]["screening_splits"]]
-    general=[r["prompt"] for r in load_general(cfg)[:cfg["runtime"]["calibration_n"]]]
-    base,tok=load_model(cfg,family,"base")
-    target,_=load_model(cfg,family,adapter_condition)
+    from .directions import load_direction_bundle
+    # Preparation loads and unloads the base model before the target adapter is loaded.
+    get_direction=load_direction_bundle(cfg,family,feature)
+    scenarios=[r for r in load_screening(cfg)
+               if r["split"] in cfg["steering"]["screening_splits"]]
+    target,tok=load_model(cfg,family,adapter_condition)
     out=run_dir(cfg,family,"activation-steering")
     try:
-        result=[]
-        for layer in range(len(blocks(base))):
+        records=[]
+        prompts=[scenario_prompt(r["scenario"]) for r in scenarios]
+        pos=[r["welfare_supporting"] for r in scenarios]
+        neg=[r["welfare_opposing"] for r in scenarios]
+        for layer in range(len(blocks(target))):
             for site in cfg["runtime"]["sites"]:
-                d,norm=direction_for(base,tok,pairs,layer,site,cfg)
-                scale=calibrate(base,tok,general,layer,site,cfg)
-                vector=d*scale
-                prompts=[scenario_prompt(r["scenario"]) for r in scenarios]
-                pos=[r["welfare_supporting"] for r in scenarios]
-                neg=[r["welfare_opposing"] for r in scenarios]
-                # Inputs are explicitly continuation strings after the fixed evaluation prefix.
+                unit,scale=get_direction(layer,site)
+                vector=unit*scale
                 for strength in cfg["steering"]["alphas"]:
                     values=continuation_scores(target,tok,prompts,pos,neg,layer,site,vector,
                                                 float(strength),policy,cfg["runtime"]["max_length"])
                     for r,val in zip(scenarios,values):
-                        result.append({"feature":feature,"adapter":adapter_condition,
-                                       "layer":layer,"site":site,"strength":float(strength),
-                                       "policy":policy,"scenario_id":r["scenario_id"],
-                                       "split":r["split"],"category":r["category"],
-                                       "tradeoff":r["tradeoff"],"score":val,
-                                       "direction_norm":norm,"calibration_scale":scale})
+                        records.append({"feature":feature,"adapter":adapter_condition,
+                                        "layer":layer,"site":site,"strength":float(strength),
+                                        "policy":policy,"scenario_id":r["scenario_id"],
+                                        "split":r["split"],"category":r["category"],
+                                        "tradeoff":r["tradeoff"],"score":val,
+                                        "calibration_scale":scale})
         path=out/f"screen_{feature}_{adapter_condition}_{policy}.jsonl"
-        write_rows(path,result)
+        write_rows(path,records)
         return path
-    finally:unload(base);unload(target)
+    finally:unload(target)
 
 def selection(cfg,family,features=FEATURES,policy=None):
     """Validation selects one configuration per feature/adapter over BOTH token policies.
