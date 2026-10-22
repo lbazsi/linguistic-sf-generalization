@@ -85,7 +85,7 @@ def generate(cfg,family,policy="prompt_last"):
                     continuation=tok.decode(output[0,tokens["input_ids"].shape[1]:],skip_special_tokens=True).strip()
                     rows.append({"scenario_id":row["scenario_id"],"feature":feature,
                                  "adapter":condition,"layer":layer,"site":site,
-                                 "strength":entry["strength"],"policy":policy,
+                                 "strength":entry["strength"],"policy":entry["policy"],
                                  "condition":f"{feature}__{condition}__{entry[\'policy\']}",
                                  "continuation":continuation,"prompt":prompt})
                 write_rows(path,rows)
@@ -96,7 +96,7 @@ def judge_plan(cfg,family,policy="prompt_last"):
     """Return only the generated response artifacts; no implicit API calls."""
     directory=run_dir(cfg,family,"activation-steering")/"judged"
     selected=selected_conditions(cfg,family,policy)
-    files=[directory/f"{x['feature']}__{x['adapter']}__{policy}.jsonl" for x in selected]
+    files=[directory/f"{x['feature']}__{x['adapter']}__{x['policy']}.jsonl" for x in selected]
     for path in files:
         if not path.is_file():raise FileNotFoundError(path)
         if len(read_data(path))!=cfg["steering"]["judged_n"]:
