@@ -93,9 +93,17 @@ def compare(x,y):
     xy=float(x.dot(y))
     denominator=max((xx*yy)**.5,1e-12)
     difference=max(xx+yy-2*xy,0)**.5
+    qbx,_=torch.linalg.qr(x.B,mode="reduced")
+    qby,_=torch.linalg.qr(y.B,mode="reduced")
+    qax,_=torch.linalg.qr(x.A.T,mode="reduced")
+    qay,_=torch.linalg.qr(y.A.T,mode="reduced")
+    left=torch.linalg.svdvals(qbx.T@qby)
+    right=torch.linalg.svdvals(qax.T@qay)
     return {"cosine":max(-1,min(1,xy/denominator)),
             "relative_distance":difference/max(xx**.5,1e-12),
-            "norm_ratio":yy**.5/max(xx**.5,1e-12)}
+            "norm_ratio":yy**.5/max(xx**.5,1e-12),
+            "left_subspace_cosine":float(left.mean().clamp(0,1)),
+            "right_subspace_cosine":float(right.mean().clamp(0,1))}
 
 
 def analyze_adapter_pairs(paths,checkpoint="final"):
