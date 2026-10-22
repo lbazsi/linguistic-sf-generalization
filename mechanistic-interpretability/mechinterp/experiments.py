@@ -82,7 +82,7 @@ def difference(cfg,family,condition,checkpoint="final"):
                provenance(cfg,family,"difference",[location(cfg,"scenarios"),location(cfg,"general")]))
     return result_file
 
-def probe_dataset(cfg,task,feature=None,judgments_path=None,condition=None):
+def probe_dataset(cfg,task,feature=None,judgments_path=None,condition=None,family=None):
     seed=int(cfg["seed"])
     if task=="concept":
         raw=load_concepts(cfg)
@@ -102,7 +102,18 @@ def probe_dataset(cfg,task,feature=None,judgments_path=None,condition=None):
         if condition is None:raise ValueError("Behavior probe requires condition")
         rows=load_scenarios(cfg)
         scores={}
-        source=location(cfg,"judgments") if judgments_path is None else judgments_path
+        if judgments_path is not None:
+            source=judgments_path
+        elif family=="gemma2":
+            source=location(cfg,"judgments")
+        else:
+            specified=cfg["models"][family].get("judgments")
+            if not specified:
+                raise ValueError(f"Set models.{family}.judgments to its own unsteered evaluation scores")
+            from pathlib import Path
+            source=Path(specified)
+            if not source.is_absolute():
+                source=(Path(cfg["_config_file"]).resolve().parent.parent/source).resolve()
         from .common import read_data
         for r in read_data(source):
             if r.get("condition")==condition and r.get("scores",{}).get("target_value_support") is not None:
@@ -115,7 +126,7 @@ def probe_dataset(cfg,task,feature=None,judgments_path=None,condition=None):
     raise ValueError(task)
 
 def probing(cfg,family,condition,task,feature=None):
-    data=probe_dataset(cfg,task,feature=feature,condition=condition)
+    data=probe_dataset(cfg,task,feature=feature,condition=condition,family=family)
     subsets={part:[r for r in data if r["partition"]==part]
              for part in ("train","development","test")}
     model,tok=load_model(cfg,family,condition)
