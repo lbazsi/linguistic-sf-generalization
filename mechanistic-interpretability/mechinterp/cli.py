@@ -11,7 +11,7 @@ from .common import (FEATURES, load_config,load_concepts,load_general,load_scree
 def main():
     p=argparse.ArgumentParser(description="Mechanistic interpretability experiment pipeline")
     p.add_argument("stage",choices=("validate","difference","probe","lora","steering-screen",
-                                    "steering-select","steering-controls","lora-functional","synthesis","judge-plan","judge-generate","judge-run",
+                                    "steering-select","steering-controls","lora-functional","synthesis","plots","judge-plan","judge-generate","judge-run",
                                     "judge-aggregate"))
     p.add_argument("--config",default=str(Path(__file__).resolve().parents[1]/"config/pipeline.yaml"))
     p.add_argument("--model",choices=("gemma2","qwen3","llama31","mistral"),default="gemma2")
@@ -44,6 +44,9 @@ def main():
     elif args.stage=="lora-functional":
         from .functional import functional_analysis
         result=functional_analysis(cfg,args.model,args.checkpoint)
+    elif args.stage=="plots":
+        from .visualize import plots
+        result=plots(cfg,args.model)
     elif args.stage=="synthesis":
         from .synthesis import summarize
         result=summarize(cfg)
