@@ -6,7 +6,7 @@ import torch
 from .common import (FEATURES, control_for, feature_pairs, load_concepts, load_general,
                      load_scenarios, location, run_dir, scenario_prompt, split_groups,
                      write_json, write_rows, adapter_dir, provenance, model_conditions, batches)
-from .models import load_model, pooled_batches, unload, blocks
+from .models import load_model, pooled_batches, unload, blocks, tensor_output
 from .stats import linear_cka, svcca, rms_displacement
 from .probes import train_probe
 from .lora import lora_matrices,geometry,compare
@@ -20,6 +20,39 @@ def collect(model,tok,texts,layer,site,pooling,cfg):
     return torch.cat(list(pooled_batches(model,tok,texts,layer,site,pooling,
                           int(cfg["runtime"]["batch_size"]),int(cfg["runtime"]["max_length"]))),dim=0)
 
+def _capture_grid(cfg,family,condition,texts,checkpoint):
+    """One model at a time: accumulate only final/mean pooled observations on the GPU.
+
+    Keeps memory bounded even when two bf16 9B models cannot coexist on one A100.
+    """
+    from .models import site_module,pool,tensor_output,encode
+    from collections import defaultdict
+    model,tok=load_model(cfg,family,condition,checkpoint)
+    sites=[(layer,site) for layer in range(len(blocks(model)))
+           for site in cfg["runtime"]["sites"]]
+    collected=defaultdict(list)
+    try:
+        bs=int(cfg["runtime"]["batch_size"])
+        for batch in batches(texts,bs):
+            encoded=encode(tok,batch,model.device,int(cfg["runtime"]["max_length"]))
+            mask=encoded["attention_mask"]
+            handles=[]
+            for layer,site in sites:
+                def hook(_module,_args,out,layer=layer,site=site):
+                    tensor=tensor_output(out).detach()
+                    for how in cfg["runtime"]["pooling"]:
+                        collected[(layer,site,how)].append(pool(tensor,mask,how))
+                handles.append(site_module(model,layer,site).register_forward_hook(hook))
+            try:
+                with torch.inference_mode():
+                    model(**encoded,use_cache=False)
+            finally:
+                for h in handles:h.remove()
+            del encoded
+        return {key:torch.cat(parts,dim=0) for key,parts in collected.items()}
+    finally:
+        unload(model)
+
 def difference(cfg,family,condition,checkpoint="final"):
     control = control_for(condition) if condition in FEATURES else "base"
     scenarios=load_scenarios(cfg)
@@ -27,28 +60,27 @@ def difference(cfg,family,condition,checkpoint="final"):
               "general":[r["prompt"] for r in load_general(cfg)]}
     out=run_dir(cfg,family,"model-difference-analysis")
     result_file=out/f"{condition}_{checkpoint}.jsonl"
-    model_a,tok=load_model(cfg,family,control,checkpoint)
-    model_b,_=load_model(cfg,family,condition,checkpoint)
-    try:
-        records=[]
-        for domain,texts in datasets.items():
-            for layer,site,pool in layers_and_sites(model_a,cfg):
-                a=collect(model_a,tok,texts,layer,site,pool,cfg)
-                b=collect(model_b,tok,texts,layer,site,pool,cfg)
-                if a.shape != b.shape: raise ValueError("Mismatched activation dimensions")
-                metrics={"cka":linear_cka(a,b),"svcca":svcca(a,b,
-                    float(cfg["analysis"]["svcca_variance"]),int(cfg["analysis"]["svcca_components_cap"])),
-                    "displacement":rms_displacement(a,b)}
-                records.append({"model":family,"condition":condition,"control":control,
-                                "checkpoint":checkpoint,"domain":domain,"layer":layer,
-                                "site":site,"pooling":pool,"n":len(texts),**metrics})
-                del a,b
-        write_rows(result_file,records)
-        write_json(out/f"{condition}_{checkpoint}_manifest.json",
-                   provenance(cfg,family,"difference",[location(cfg,"scenarios"),location(cfg,"general")]))
-        return result_file
-    finally:
-        unload(model_a);unload(model_b)
+    records=[]
+    for domain,texts in datasets.items():
+        a=_capture_grid(cfg,family,control,texts,checkpoint)
+        b=_capture_grid(cfg,family,condition,texts,checkpoint)
+        if set(a)!=set(b):raise ValueError("Hook coverage differs between adapters")
+        for (layer,site,pool),x in a.items():
+            y=b[(layer,site,pool)]
+            if x.shape != y.shape:raise ValueError("Mismatched activation shapes")
+            metrics={"cka":linear_cka(x,y),"svcca":svcca(x,y,
+                float(cfg["analysis"]["svcca_variance"]),int(cfg["analysis"]["svcca_components_cap"])),
+                "displacement":rms_displacement(x,y)}
+            records.append({"model":family,"condition":condition,"control":control,
+                            "checkpoint":checkpoint,"domain":domain,"layer":layer,
+                            "site":site,"pooling":pool,"n":len(texts),**metrics})
+            del y
+        del a,b
+        if torch.cuda.is_available():torch.cuda.empty_cache()
+    write_rows(result_file,records)
+    write_json(out/f"{condition}_{checkpoint}_manifest.json",
+               provenance(cfg,family,"difference",[location(cfg,"scenarios"),location(cfg,"general")]))
+    return result_file
 
 def probe_dataset(cfg,task,feature=None,judgments_path=None,condition=None):
     seed=int(cfg["seed"])
