@@ -53,3 +53,36 @@ Report paired scenario-level effects with 95% semantic-cell-cluster bootstrap co
 ## Reproducibility contract
 
 Record resolved Hugging Face base-model revision, adapter hash and checkpoint step, package/CUDA/PyTorch/Transformers/PEFT versions, hardware, random seeds, full evaluation configuration, corpus and prompt hashes, split ID lists, hook definition, pooling rule, regularization choices, normalization calibration, predeclared search space, and scoring revisions. Transient activations and model weights are deliberately excluded from committed artifacts; reproducing results requires regenerating the activations from the original inputs and external base/adapter checkpoints. Documentation here specifies planned analyses; it does not claim they have already been executed.
+
+
+## Implementation and commands
+
+The Python implementation lives in `mechinterp/`, with a single command entry point, `run.py`, configuration in `config/pipeline.yaml` and smoke tests in `tests/`. Install with `pip install -r requirements.txt` and run `python -m pytest tests -q`. The repository provides method specifications and implementation; the GPU analyses have not been executed by this documentation commit.
+
+```bash
+cd mechanistic-interpretability
+python run.py validate
+python run.py validate --check-screening   # requires steering_screening.jsonl
+python run.py difference --model gemma2 --condition epistemic_hedging
+python run.py probe --model gemma2 --condition canonical --task concept
+python run.py probe --model gemma2 --condition canonical --task linguistic --feature epistemic_hedging
+python run.py probe --model gemma2 --condition canonical --task behavior
+python run.py lora --model gemma2
+python run.py lora-functional --model gemma2
+python run.py steering-screen --model gemma2 --feature epistemic_hedging --condition canonical
+python run.py steering-screen --model gemma2 --feature epistemic_hedging --condition epistemic_hedging
+python run.py steering-select --model gemma2
+python run.py judge-plan --model gemma2
+python run.py judge-generate --model gemma2
+python run.py judge-run --model gemma2 --execute-judges  # explicit API charges
+python run.py judge-aggregate --model gemma2
+python run.py synthesis
+```
+
+Screen all registered features and both matching adapter conditions before invoking `steering-select`. Repeat separately with `--policy generation` for generation-step interventions. The judged-evaluation process uses only the held-out 100 scenario IDs, and its batch size follows the original evaluation configuration. `judge-plan` prints/writes workload counts; actual monetary pricing requires observed or independently supplied prompt/completion token estimates and current per-judge prices.
+
+The model configuration expects existing independently trained checkpoint trees, including midpoint/final adapters and their training summaries. Adapter bytes are not stored in this repository. Each additional model must have its revision pinned and adapters generated via the common fine-tuning contract. Results are written under `outputs/<model>/<stage>/` and are not input checkpoints.
+
+### Verification and current boundaries
+
+Unit smoke tests verify data parsing, grouped splits, key statistics and hook behavior without downloading large models. Full GPU validation must separately verify architecture hooks, PEFT adapter reassembly, CUDA memory use, Qwen/Mistral/Llama compatibility and agreement of generated continuations with the original evaluator. Probe metrics, model differences and LoRA geometry are descriptive; observed intervention effects are not an identification of training-time causation. The current steering screen ranks by welfare log-probability change; linguistic-manipulation and coherence diagnostics and matched random-direction controls require additional validation before strong causal interpretation. No judge stage is called automatically from analysis commands.
