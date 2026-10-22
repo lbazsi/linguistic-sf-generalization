@@ -163,9 +163,25 @@ def probing(cfg,family,condition,task,feature=None):
         return output
     finally:unload(model)
 
+def _base_projection_norms(cfg,family):
+    """Read frozen base projection magnitudes without persisting weights."""
+    model,_=load_model(cfg,family,"base")
+    try:
+        norms={}
+        for name,module in model.named_modules():
+            if not name.endswith((".q_proj",".k_proj",".v_proj",".o_proj",".gate_proj",".up_proj",".down_proj")):
+                continue
+            if not hasattr(module,"weight"):continue
+            marker="model.layers."
+            if marker not in name:continue
+            norms[marker+name.split(marker,1)[1]]=float(module.weight.detach().float().norm().item())
+        return norms
+    finally:unload(model)
+
 def lora_analysis(cfg,family):
     from .common import FEATURES
     out=run_dir(cfg,family,"LoRA-analysis")
+    base_norms=_base_projection_norms(cfg,family)
     rows=[]
     for checkpoint in ("midpoint","final"):
         weights={}
@@ -174,8 +190,11 @@ def lora_analysis(cfg,family):
             weights[condition]=lora_matrices(path)[0]
         for condition,modules in weights.items():
             for module,m in modules.items():
-                entry={"condition":condition,"checkpoint":checkpoint,
-                       "module":module,**geometry(m)}
+                base_key="model.layers."+module.split("model.layers.",1)[-1]
+            if base_key not in base_norms:raise ValueError("Missing base projection "+base_key)
+            rel=float(m.norm())/max(base_norms[base_key],1e-12)
+            entry={"condition":condition,"checkpoint":checkpoint,
+                   "module":module,"relative_base_weight_norm":rel,**geometry(m)}
                 if condition in FEATURES:
                     ctrl=control_for(condition)
                     if module not in weights[ctrl]:
