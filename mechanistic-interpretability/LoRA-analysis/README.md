@@ -45,3 +45,10 @@ Store small metric tables, singular-value summaries, layer/module heatmaps, meta
 ## Interpretation
 
 A large parameter difference need not produce a large activation or behavioral difference. Low-rank subspaces can differ while producing similar functional outputs on the tested distribution. Parameter analyses are descriptive and cannot by themselves establish that a particular module causes the observed welfare-generalization effect.
+
+
+## Implementation
+
+Effective updates are represented by their low-rank factors, with exact norms, nonzero singular spectra and left/right principal-subspace overlaps computed without dense weight reconstruction. Update magnitudes are also normalized against the frozen base projections. Functional analysis applies factorized updates to matched base-model module inputs on both welfare and general prompts; it reports RMS local perturbation and feature-versus-control difference for midpoint and final checkpoints. No additional model checkpoints, dense update dumps or token activations are stored.
+
+`python run.py lora --model gemma2` computes geometry for both checkpoints. `python run.py lora-functional --model gemma2 --checkpoint midpoint` and `--checkpoint final` compute the corresponding functional summaries. `run_all.py --stage lora` includes all three tasks.
