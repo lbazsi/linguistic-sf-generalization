@@ -72,8 +72,19 @@ def difference(cfg,family,condition,checkpoint="final"):
                 float(cfg["analysis"]["svcca_variance"]),int(cfg["analysis"]["svcca_components_cap"])),
                 "displacement":rms_displacement(x,y)}
             records.append({"model":family,"condition":condition,"control":control,
-                            "checkpoint":checkpoint,"domain":domain,"layer":layer,
-                            "site":site,"pooling":pool,"n":len(texts),**metrics})
+                            "checkpoint":checkpoint,"domain":domain,"category":"all",
+                            "layer":layer,"site":site,"pooling":pool,"n":len(texts),**metrics})
+            if domain=="welfare":
+                for category in sorted({r["category"] for r in scenarios}):
+                    indexes=[idx for idx,row in enumerate(scenarios) if row["category"]==category]
+                    xa=x[indexes];ya=y[indexes]
+                    sub={"cka":linear_cka(xa,ya),
+                         "svcca":svcca(xa,ya,float(cfg["analysis"]["svcca_variance"]),
+                                  int(cfg["analysis"]["svcca_components_cap"])),
+                         "displacement":rms_displacement(xa,ya)}
+                    records.append({"model":family,"condition":condition,"control":control,
+                                    "checkpoint":checkpoint,"domain":domain,"category":category,
+                                    "layer":layer,"site":site,"pooling":pool,"n":len(indexes),**sub})
             del y
         del a,b
         if torch.cuda.is_available():torch.cuda.empty_cache()
