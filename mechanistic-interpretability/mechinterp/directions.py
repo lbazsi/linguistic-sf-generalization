@@ -36,19 +36,25 @@ def prepare(cfg,family,feature,force=False):
     pooling=cfg["steering"]["directions_pooling"]
     sites=[(i,site) for i in range(len(blocks(model))) for site in cfg["runtime"]["sites"]]
     directions={}
+    shuffled={}
     calibrations={}
     try:
         for batch in batches(train,int(cfg["runtime"]["batch_size"])):
             texts=[r["canonical"] for r in batch]+[r["feature_variant"] for r in batch]
             tokens=encode(tok,texts,model.device,int(cfg["runtime"]["max_length"]))
             mask=tokens["attention_mask"]
+            signs=torch.tensor([1.0 if (int(r["id"])+int(cfg["seed"]))%2 else -1.0
+                                for r in batch],device=model.device)
             handles=[]
             for layer,site in sites:
                 def hook(_module,_inputs,output,layer=layer,site=site):
                     sample=pool(tensor_output(output).detach(),mask,pooling)
-                    offset=(sample[len(batch):]-sample[:len(batch)]).float().sum(0)
+                    contrast=(sample[len(batch):]-sample[:len(batch)]).float()
+                    offset=contrast.sum(0)
+                    null_offset=(contrast*signs[:,None]).sum(0)
                     key=(layer,site)
                     directions[key]=offset if key not in directions else directions[key]+offset
+                    shuffled[key]=null_offset if key not in shuffled else shuffled[key]+null_offset
                 handles.append(site_module(model,layer,site).register_forward_hook(hook))
             try:
                 model(**tokens,use_cache=False)
@@ -82,6 +88,14 @@ def prepare(cfg,family,feature,force=False):
                 raise ValueError(f"Degenerate linguistic contrast at {key}")
             name=f"{layer}__{site}"
             saved[name+"__direction"]=(vector/norm).detach().cpu().contiguous()
+            control=shuffled[key]/len(train)
+            if control.norm().item()<1e-8:
+                raise ValueError(f"Degenerate label-shuffled direction at {key}")
+            saved[name+"__shuffled"]=(control/control.norm()).detach().cpu().contiguous()
+            generator=torch.Generator(device="cpu")
+            generator.manual_seed(int(cfg["seed"])+1009*layer+(0 if site=="residual" else 1))
+            random_vec=torch.randn(saved[name+"__direction"].shape,generator=generator)
+            saved[name+"__random"]=(random_vec/random_vec.norm()).contiguous()
             saved[name+"__scale"]=torch.tensor([calibrations[key]/len(general)],dtype=torch.float32)
             norms[name]=float(norm.item())
         save_file(saved,str(target))
@@ -96,9 +110,11 @@ def prepare(cfg,family,feature,force=False):
 def load_direction_bundle(cfg,family,feature):
     path=prepare(cfg,family,feature)
     bundle=load_file(str(path))
-    def get(layer,site):
+    def get(layer,site,kind="direction"):
         key=f"{layer}__{site}"
-        direction=bundle[key+"__direction"].float()
+        if kind not in ("direction","random","shuffled"):
+            raise ValueError(kind)
+        direction=bundle[key+"__"+kind].float()
         scale=float(bundle[key+"__scale"].item())
         return direction,scale
     return get
