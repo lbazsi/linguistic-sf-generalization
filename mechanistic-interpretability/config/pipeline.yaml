@@ -47,7 +47,8 @@ analysis:
 probing:
   train_fraction: 0.70
   development_fraction: 0.15
-  epochs: 10
+  epochs: 4
+  max_linguistic_pairs: 1000
   learning_rate: 0.01
   weight_decay: 0.001
   # Same estimator, penalty and hyperparameters for every model, site and feature.
