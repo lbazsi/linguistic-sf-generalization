@@ -11,7 +11,7 @@ from .common import (FEATURES, load_config,load_concepts,load_general,load_scree
 def main():
     p=argparse.ArgumentParser(description="Mechanistic interpretability experiment pipeline")
     p.add_argument("stage",choices=("validate","difference","probe","lora","steering-screen",
-                                    "steering-select","lora-functional","synthesis","judge-plan","judge-generate","judge-run",
+                                    "steering-select","steering-controls","lora-functional","synthesis","judge-plan","judge-generate","judge-run",
                                     "judge-aggregate"))
     p.add_argument("--config",default=str(Path(__file__).resolve().parents[1]/"config/pipeline.yaml"))
     p.add_argument("--model",choices=("gemma2","qwen3","llama31","mistral"),default="gemma2")
@@ -54,6 +54,9 @@ def main():
     elif args.stage=="steering-select":
         from .steering import selection
         result=selection(cfg,args.model,policy=args.policy)
+    elif args.stage=="steering-controls":
+        from .steering import selected_controls
+        result=selected_controls(cfg,args.model)
     elif args.stage=="judge-plan":
         from .judged import write_workload
         result=write_workload(cfg,args.model,args.policy)
