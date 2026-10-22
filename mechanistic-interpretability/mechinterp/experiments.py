@@ -126,23 +126,24 @@ def probe_dataset(cfg,task,feature=None,judgments_path=None,condition=None,famil
     raise ValueError(task)
 
 def probing(cfg,family,condition,task,feature=None):
+    """Run one model, all layers and sites, with transient minibatch activations."""
+    from .streaming import fit_all
     data=probe_dataset(cfg,task,feature=feature,condition=condition,family=family)
     subsets={part:[r for r in data if r["partition"]==part]
              for part in ("train","development","test")}
     model,tok=load_model(cfg,family,condition)
     try:
-        records=[]
-        for layer,site,pool in layers_and_sites(model,cfg):
-            fit=train_probe(model,tok,subsets["train"],subsets["development"],subsets["test"],
-                            layer,site,pool,
-                            "regression" if task=="behavior" else "classification",cfg)
-            records.append({"layer":layer,"site":site,"pooling":pool,
-                            "task":task,"feature":feature,"condition":condition,
-                            "development":fit["validation"],"test":fit["test"]})
-        output=run_dir(cfg,family,"linear-probing")/f"{task}_{feature or 'all'}_{condition}.jsonl"
+        out=run_dir(cfg,family,"linear-probing")
+        stem=f"{task}_{feature or 'all'}_{condition}"
+        metrics=fit_all(model,tok,subsets["train"],subsets["development"],subsets["test"],
+                        "regression" if task=="behavior" else "classification",cfg,
+                        out/f"{stem}_weights.safetensors")
+        records=[{**item,"task":task,"feature":feature,"condition":condition,
+                  "family":family} for item in metrics]
+        output=out/f"{stem}.jsonl"
         write_rows(output,records)
         return output
-    finally: unload(model)
+    finally:unload(model)
 
 def lora_analysis(cfg,family):
     from .common import FEATURES
