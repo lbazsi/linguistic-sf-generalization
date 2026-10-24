@@ -59,6 +59,8 @@ Record resolved Hugging Face base-model revision, adapter hash and checkpoint st
 
 The Python implementation lives in `mechinterp/`, with a single command entry point, `run.py`, configuration in `config/pipeline.yaml` and smoke tests in `tests/`. Install with `pip install -r requirements.txt` and run `python -m pytest tests -q`. The repository provides method specifications and implementation; the GPU analyses have not been executed by this documentation commit.
 
+On GPU images with an existing CUDA-enabled PyTorch installation, an environment created with `python3 -m venv --system-site-packages .venv` can reuse that PyTorch build. Install the full requirements file **inside** the virtual environment: its compatible NumPy, Pillow, scikit-learn, and Transformers versions must take precedence over older system-level packages. Run `python -m pip check` and the smoke tests before GPU inference. The dependency bounds exclude NumPy 2 for legacy binary compatibility and Transformers 5 pending validation of the model-loading interface. When restoring feature adapters, the loader accepts both their original numbered paths (for example, `features/conditionality_01/seed_42`) and unnumbered paths. It verifies the presence of both `adapter_config.json` and `adapter_model.safetensors`; use the original checksum manifest separately for byte-integrity verification.
+
 ```bash
 cd mechanistic-interpretability
 python run.py validate
