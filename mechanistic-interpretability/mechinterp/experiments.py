@@ -199,18 +199,27 @@ def lora_analysis(cfg,family):
         for condition in ("canonical","control_zh",*FEATURES):
             path=adapter_dir(cfg,family,condition,checkpoint)
             weights[condition]=lora_matrices(path)[0]
-        for condition,modules in weights.items():
-            for module,m in modules.items():
-                base_key="model.layers."+module.split("model.layers.",1)[-1]
-            if base_key not in base_norms:raise ValueError("Missing base projection "+base_key)
-            rel=float(m.norm())/max(base_norms[base_key],1e-12)
-            entry={"condition":condition,"checkpoint":checkpoint,
-                   "module":module,"relative_base_weight_norm":rel,**geometry(m)}
+        for condition, modules in weights.items():
+            for module, update in modules.items():
+                base_key = "model.layers." + module.split("model.layers.", 1)[-1]
+                if base_key not in base_norms:
+                    raise ValueError("Missing base projection " + base_key)
+                relative_norm = float(update.norm()) / max(base_norms[base_key], 1e-12)
+                entry = {
+                    "condition": condition,
+                    "checkpoint": checkpoint,
+                    "module": module,
+                    "relative_base_weight_norm": relative_norm,
+                    **geometry(update),
+                }
                 if condition in FEATURES:
-                    ctrl=control_for(condition)
-                    if module not in weights[ctrl]:
-                        raise ValueError(f"Module {module} absent from {ctrl}")
-                    entry.update({"control":ctrl,**compare(weights[ctrl][module],m)})
+                    control = control_for(condition)
+                    if module not in weights[control]:
+                        raise ValueError(f"Module {module} absent from {control}")
+                    entry.update({
+                        "control": control,
+                        **compare(weights[control][module], update),
+                    })
                 rows.append(entry)
         del weights
     # Compare each module's midpoint and final geometry.
