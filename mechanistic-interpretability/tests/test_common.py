@@ -22,3 +22,24 @@ def test_control_registry():
     assert control_for("fusion")=="control_zh"
     assert control_for("constituent_order")=="canonical"
     with pytest.raises(ValueError):control_for("not_a_feature")
+
+def test_original_numbered_feature_adapter_layout(tmp_path):
+    from mechinterp.common import adapter_dir
+
+    checkpoint = tmp_path / "features" / "conditionality_01" / "seed_42" / "adapter"
+    checkpoint.mkdir(parents=True)
+    (checkpoint / "adapter_config.json").write_text("{}")
+    (checkpoint / "adapter_model.safetensors").write_bytes(b"test")
+    cfg = {"seed": 42, "models": {"gemma2": {"adapters": str(tmp_path)}}}
+    assert adapter_dir(cfg, "gemma2", "conditionality") == checkpoint
+
+
+def test_adapter_requires_tensors(tmp_path):
+    from mechinterp.common import adapter_dir
+
+    checkpoint = tmp_path / "canonical" / "seed_42" / "adapter"
+    checkpoint.mkdir(parents=True)
+    (checkpoint / "adapter_config.json").write_text("{}")
+    cfg = {"seed": 42, "models": {"gemma2": {"adapters": str(tmp_path)}}}
+    with pytest.raises(FileNotFoundError, match="Missing LoRA tensors"):
+        adapter_dir(cfg, "gemma2", "canonical")
