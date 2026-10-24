@@ -107,12 +107,27 @@ def adapter_dir(cfg: dict, family: str, condition: str, checkpoint: str = "final
     else:
         if condition not in FEATURES:
             raise ValueError(f"Unknown condition: {condition}")
-        run = root / "features" / condition / f"seed_{seed}"
+        feature_root = root / "features"
+        direct = feature_root / condition
+        if direct.is_dir():
+            feature_dir = direct
+        else:
+            # The original training pipeline numbers alphabetically sorted features,
+            # e.g. conditionality_01; subsequent runs may use unnumbered names.
+            numbered = sorted(feature_root.glob(f"{condition}_[0-9][0-9]"))
+            if len(numbered) > 1:
+                raise ValueError(f"Ambiguous adapter directories for {condition}: {numbered}")
+            feature_dir = numbered[0] if numbered else direct
+        run = feature_dir / f"seed_{seed}"
     sub = "adapter" if checkpoint == "final" else "midpoint_adapter"
     target = run / sub
     if not (target / "adapter_config.json").is_file():
         raise FileNotFoundError(
-            f"Missing LoRA tensors/config at {target}. Restore the external adapter archive."
+            f"Missing LoRA config at {target}. Restore the external adapter archive."
+        )
+    if not (target / "adapter_model.safetensors").is_file():
+        raise FileNotFoundError(
+            f"Missing LoRA tensors at {target}. Restore the external adapter archive."
         )
     return target
 
