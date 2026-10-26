@@ -60,7 +60,8 @@ probing:
   ridge_alphas: [0.01, 0.1, 1.0, 10.0, 100.0, 1000.0]
   # Validation selects only the stopping epoch, not different per-task estimators.
 steering:
-  alphas: [-2.0, -1.0, 0.0, 1.0, 2.0]
+  # Effective alpha = signed fraction times sqrt(hidden width)
+  relative_norm_fractions: [-0.25, -0.10, -0.03, 0.0, 0.03, 0.10, 0.25]
   directions_pooling: final
   token_policies: [prompt_last, generation]
   screening_splits: [screen, validation]
