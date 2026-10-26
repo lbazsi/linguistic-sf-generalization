@@ -33,17 +33,19 @@ def selected_conditions(cfg,family,policy="prompt_last"):
 def workload(cfg,family,policy="prompt_last"):
     selected=selected_conditions(cfg,family,policy)
     test=[r for r in load_screening(cfg) if r["split"]==cfg["steering"]["judged_split"]]
-    n=len(test)*len(selected)
-    judge_batches=math.ceil(len(test)/cfg["steering"]["judging"]["batch_size"])*len(selected)*2
-    result={"family":family,"configurations":len(selected),"scenarios_per_configuration":len(test),
-            "generations":n,"individual_judgments":n*2,"api_requests_without_retries":judge_batches,
-            "judge_batch_size":cfg["steering"]["judging"]["batch_size"],
-            "token_estimate_note":"API tokens vary with prompt length and judge reasoning; configured unit prices and token estimates are needed to price requests."}
-    price=cfg["steering"]["judging"]
-    if price.get("input_usd_per_million") is not None and price.get("output_usd_per_million") is not None:
-        # Deliberately do not fabricate a cost without model-specific token estimates.
-        result["estimated_cost_usd"]=None
-    return result
+    paired=len(test)*len(selected)
+    generation_count=2*paired
+    judge_batches=math.ceil(len(test)/int(cfg["steering"]["judging"]["batch_size"]))*len(selected)*2*2
+    return {
+        "family":family,"protocol":"paired_revised_v2",
+        "configurations":len(selected),"scenarios_per_configuration":len(test),
+        "matched_pairs":paired,"generations":generation_count,
+        "unsteered_generations":paired,"steered_generations":paired,
+        "individual_judgments":generation_count*2,
+        "api_requests_without_retries":judge_batches,
+        "judge_batch_size":int(cfg["steering"]["judging"]["batch_size"]),
+        "token_estimate_note":"Judge and response tokens vary; these are exact request counts before retries.",
+    }
 
 def write_workload(cfg,family,policy="prompt_last"):
     result=workload(cfg,family,policy)
@@ -52,58 +54,88 @@ def write_workload(cfg,family,policy="prompt_last"):
     return path
 
 def generate(cfg,family,policy="prompt_last"):
-    """Held-out judged generations; adapter and direction models never coexist."""
+    """Produce same-seed, new unsteered and steered continuations on each test ID.
+
+    Both arms use identical prompts and model state but different interventions.
+    Unsteered responses are *not* reused from a prior, differently seeded run.
+    """
     from .directions import load_direction_bundle
     selected=selected_conditions(cfg,family,policy)
     test=[r for r in load_screening(cfg) if r["split"]==cfg["steering"]["judged_split"]]
-    if len(test)!=cfg["steering"]["judged_n"]:raise ValueError("Unexpected held-out scenario count")
+    if len(test)!=cfg["steering"]["judged_n"]:
+        raise ValueError("Unexpected held-out scenario count")
     out=run_dir(cfg,family,"activation-steering")/"judged"
     out.mkdir(parents=True,exist_ok=True)
     grouped=defaultdict(list)
-    for row in selected:grouped[row["adapter"]].append(row)
+    for entry in selected:
+        grouped[entry["adapter"]].append(entry)
     for condition,specs in grouped.items():
-        # Direction preparation (if needed) runs before loading the adapted model.
-        bundles={entry["feature"]:load_direction_bundle(cfg,family,entry["feature"])
-                 for entry in specs}
-        target,tok=load_model(cfg,family,condition)
+        bundles={s["feature"]:load_direction_bundle(cfg,family,s["feature"])
+                 for s in specs}
+        model,tok=load_model(cfg,family,condition)
         try:
             generation=cfg["steering"]["generation"]
             for entry in specs:
-                feature=entry["feature"];layer=entry["layer"];site=entry["site"]
+                feature=entry["feature"]
+                layer=entry["layer"];site=entry["site"]
                 direction,scale=bundles[feature](layer,site)
-                filepath=out/f"{feature}__{condition}__{entry['policy']}.jsonl"
-                if filepath.exists():
-                    raise FileExistsError(f"Judged generation already exists: {filepath}")
-                rows=[]
+                files={
+                    arm:out/f"{feature}__{condition}__{entry['policy']}__{arm}.jsonl"
+                    for arm in ("unsteered","steered")
+                }
+                if any(f.exists() for f in files.values()):
+                    raise FileExistsError(
+                        f"One or both arms already exist for {feature}/{condition}; "
+                        "do not silently overwrite a partial matched-pair experiment")
+                arms={"unsteered":[],"steered":[]}
                 for item in test:
                     prompt=scenario_prompt(item["scenario"])
-                    tokens=encode(tok,[prompt],target.device,cfg["runtime"]["max_length"])
-                    torch.manual_seed(int(generation["seed"])+int(item["scenario_id"]))
-                    with torch.inference_mode(),steer(target,layer,site,direction*scale,
-                                                      entry["strength"],entry["policy"]):
-                        output=target.generate(**tokens,max_new_tokens=generation["max_new_tokens"],
-                            do_sample=generation["do_sample"],temperature=generation["temperature"],
-                            top_p=generation["top_p"],pad_token_id=tok.pad_token_id)
-                    continuation=tok.decode(output[0,tokens["input_ids"].shape[1]:],
-                                            skip_special_tokens=True).strip()
-                    rows.append({"scenario_id":item["scenario_id"],"feature":feature,
-                                 "adapter":condition,"layer":layer,"site":site,
-                                 "strength":entry["strength"],"policy":entry["policy"],
-                                 "condition":f"{feature}__{condition}__{entry['policy']}",
-                                 "continuation":continuation,"prompt":prompt})
-                write_rows(filepath,rows)
-        finally:unload(target)
+                    tokens=encode(tok,[prompt],model.device,cfg["runtime"]["max_length"])
+                    seed=int(generation["seed"])+int(item["scenario_id"])
+                    for arm in ("unsteered","steered"):
+                        strength=0. if arm=="unsteered" else float(entry["strength"])
+                        torch.manual_seed(seed)
+                        with torch.inference_mode(),steer(
+                            model,layer,site,direction*scale,strength,entry["policy"]):
+                            output=model.generate(
+                                **tokens,max_new_tokens=generation["max_new_tokens"],
+                                do_sample=generation["do_sample"],
+                                temperature=generation["temperature"],
+                                top_p=generation["top_p"],pad_token_id=tok.pad_token_id)
+                        continuation=tok.decode(
+                            output[0,tokens["input_ids"].shape[1]:],
+                            skip_special_tokens=True).strip()
+                        arms[arm].append({
+                            "scenario_id":item["scenario_id"],
+                            "feature":feature,"adapter":condition,
+                            "layer":layer,"site":site,"arm":arm,
+                            "strength":strength,"policy":entry["policy"],
+                            "condition":f"{feature}__{condition}__{entry['policy']}",
+                            "generation_seed":seed,"continuation":continuation,
+                            "prompt":prompt,
+                        })
+                for arm,f in files.items():
+                    write_rows(f,arms[arm])
+        finally:
+            unload(model)
     return out
 
+
 def judge_plan(cfg,family,policy="prompt_last"):
-    """Return only the generated response artifacts; no implicit API calls."""
+    """Every feature/configuration must have both separately judged arms."""
     directory=run_dir(cfg,family,"activation-steering")/"judged"
     selected=selected_conditions(cfg,family,policy)
-    files=[directory/f"{x['feature']}__{x['adapter']}__{x['policy']}.jsonl" for x in selected]
-    for path in files:
-        if not path.is_file():raise FileNotFoundError(path)
-        if len(read_data(path))!=cfg["steering"]["judged_n"]:
-            raise ValueError(f"Incomplete response file {path}")
+    files=[]
+    for s in selected:
+        for arm in ("unsteered","steered"):
+            f=directory/f"{s['feature']}__{s['adapter']}__{s['policy']}__{arm}.jsonl"
+            if not f.is_file():raise FileNotFoundError(f)
+            rows=read_data(f)
+            if len(rows)!=cfg["steering"]["judged_n"] or len(set(r["scenario_id"] for r in rows))!=len(rows):
+                raise ValueError(f"Incomplete or duplicate judged file: {f}")
+            if any(row.get("arm")!=arm for row in rows):
+                raise ValueError(f"Arm mismatch in {f}")
+            files.append(f)
     return files
 
 async def judge(cfg,family,policy="prompt_last",execute=False):
@@ -155,52 +187,76 @@ async def judge(cfg,family,policy="prompt_last",execute=False):
     return out
 
 def aggregate(cfg,family,policy="prompt_last"):
-    """Paired steered-vs-unsteered welfare scores on identical held-out scenarios."""
+    """Judge-matched steered minus newly generated unsteered responses.
+
+    Judge files are distinct per arm. Pair IDs, prompt and seeds are asserted.
+    A legacy historical-baseline comparison may be analyzed separately, but
+    never mixed with this paired-v2 inferential family.
+    """
     from .stats import cluster_signflip
     source=judge_plan(cfg,family,policy)
-    directory=run_dir(cfg,family,"activation-steering")/"judgments"
-    baseline_path=cfg["models"][family].get("judgments")
-    if baseline_path is None:
-        if family!="gemma2":
-            raise ValueError(f"Pin the model-specific original evaluation combined_judgments.jsonl in models.{family}.judgments")
-        baseline_path=str(location(cfg,"judgments"))
-    else:
-        path=Path(baseline_path)
-        baseline_path=str(path if path.is_absolute() else (Path(cfg["_config_file"]).parent.parent/path).resolve())
-    existing=read_data(Path(baseline_path))
-    baseline={(r["condition"],int(r["scenario_id"])):r["scores"]["target_value_support"]
-              for r in existing if r.get("scores") is not None}
-    rows=[];scenario={int(r["id"]):r for r in load_scenarios(cfg)}
-    for file in source:
-        conditions=read_data(file)
-        j1={int(r["scenario_id"]):r for r in read_data(directory/"judge_1"/file.name)}
-        j2={int(r["scenario_id"]):r for r in read_data(directory/"judge_2"/file.name)}
-        for r in conditions:
-            sid=int(r["scenario_id"])
-            judgments=[j1[sid],j2[sid]]
-            vals=[j["scores"]["target_value_support"] for j in judgments
-                  if j["scores"]["target_value_support"] is not None]
-            value=sum(vals)/len(vals) if vals else None
-            base=baseline.get((r["adapter"],sid))
-            if base is None:
-                raise ValueError(f"Missing baseline score for {r['adapter']} scenario {sid}")
-            s=scenario[sid];cell="|".join(map(str,(s["category"],s["animal"],s["value"],s["context"])))
-            rows.append({**r,"target_value_support":value,"unsteered_score":base,
-                         "paired_delta":value-base if value is not None else None,
-                         "semantic_cell":cell,"category":s["category"],"tradeoff":s["tradeoff"],
-                         "judge_1":j1[sid]["scores"],"judge_2":j2[sid]["scores"]})
-    output=directory/"combined.jsonl"
-    write_rows(output,rows)
-    summary=[]
-    grouped=defaultdict(list)
-    for row in rows:grouped[(row["feature"],row["adapter"])].append(row)
-    for (feature,condition),part in grouped.items():
+    folder=run_dir(cfg,family,"activation-steering")/"judgments"
+    scenarios={int(r["id"]):r for r in load_scenarios(cfg)}
+    by_name={f.name:f for f in source}
+    rows=[]
+    for spec in selected_conditions(cfg,family,policy):
+        stem=f"{spec['feature']}__{spec['adapter']}__{spec['policy']}"
+        arm_data={}
+        for arm in ("unsteered","steered"):
+            name=f"{stem}__{arm}.jsonl"
+            response=read_data(by_name[name])
+            j1={int(r["scenario_id"]):r for r in read_data(folder/"judge_1"/name)}
+            j2={int(r["scenario_id"]):r for r in read_data(folder/"judge_2"/name)}
+            arm_data[arm]={}
+            for r in response:
+                sid=int(r["scenario_id"])
+                if sid not in j1 or sid not in j2:
+                    raise ValueError(f"Missing judge result for {sid} in {name}")
+                vals=[j["scores"].get("target_value_support") for j in (j1[sid],j2[sid])]
+                usable=[float(v) for v in vals if v is not None]
+                arm_data[arm][sid]={
+                    "source":r,"judge_1":j1[sid]["scores"],"judge_2":j2[sid]["scores"],
+                    "score":sum(usable)/len(usable) if usable else None,
+                }
+        if set(arm_data["unsteered"])!=set(arm_data["steered"]):
+            raise ValueError("Arm scenario IDs differ")
+        for sid,baseline in arm_data["unsteered"].items():
+            intervention=arm_data["steered"][sid]
+            a,b=baseline["source"],intervention["source"]
+            if a["prompt"]!=b["prompt"] or a["generation_seed"]!=b["generation_seed"]:
+                raise ValueError("Unmatched prompt or seed in judged comparison")
+            score0=baseline["score"];score1=intervention["score"]
+            sc=scenarios[sid]
+            cell="|".join(map(str,(sc["category"],sc["animal"],sc["value"],sc["context"])))
+            rows.append({
+                **b,"baseline_continuation":a["continuation"],
+                "unsteered_score":score0,"target_value_support":score1,
+                "paired_delta":score1-score0 if score0 is not None and score1 is not None else None,
+                "semantic_cell":cell,"category":sc["category"],"tradeoff":sc["tradeoff"],
+                "judge_1":intervention["judge_1"],"judge_2":intervention["judge_2"],
+                "baseline_judge_1":baseline["judge_1"],"baseline_judge_2":baseline["judge_2"],
+                "comparison_protocol":"matched_generated_baseline_v2",
+            })
+    dest=folder/"combined.jsonl"
+    write_rows(dest,rows)
+    groups=defaultdict(list)
+    for row in rows:
+        groups[(row["feature"],row["adapter"])].append(row)
+    summaries=[]
+    for (feature,adapter),part in groups.items():
         usable=[r for r in part if r["paired_delta"] is not None]
-        delta=[r["paired_delta"] for r in usable];clusters=[r["semantic_cell"] for r in usable]
-        summary.append({"feature":feature,"adapter":condition,"n":len(usable),
-            "paired_delta":cluster_interval(delta,clusters,cfg["seed"],cfg["stats"]["bootstrap_replicates"]),
-            "p_value":cluster_signflip(delta,clusters,cfg["seed"],cfg["stats"]["permutations"])})
-    q=bh([item["p_value"] for item in summary])
-    for item,qv in zip(summary,q):item["q_value"]=qv
-    write_json(directory/"summary.json",summary)
-    return output
+        deltas=[r["paired_delta"] for r in usable]
+        clusters=[r["semantic_cell"] for r in usable]
+        if not deltas:raise ValueError(f"No valid paired outcomes for {feature}/{adapter}")
+        summaries.append({
+            "feature":feature,"adapter":adapter,"n":len(usable),
+            "comparison_protocol":"matched_generated_baseline_v2",
+            "paired_delta":cluster_interval(deltas,clusters,int(cfg["seed"]),
+                                            int(cfg["stats"]["bootstrap_replicates"])),
+            "p_value":cluster_signflip(deltas,clusters,int(cfg["seed"]),
+                                       int(cfg["stats"]["permutations"])),
+        })
+    q=bh([item["p_value"] for item in summaries])
+    for row,qvalue in zip(summaries,q):row["q_value"]=qvalue
+    write_json(folder/"summary.json",summaries)
+    return dest
