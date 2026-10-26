@@ -97,7 +97,7 @@ def pooled_batches(model, tokenizer, texts, layer, site, pooling, batch_size=4, 
         del inputs, state
 
 @contextmanager
-def steer(model, layer, site, vector, strength, token_policy="prompt_last"):
+def steer(model, layer, site, vector, strength, token_policy="prompt_last", audit=None):
     """Modify exactly the final prompt token during prefill; optionally every decode token."""
     vec = vector.float()
     def hook(_module, _inputs, output):
@@ -109,6 +109,12 @@ def steer(model, layer, site, vector, strength, token_policy="prompt_last"):
         shifted = hidden.clone()
         delta = (strength * vec).to(hidden.device, dtype=hidden.dtype)
         shifted[:, -1, :] += delta
+        if audit is not None:
+            audit["calls"] = audit.get("calls", 0) + 1
+            audit["positions"] = audit.get("positions", 0) + int(hidden.shape[0])
+            audit["delta_sum"] = audit.get("delta_sum", 0.) + float(delta.float().norm()) * hidden.shape[0]
+            n = hidden[:, -1, :].float().norm(dim=-1).clamp_min(1e-8)
+            audit["relative_sum"] = audit.get("relative_sum", 0.) + float((delta.float().norm() / n).sum())
         return replace_tensor_output(output, shifted)
     handle = site_module(model, layer, site).register_forward_hook(hook)
     try:
