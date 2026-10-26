@@ -1,0 +1,30 @@
+{
+  "created_at_utc": "2026-10-24T06:41:20.323138+00:00",
+  "stage": "difference",
+  "family": "gemma2",
+  "model": {
+    "name": "google/gemma-2-9b",
+    "revision": "33c193028431c2fde6c6e51f29e6f17b60cbfac6",
+    "adapters": "../fine_tuning/outputs"
+  },
+  "seed": 42,
+  "config_sha256": "48c8a5c7279229ad03ce3dac6bfd684979a2349c493b4fc7d956144ba03b0e76",
+  "input_hashes": {
+    "/home/ubuntu/linguistic-sf-generalization/mechanistic-interpretability/data/general_domain_prompts.json": "edde4877b22661a174361377700977b70096e744e3595d569584016b6d36f496",
+    "/home/ubuntu/linguistic-sf-generalization/mechanistic-interpretability/data/welfare_concept_probes.json": "d1dc1f0e242763a7f714390da43d8e5b3a614d8f54e93a62318cd5ee727ddbef",
+    "/home/ubuntu/linguistic-sf-generalization/results/evaluation_results/data/scenarios/final/scenarios.jsonl": "5db7e8c67c7c43c8498a59a3e8bcdc1b1f7fb37cdbaf2fcdeb4f7eaa2f83d5fc",
+    "/home/ubuntu/linguistic-sf-generalization/mechanistic-interpretability/data/steering_screening.jsonl": "52eb5af97fd4efa1a55b7c121dbc808bc3f96c41925c7a9e748f23561c4e62db"
+  },
+  "artifact": {
+    "path": "/home/ubuntu/linguistic-sf-generalization/mechanistic-interpretability/outputs/gemma2/model-difference-analysis/control_zh_final.jsonl",
+    "sha256": "d25d75961c541f7205c3d0de41a70d7f0f267e75582a279045279f10a98e9419"
+  },
+  "python": "3.10.12",
+  "runtime": {
+    "torch": "2.7.0",
+    "cuda": "12.8",
+    "transformers": "4.57.6",
+    "peft": "0.21.2",
+    "gpu": "NVIDIA A100-SXM4-40GB"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "family": "qwen3",
+  "configurations": 28,
+  "scenarios_per_configuration": 100,
+  "generations": 2800,
+  "individual_judgments": 5600,
+  "api_requests_without_retries": 560,
+  "judge_batch_size": 10,
+  "token_estimate_note": "API tokens vary with prompt length and judge reasoning; configured unit prices and token estimates are needed to price requests."
+}

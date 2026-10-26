@@ -1,0 +1,282 @@
+[
+  {
+    "feature": "conditionality",
+    "adapter": "canonical",
+    "layer": 34,
+    "site": "residual",
+    "strength": -2.0,
+    "policy": "generation",
+    "validation_delta": -0.014294756948947907,
+    "n_validation": 80
+  },
+  {
+    "feature": "conditionality",
+    "adapter": "conditionality",
+    "layer": 34,
+    "site": "residual",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": 0.015296849608421325,
+    "n_validation": 80
+  },
+  {
+    "feature": "epistemic_hedging",
+    "adapter": "canonical",
+    "layer": 14,
+    "site": "residual",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.016964855790138244,
+    "n_validation": 80
+  },
+  {
+    "feature": "epistemic_hedging",
+    "adapter": "epistemic_hedging",
+    "layer": 13,
+    "site": "residual",
+    "strength": -2.0,
+    "policy": "generation",
+    "validation_delta": 0.010900522768497466,
+    "n_validation": 80
+  },
+  {
+    "feature": "formality",
+    "adapter": "canonical",
+    "layer": 35,
+    "site": "mlp",
+    "strength": -2.0,
+    "policy": "generation",
+    "validation_delta": -0.018265736103057862,
+    "n_validation": 80
+  },
+  {
+    "feature": "formality",
+    "adapter": "formality",
+    "layer": 35,
+    "site": "mlp",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": 0.015888981521129608,
+    "n_validation": 80
+  },
+  {
+    "feature": "genericity",
+    "adapter": "canonical",
+    "layer": 35,
+    "site": "mlp",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.01667361706495285,
+    "n_validation": 80
+  },
+  {
+    "feature": "genericity",
+    "adapter": "genericity",
+    "layer": 35,
+    "site": "mlp",
+    "strength": -2.0,
+    "policy": "generation",
+    "validation_delta": 0.01656629741191864,
+    "n_validation": 80
+  },
+  {
+    "feature": "modal_strength",
+    "adapter": "canonical",
+    "layer": 35,
+    "site": "mlp",
+    "strength": -2.0,
+    "policy": "generation",
+    "validation_delta": 0.019921234250068663,
+    "n_validation": 80
+  },
+  {
+    "feature": "modal_strength",
+    "adapter": "modal_strength",
+    "layer": 35,
+    "site": "mlp",
+    "strength": -2.0,
+    "policy": "generation",
+    "validation_delta": 0.018625862896442413,
+    "n_validation": 80
+  },
+  {
+    "feature": "narrative_framing",
+    "adapter": "canonical",
+    "layer": 19,
+    "site": "residual",
+    "strength": -2.0,
+    "policy": "generation",
+    "validation_delta": 0.011483950912952423,
+    "n_validation": 80
+  },
+  {
+    "feature": "narrative_framing",
+    "adapter": "narrative_framing",
+    "layer": 19,
+    "site": "residual",
+    "strength": -2.0,
+    "policy": "generation",
+    "validation_delta": 0.011143486201763152,
+    "n_validation": 80
+  },
+  {
+    "feature": "nominalization",
+    "adapter": "canonical",
+    "layer": 27,
+    "site": "residual",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.0145320326089859,
+    "n_validation": 80
+  },
+  {
+    "feature": "nominalization",
+    "adapter": "nominalization",
+    "layer": 21,
+    "site": "residual",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.011364661157131195,
+    "n_validation": 80
+  },
+  {
+    "feature": "pronoun_distribution",
+    "adapter": "canonical",
+    "layer": 9,
+    "site": "mlp",
+    "strength": -2.0,
+    "policy": "generation",
+    "validation_delta": -0.009539628028869629,
+    "n_validation": 80
+  },
+  {
+    "feature": "pronoun_distribution",
+    "adapter": "pronoun_distribution",
+    "layer": 35,
+    "site": "mlp",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.011210580170154572,
+    "n_validation": 80
+  },
+  {
+    "feature": "subordination",
+    "adapter": "canonical",
+    "layer": 35,
+    "site": "mlp",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.01783670037984848,
+    "n_validation": 80
+  },
+  {
+    "feature": "subordination",
+    "adapter": "subordination",
+    "layer": 35,
+    "site": "residual",
+    "strength": -2.0,
+    "policy": "generation",
+    "validation_delta": 0.010957008600234986,
+    "n_validation": 80
+  },
+  {
+    "feature": "tense_aspect",
+    "adapter": "canonical",
+    "layer": 35,
+    "site": "mlp",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.013370944559574128,
+    "n_validation": 80
+  },
+  {
+    "feature": "tense_aspect",
+    "adapter": "tense_aspect",
+    "layer": 35,
+    "site": "mlp",
+    "strength": -2.0,
+    "policy": "generation",
+    "validation_delta": 0.01288670152425766,
+    "n_validation": 80
+  },
+  {
+    "feature": "voice",
+    "adapter": "canonical",
+    "layer": 34,
+    "site": "residual",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.01656261384487152,
+    "n_validation": 80
+  },
+  {
+    "feature": "voice",
+    "adapter": "voice",
+    "layer": 32,
+    "site": "residual",
+    "strength": -2.0,
+    "policy": "generation",
+    "validation_delta": 0.014264769852161407,
+    "n_validation": 80
+  },
+  {
+    "feature": "constituent_order",
+    "adapter": "canonical",
+    "layer": 18,
+    "site": "residual",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.014436380565166473,
+    "n_validation": 80
+  },
+  {
+    "feature": "constituent_order",
+    "adapter": "constituent_order",
+    "layer": 17,
+    "site": "residual",
+    "strength": -2.0,
+    "policy": "generation",
+    "validation_delta": 0.007508526742458344,
+    "n_validation": 80
+  },
+  {
+    "feature": "inflectional_synthesis",
+    "adapter": "control_zh",
+    "layer": 34,
+    "site": "residual",
+    "strength": -2.0,
+    "policy": "generation",
+    "validation_delta": -0.01274273693561554,
+    "n_validation": 80
+  },
+  {
+    "feature": "inflectional_synthesis",
+    "adapter": "inflectional_synthesis",
+    "layer": 34,
+    "site": "residual",
+    "strength": -2.0,
+    "policy": "generation",
+    "validation_delta": -0.011156459152698518,
+    "n_validation": 80
+  },
+  {
+    "feature": "fusion",
+    "adapter": "control_zh",
+    "layer": 35,
+    "site": "mlp",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.014266331493854523,
+    "n_validation": 80
+  },
+  {
+    "feature": "fusion",
+    "adapter": "fusion",
+    "layer": 35,
+    "site": "mlp",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.012417382001876831,
+    "n_validation": 80
+  }
+]
