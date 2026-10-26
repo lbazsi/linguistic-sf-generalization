@@ -60,6 +60,9 @@ def fit_ridge_activations(keys, train_x, dev_x, test_x, train_y, dev_y, test_y,
     stds = torch.ones_like(weights)
     selected = torch.full((shape[0],), float("inf"))
     results = []
+    selected_idx = None
+    selected_dev_rmse = float("inf")
+    selected_raw_test = None
     for i, (layer, site, pooling) in enumerate(keys):
         raw = train_x[i].float()
         mu = raw.mean(0)
@@ -122,6 +125,10 @@ def fit_ridge_activations(keys, train_x, dev_x, test_x, train_y, dev_y, test_y,
                 "target_mean": float(label.float().mean()),
                 "target_std": float(label.float().std(unbiased=False)),
             }
+        if metrics["development"]["rmse"] < selected_dev_rmse:
+            selected_idx = i
+            selected_dev_rmse = metrics["development"]["rmse"]
+            selected_raw_test = eval_before_clip["test"].detach().float().cpu().clone()
         results.append({
             "layer":layer, "site":site, "pooling":pooling,
             "method":"dual_ridge_v2", "selected_penalty":best_penalty,
@@ -137,7 +144,7 @@ def fit_ridge_activations(keys, train_x, dev_x, test_x, train_y, dev_y, test_y,
                "selected_penalty":selected.contiguous(),
                "target_mean":target_mean.float().view(1).cpu().contiguous(),
                "target_scale":effective_scale.float().view(1).cpu().contiguous()}
-    return results, tensors
+    return results, tensors, selected_idx, selected_raw_test
 
 
 @torch.inference_mode()
@@ -154,7 +161,24 @@ def fit_behavior(model, tok, train, development, test, cfg, weights_path):
     labels = [torch.tensor([float(r["label"]) for r in part],
                            device=arrays[0].device) for part in (train, development, test)]
     penalties = cfg["probing"].get("ridge_alphas", list(DEFAULT_ALPHAS))
-    results, tensors = fit_ridge_activations(keys, *arrays, *labels, penalties=penalties)
+    results, tensors, selected_idx, selected_raw_test = fit_ridge_activations(keys, *arrays, *labels, penalties=penalties)
     weights_path.parent.mkdir(parents=True, exist_ok=True)
     save_file(tensors, str(weights_path))
+    from .probe_robustness import inspect_heldout
+    from .common import write_json, write_rows
+    details, cases = inspect_heldout(
+        test, labels[2].detach().float().cpu().tolist(),
+        selected_raw_test.tolist(),
+        [float(labels[0].float().mean())] * len(test),
+        seed=int(cfg["seed"]),
+        reps=int(cfg["stats"]["bootstrap_replicates"]))
+    selected = results[selected_idx]
+    details["selection"] = {
+        "criterion":"development_rmse_only",
+        "layer":selected["layer"],"site":selected["site"],
+        "pooling":selected["pooling"],"penalty":selected["selected_penalty"],
+        "selected_baseline":selected["selected_baseline"]}
+    stem = weights_path.name.removesuffix("_weights.safetensors")
+    write_json(weights_path.with_name(stem+"_robustness.json"), details)
+    write_rows(weights_path.with_name(stem+"_heldout_predictions.jsonl"),cases)
     return results
