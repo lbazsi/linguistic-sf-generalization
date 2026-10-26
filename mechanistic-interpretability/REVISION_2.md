@@ -92,3 +92,19 @@ python run.py judge-aggregate --model llama31
 The revised generation stage creates **5,600 outputs**, divided into 2,800 fresh unsteered baselines and 2,800 steered continuations, each arm sharing the same scenario seed. Two independent judges evaluate **11,200 judgments**, or **1,120 requests in batches of ten before retries**. The old protocol counted 560 requests; do not reuse that budget. A partial judged run can resume its judge files but should never overwrite already generated matched pairs.
 
 After complete revised results have been committed, regenerate the cross-model report and figure suite. These steps are not part of the Llama pilot and must not be launched automatically merely because the screening proxy improved.
+
+## Direction cache and linguistic pilot interpretation
+
+Before the pilot, reuse the previously computed direction vectors where available:
+
+~~~bash
+mkdir -p outputs/revision_2/llama31/activation-steering
+cp -n outputs/llama31/activation-steering/directions_*.safetensors outputs/revision_2/llama31/activation-steering/
+cp -n outputs/llama31/activation-steering/directions_*_metadata.json outputs/revision_2/llama31/activation-steering/
+~~~
+
+Only execute these copy commands if the old directions exist. The revised loader recalibrates site scales once per family from 200 balanced prompts across all 20 general domains and saves site_calibration_v2.json. Old direction unit vectors are reused but old calibration scales are ignored.
+
+The validation-only pilot additionally tests 20 independent held-out matched linguistic pairs per feature, reporting length-normalized feature-variant-minus-canonical log-probability gaps separately from the welfare-option proxy. It compares the selected direction at the 10% nominal dose with a shuffled-label control and five independently seeded random directions. Positive linguistic-pair evidence is only a proxy: generated-output grammar, language identity, response coherence, and blinded inspection remain necessary before judging any new welfare responses.
+
+Pilot use of the linguistic test split never authorizes selecting final welfare configurations from the 100-scenario welfare test partition. The original 80-scenario steering validation subset is exploratory because previous selection has already used it. No new confirmatory claim should treat that validation subset as fresh test data.
