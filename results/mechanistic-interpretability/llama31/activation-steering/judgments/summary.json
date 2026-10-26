@@ -1,0 +1,366 @@
+[
+  {
+    "feature": "conditionality",
+    "adapter": "canonical",
+    "n": 100,
+    "paired_delta": {
+      "mean": 0.055,
+      "low": -0.010941862784204224,
+      "high": 0.13,
+      "clusters": 86
+    },
+    "p_value": 0.16741629185407297,
+    "q_value": 0.9025487256371815
+  },
+  {
+    "feature": "conditionality",
+    "adapter": "conditionality",
+    "n": 100,
+    "paired_delta": {
+      "mean": 0.075,
+      "low": -0.025516778876499054,
+      "high": 0.19388498117693675,
+      "clusters": 86
+    },
+    "p_value": 0.23588205897051473,
+    "q_value": 0.9435282358820588
+  },
+  {
+    "feature": "epistemic_hedging",
+    "adapter": "canonical",
+    "n": 100,
+    "paired_delta": {
+      "mean": 0.0,
+      "low": -0.06124026930359772,
+      "high": 0.0625140765765765,
+      "clusters": 86
+    },
+    "p_value": 1.0,
+    "q_value": 1.0
+  },
+  {
+    "feature": "epistemic_hedging",
+    "adapter": "epistemic_hedging",
+    "n": 100,
+    "paired_delta": {
+      "mean": -0.01,
+      "low": -0.13442338709677418,
+      "high": 0.12983352803738304,
+      "clusters": 86
+    },
+    "p_value": 0.9455272363818091,
+    "q_value": 1.0
+  },
+  {
+    "feature": "formality",
+    "adapter": "canonical",
+    "n": 100,
+    "paired_delta": {
+      "mean": 0.02,
+      "low": -0.04,
+      "high": 0.08163510596546308,
+      "clusters": 86
+    },
+    "p_value": 0.6351824087956022,
+    "q_value": 1.0
+  },
+  {
+    "feature": "formality",
+    "adapter": "formality",
+    "n": 100,
+    "paired_delta": {
+      "mean": 0.025,
+      "low": -0.03886407766990291,
+      "high": 0.09042679837892603,
+      "clusters": 86
+    },
+    "p_value": 0.544727636181909,
+    "q_value": 1.0
+  },
+  {
+    "feature": "genericity",
+    "adapter": "canonical",
+    "n": 100,
+    "paired_delta": {
+      "mean": 0.02,
+      "low": -0.04444719471947195,
+      "high": 0.08333333333333333,
+      "clusters": 86
+    },
+    "p_value": 0.6531734132933533,
+    "q_value": 1.0
+  },
+  {
+    "feature": "genericity",
+    "adapter": "genericity",
+    "n": 100,
+    "paired_delta": {
+      "mean": 0.005,
+      "low": -0.07653061224489796,
+      "high": 0.07768128033980576,
+      "clusters": 86
+    },
+    "p_value": 1.0,
+    "q_value": 1.0
+  },
+  {
+    "feature": "modal_strength",
+    "adapter": "canonical",
+    "n": 100,
+    "paired_delta": {
+      "mean": 0.035,
+      "low": -0.025510204081632654,
+      "high": 0.09346524532710276,
+      "clusters": 86
+    },
+    "p_value": 0.3353323338330835,
+    "q_value": 1.0
+  },
+  {
+    "feature": "modal_strength",
+    "adapter": "modal_strength",
+    "n": 100,
+    "paired_delta": {
+      "mean": 0.025,
+      "low": -0.04839101158784841,
+      "high": 0.094072785656944,
+      "clusters": 86
+    },
+    "p_value": 0.5797101449275363,
+    "q_value": 1.0
+  },
+  {
+    "feature": "narrative_framing",
+    "adapter": "canonical",
+    "n": 100,
+    "paired_delta": {
+      "mean": -0.015,
+      "low": -0.08654336734693878,
+      "high": 0.061855670103092786,
+      "clusters": 86
+    },
+    "p_value": 0.7881059470264867,
+    "q_value": 1.0
+  },
+  {
+    "feature": "narrative_framing",
+    "adapter": "narrative_framing",
+    "n": 100,
+    "paired_delta": {
+      "mean": 0.05,
+      "low": -0.07281806229773462,
+      "high": 0.17823485330184385,
+      "clusters": 86
+    },
+    "p_value": 0.49825087456271866,
+    "q_value": 1.0
+  },
+  {
+    "feature": "nominalization",
+    "adapter": "canonical",
+    "n": 100,
+    "paired_delta": {
+      "mean": 0.05,
+      "low": -0.01020408163265306,
+      "high": 0.1142955439056356,
+      "clusters": 86
+    },
+    "p_value": 0.1794102948525737,
+    "q_value": 0.9025487256371815
+  },
+  {
+    "feature": "nominalization",
+    "adapter": "nominalization",
+    "n": 100,
+    "paired_delta": {
+      "mean": 0.0,
+      "low": -0.11010387261820749,
+      "high": 0.11001315789473677,
+      "clusters": 86
+    },
+    "p_value": 1.0,
+    "q_value": 1.0
+  },
+  {
+    "feature": "pronoun_distribution",
+    "adapter": "canonical",
+    "n": 100,
+    "paired_delta": {
+      "mean": 0.05,
+      "low": -0.010309278350515464,
+      "high": 0.11386138613861387,
+      "clusters": 86
+    },
+    "p_value": 0.16841579210394803,
+    "q_value": 0.9025487256371815
+  },
+  {
+    "feature": "pronoun_distribution",
+    "adapter": "pronoun_distribution",
+    "n": 100,
+    "paired_delta": {
+      "mean": 0.005,
+      "low": -0.08417709695497852,
+      "high": 0.08411330619043211,
+      "clusters": 86
+    },
+    "p_value": 1.0,
+    "q_value": 1.0
+  },
+  {
+    "feature": "subordination",
+    "adapter": "canonical",
+    "n": 100,
+    "paired_delta": {
+      "mean": 0.02,
+      "low": -0.04952995299529953,
+      "high": 0.09134615384615384,
+      "clusters": 86
+    },
+    "p_value": 0.664167916041979,
+    "q_value": 1.0
+  },
+  {
+    "feature": "subordination",
+    "adapter": "subordination",
+    "n": 100,
+    "paired_delta": {
+      "mean": 0.02,
+      "low": -0.053411146011802774,
+      "high": 0.087644026682838,
+      "clusters": 86
+    },
+    "p_value": 0.7061469265367316,
+    "q_value": 1.0
+  },
+  {
+    "feature": "tense_aspect",
+    "adapter": "canonical",
+    "n": 100,
+    "paired_delta": {
+      "mean": 0.015,
+      "low": -0.04456559405940594,
+      "high": 0.07081226295828057,
+      "clusters": 86
+    },
+    "p_value": 0.7306346826586707,
+    "q_value": 1.0
+  },
+  {
+    "feature": "tense_aspect",
+    "adapter": "tense_aspect",
+    "n": 100,
+    "paired_delta": {
+      "mean": -0.01,
+      "low": -0.061855670103092786,
+      "high": 0.04718737454837405,
+      "clusters": 86
+    },
+    "p_value": 0.8715642178910544,
+    "q_value": 1.0
+  },
+  {
+    "feature": "voice",
+    "adapter": "canonical",
+    "n": 100,
+    "paired_delta": {
+      "mean": 0.05,
+      "low": -0.014154312668463611,
+      "high": 0.11650485436893204,
+      "clusters": 86
+    },
+    "p_value": 0.1934032983508246,
+    "q_value": 0.9025487256371815
+  },
+  {
+    "feature": "voice",
+    "adapter": "voice",
+    "n": 100,
+    "paired_delta": {
+      "mean": -0.02,
+      "low": -0.1188118811881188,
+      "high": 0.08152451197870451,
+      "clusters": 86
+    },
+    "p_value": 0.7581209395302348,
+    "q_value": 1.0
+  },
+  {
+    "feature": "constituent_order",
+    "adapter": "canonical",
+    "n": 100,
+    "paired_delta": {
+      "mean": -0.005,
+      "low": -0.08824295343137255,
+      "high": 0.06731770833333328,
+      "clusters": 86
+    },
+    "p_value": 1.0,
+    "q_value": 1.0
+  },
+  {
+    "feature": "constituent_order",
+    "adapter": "constituent_order",
+    "n": 100,
+    "paired_delta": {
+      "mean": 0.01,
+      "low": -0.08333333333333333,
+      "high": 0.10953571428571422,
+      "clusters": 86
+    },
+    "p_value": 0.9185407296351824,
+    "q_value": 1.0
+  },
+  {
+    "feature": "inflectional_synthesis",
+    "adapter": "control_zh",
+    "n": 100,
+    "paired_delta": {
+      "mean": 0.07,
+      "low": -0.015306122448979591,
+      "high": 0.15689525810324112,
+      "clusters": 86
+    },
+    "p_value": 0.14442778610694654,
+    "q_value": 0.9025487256371815
+  },
+  {
+    "feature": "inflectional_synthesis",
+    "adapter": "inflectional_synthesis",
+    "n": 100,
+    "paired_delta": {
+      "mean": 0.065,
+      "low": -0.041247852233676975,
+      "high": 0.1782178217821782,
+      "clusters": 86
+    },
+    "p_value": 0.27936031984008,
+    "q_value": 0.9777611194402799
+  },
+  {
+    "feature": "fusion",
+    "adapter": "control_zh",
+    "n": 100,
+    "paired_delta": {
+      "mean": 0.065,
+      "low": 0.0,
+      "high": 0.13810030395136777,
+      "clusters": 86
+    },
+    "p_value": 0.0944527736131934,
+    "q_value": 0.9025487256371815
+  },
+  {
+    "feature": "fusion",
+    "adapter": "fusion",
+    "n": 100,
+    "paired_delta": {
+      "mean": 0.05,
+      "low": -0.07924792479247925,
+      "high": 0.19160675772825295,
+      "clusters": 86
+    },
+    "p_value": 0.5317341329335332,
+    "q_value": 1.0
+  }
+]

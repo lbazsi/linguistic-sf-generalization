@@ -1,0 +1,282 @@
+[
+  {
+    "feature": "conditionality",
+    "adapter": "canonical",
+    "layer": 16,
+    "site": "residual",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.007691316306591034,
+    "n_validation": 80
+  },
+  {
+    "feature": "conditionality",
+    "adapter": "conditionality",
+    "layer": 16,
+    "site": "residual",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.007208091765642166,
+    "n_validation": 80
+  },
+  {
+    "feature": "epistemic_hedging",
+    "adapter": "canonical",
+    "layer": 16,
+    "site": "residual",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.009218523651361466,
+    "n_validation": 80
+  },
+  {
+    "feature": "epistemic_hedging",
+    "adapter": "epistemic_hedging",
+    "layer": 16,
+    "site": "residual",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.009047885239124299,
+    "n_validation": 80
+  },
+  {
+    "feature": "formality",
+    "adapter": "canonical",
+    "layer": 26,
+    "site": "residual",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.009955641627311707,
+    "n_validation": 80
+  },
+  {
+    "feature": "formality",
+    "adapter": "formality",
+    "layer": 25,
+    "site": "residual",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.007439792901277542,
+    "n_validation": 80
+  },
+  {
+    "feature": "genericity",
+    "adapter": "canonical",
+    "layer": 18,
+    "site": "residual",
+    "strength": -2.0,
+    "policy": "generation",
+    "validation_delta": -0.006045876443386078,
+    "n_validation": 80
+  },
+  {
+    "feature": "genericity",
+    "adapter": "genericity",
+    "layer": 18,
+    "site": "residual",
+    "strength": -2.0,
+    "policy": "generation",
+    "validation_delta": -0.004808807373046875,
+    "n_validation": 80
+  },
+  {
+    "feature": "modal_strength",
+    "adapter": "canonical",
+    "layer": 24,
+    "site": "residual",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.00793602541089058,
+    "n_validation": 80
+  },
+  {
+    "feature": "modal_strength",
+    "adapter": "modal_strength",
+    "layer": 22,
+    "site": "residual",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.007247490435838699,
+    "n_validation": 80
+  },
+  {
+    "feature": "narrative_framing",
+    "adapter": "canonical",
+    "layer": 12,
+    "site": "residual",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.010152820497751236,
+    "n_validation": 80
+  },
+  {
+    "feature": "narrative_framing",
+    "adapter": "narrative_framing",
+    "layer": 12,
+    "site": "residual",
+    "strength": -2.0,
+    "policy": "generation",
+    "validation_delta": 0.00772668570280075,
+    "n_validation": 80
+  },
+  {
+    "feature": "nominalization",
+    "adapter": "canonical",
+    "layer": 26,
+    "site": "residual",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.010650415718555451,
+    "n_validation": 80
+  },
+  {
+    "feature": "nominalization",
+    "adapter": "nominalization",
+    "layer": 26,
+    "site": "residual",
+    "strength": -2.0,
+    "policy": "generation",
+    "validation_delta": 0.006878029555082321,
+    "n_validation": 80
+  },
+  {
+    "feature": "pronoun_distribution",
+    "adapter": "canonical",
+    "layer": 18,
+    "site": "residual",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.00674729123711586,
+    "n_validation": 80
+  },
+  {
+    "feature": "pronoun_distribution",
+    "adapter": "pronoun_distribution",
+    "layer": 17,
+    "site": "residual",
+    "strength": -2.0,
+    "policy": "generation",
+    "validation_delta": 0.004913785308599472,
+    "n_validation": 80
+  },
+  {
+    "feature": "subordination",
+    "adapter": "canonical",
+    "layer": 13,
+    "site": "residual",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.0112663134932518,
+    "n_validation": 80
+  },
+  {
+    "feature": "subordination",
+    "adapter": "subordination",
+    "layer": 13,
+    "site": "residual",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.009449956566095352,
+    "n_validation": 80
+  },
+  {
+    "feature": "tense_aspect",
+    "adapter": "canonical",
+    "layer": 18,
+    "site": "residual",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.010208641737699508,
+    "n_validation": 80
+  },
+  {
+    "feature": "tense_aspect",
+    "adapter": "tense_aspect",
+    "layer": 16,
+    "site": "residual",
+    "strength": -2.0,
+    "policy": "generation",
+    "validation_delta": 0.009693922102451324,
+    "n_validation": 80
+  },
+  {
+    "feature": "voice",
+    "adapter": "canonical",
+    "layer": 16,
+    "site": "residual",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.013137373328208923,
+    "n_validation": 80
+  },
+  {
+    "feature": "voice",
+    "adapter": "voice",
+    "layer": 16,
+    "site": "residual",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.01099032536149025,
+    "n_validation": 80
+  },
+  {
+    "feature": "constituent_order",
+    "adapter": "canonical",
+    "layer": 30,
+    "site": "residual",
+    "strength": -2.0,
+    "policy": "generation",
+    "validation_delta": -0.004330351203680039,
+    "n_validation": 80
+  },
+  {
+    "feature": "constituent_order",
+    "adapter": "constituent_order",
+    "layer": 2,
+    "site": "mlp",
+    "strength": 1.0,
+    "policy": "prompt_last",
+    "validation_delta": -0.00243939608335495,
+    "n_validation": 80
+  },
+  {
+    "feature": "inflectional_synthesis",
+    "adapter": "control_zh",
+    "layer": 30,
+    "site": "residual",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.00330524742603302,
+    "n_validation": 80
+  },
+  {
+    "feature": "inflectional_synthesis",
+    "adapter": "inflectional_synthesis",
+    "layer": 30,
+    "site": "residual",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.0028925351798534393,
+    "n_validation": 80
+  },
+  {
+    "feature": "fusion",
+    "adapter": "control_zh",
+    "layer": 9,
+    "site": "residual",
+    "strength": 2.0,
+    "policy": "generation",
+    "validation_delta": -0.0045161649584770204,
+    "n_validation": 80
+  },
+  {
+    "feature": "fusion",
+    "adapter": "fusion",
+    "layer": 16,
+    "site": "residual",
+    "strength": -2.0,
+    "policy": "generation",
+    "validation_delta": -0.003543882817029953,
+    "n_validation": 80
+  }
+]

@@ -1,0 +1,31 @@
+{
+  "created_at_utc": "2026-10-26T06:58:12.810898+00:00",
+  "stage": "steering-screen",
+  "family": "mistral",
+  "model": {
+    "name": "mistralai/Mistral-7B-v0.3",
+    "revision": "caa1feb0e54d415e2df31207e5f4e273e33509b1",
+    "adapters": "../fine_tuning/outputs/mistral",
+    "judgments": "../evaluation/data/aggregated/combined_judgments.jsonl"
+  },
+  "seed": 42,
+  "config_sha256": "0dc5f61a58a31e29a9bb81d84a96a848a3dc3856a1cd9d10a1df110a94c19ae7",
+  "input_hashes": {
+    "/lambda/nfs/mistral/linguistic-sf-generalization/mechanistic-interpretability/data/general_domain_prompts.json": "edde4877b22661a174361377700977b70096e744e3595d569584016b6d36f496",
+    "/lambda/nfs/mistral/linguistic-sf-generalization/mechanistic-interpretability/data/welfare_concept_probes.json": "d1dc1f0e242763a7f714390da43d8e5b3a614d8f54e93a62318cd5ee727ddbef",
+    "/lambda/nfs/mistral/linguistic-sf-generalization/results/evaluation_results/data/scenarios/final/scenarios.jsonl": "5db7e8c67c7c43c8498a59a3e8bcdc1b1f7fb37cdbaf2fcdeb4f7eaa2f83d5fc",
+    "/lambda/nfs/mistral/linguistic-sf-generalization/mechanistic-interpretability/data/steering_screening.jsonl": "52eb5af97fd4efa1a55b7c121dbc808bc3f96c41925c7a9e748f23561c4e62db"
+  },
+  "artifact": {
+    "path": "/lambda/nfs/mistral/linguistic-sf-generalization/mechanistic-interpretability/outputs/mistral/activation-steering/screen_inflectional_synthesis_inflectional_synthesis_prompt_last.jsonl",
+    "sha256": "b0ce599c643829b87548daa04f8ecab716c3053f27625ded5136010eadde0476"
+  },
+  "python": "3.10.12",
+  "runtime": {
+    "torch": "2.7.0",
+    "cuda": "12.8",
+    "transformers": "4.57.6",
+    "peft": "0.21.2",
+    "gpu": "NVIDIA A100-SXM4-40GB"
+  }
+}
