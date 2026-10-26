@@ -65,6 +65,8 @@ def main():
         write_json(dest/"figures"/"manifest.json",manifest)
         print(f"Figures exported: {manifest['generated']}; unavailable: {manifest['unavailable']}")
         print("Figure manifest:",dest/"figures"/"manifest.json")
+    from report import generate_report
+    print("Research report:",generate_report(dest,args.stage))
 
 if __name__=="__main__":
     main()
