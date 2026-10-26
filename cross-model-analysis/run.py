@@ -4,6 +4,7 @@ from pathlib import Path
 
 from cross_model import summarize_behavioral
 from mechanisms import summarize_mechanisms
+from associations import run_associations
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
@@ -24,6 +25,8 @@ def main():
         print("Mechanistic artifact availability:", summary["available_files"], "files")
         if not summary["available_files"]:
             print("No mechanistic outputs found; no mechanistic result is inferred.")
+    if args.stage == "all":
+        print("Cross-stage:", run_associations(dest))
 
 if __name__ == "__main__":
     main()
