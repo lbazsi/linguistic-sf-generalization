@@ -1,8 +1,7 @@
 name: Mechanistic V2 CPU validation
 on:
-  push:
-    branches: ['research/mechinterp-v2-20261026']
   pull_request:
+    branches: [main]
     paths:
       - 'mechanistic-interpretability/**'
       - 'cross-model-analysis/**'
@@ -26,6 +25,14 @@ jobs:
       - name: Mechanistic unit tests
         working-directory: mechanistic-interpretability
         run: python -m pytest tests -q
+      - name: Audit classifier lexical and length controls on real datasets
+        working-directory: mechanistic-interpretability
+        run: python -m mechinterp.classifier_controls --model llama31
+      - uses: actions/upload-artifact@v4
+        with:
+          name: classifier-controls-revision2
+          path: mechanistic-interpretability/outputs/revision_2/llama31/linear-probing/classifier_control_audit.json
+          if-no-files-found: error
       - name: Cross-model regression tests
         run: python -m unittest discover -s cross-model-analysis/tests -v
       - name: Generate archived cross-model tables and figures
