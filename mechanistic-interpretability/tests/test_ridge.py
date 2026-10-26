@@ -16,7 +16,7 @@ def test_ridge_recovers_holdout_signal_and_beats_mean():
     assert weights["weights"].shape == (1, 18)
 
 def test_constant_label_uses_baseline_without_invalid_r2():
-    x=torch.randn(3, 25, 12)
+    x=torch.randn(1, 25, 12)
     y=torch.ones(25)*3
     rows,_=fit_ridge_activations([(0,"mlp","mean")],x[:,:15],x[:,15:20],x[:,20:],
                                   y[:15],y[15:20],y[20:])
