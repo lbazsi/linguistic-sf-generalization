@@ -57,3 +57,38 @@ The revised cross-model pipeline reads committed black-box inputs under results/
 ## Reporting caution
 
 Corrected probing can still yield test R2 below zero. All penalties are selected on the development split and compared with the train-mean baseline; clipped predictions and raw ranges are reported. High concept-probe ROC AUC does not establish value endorsement, and welfare steering proxies are not causal proof.
+
+## Classifier controls (CPU, no GPU required)
+
+Run after dataset validation:
+
+~~~bash
+python -m mechinterp.classifier_controls --model llama31
+~~~
+
+This compares lexical TF-IDF and length-only discrimination against a 0.5 balanced-accuracy/AUC chance baseline, preserving grouped train/development/test partitions. The output is classifier_control_audit.json in revision_2. This is a confound audit and does not replace controlled causal tests.
+
+## Optional full steering expansion: only after pilot passes
+
+The full revised screen uses signed relative-norm fractions -25%, -10%, -3%, 0, +3%, +10%, +25%, not the original uncalibrated [-2, -1, 0, 1, 2] scale. Do not run this stage if the pilot fails manipulation/coherence specificity checks.
+
+~~~bash
+python run_all.py --model llama31 --stage steering --execute --resume
+python run.py steering-select --model llama31
+python run.py steering-controls --model llama31
+python run.py judge-plan --model llama31
+~~~
+
+Review the 28 selected configurations and controls, and require language, coherence, and linguistic-manipulation validation before generating or judging held-out continuations. No held-out test scenario should influence configuration selection.
+
+After that pre-judging gate passes:
+
+~~~bash
+python run.py judge-generate --model llama31
+python run.py judge-run --model llama31 --execute-judges
+python run.py judge-aggregate --model llama31
+~~~
+
+The revised generation stage creates **5,600 outputs**, divided into 2,800 fresh unsteered baselines and 2,800 steered continuations, each arm sharing the same scenario seed. Two independent judges evaluate **11,200 judgments**, or **1,120 requests in batches of ten before retries**. The old protocol counted 560 requests; do not reuse that budget. A partial judged run can resume its judge files but should never overwrite already generated matched pairs.
+
+After complete revised results have been committed, regenerate the cross-model report and figure suite. These steps are not part of the Llama pilot and must not be launched automatically merely because the screening proxy improved.
