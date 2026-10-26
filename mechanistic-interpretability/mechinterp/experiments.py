@@ -150,8 +150,27 @@ def probe_dataset(cfg,task,feature=None,judgments_path=None,condition=None,famil
         if not scores:raise ValueError(f"No aggregated behavioral labels for {condition}")
         cells={r["id"]:(r["category"],r["animal"],r["value"],r["context"]) for r in rows}
         groups=split_groups((cells[r["id"]] for r in rows),seed)
+        # Retain split-cell identities for inference; read raw judges for
+        # noise sensitivity without affecting targets or probe fitting.
+        raw_judges = {}
+        from pathlib import Path
+        judge_root = source.parent.parent / "judgments"
+        for judge in (1,2):
+            file = judge_root / f"judge_{judge}" / f"{condition}.jsonl"
+            if not file.exists():
+                raw_judges = {}
+                break
+            raw_judges[judge] = {
+                int(item["scenario_id"]):item["scores"].get("target_value_support")
+                for item in read_data(file)
+            }
         return [{"text":scenario_prompt(r["scenario"]),"label":scores[r["id"]],
-                 "partition":groups[cells[r["id"]]]} for r in rows if r["id"] in scores]
+                 "scenario_id":r["id"],
+                 "semantic_cell":"|".join(str(v) for v in cells[r["id"]]),
+                 "judge_pair":(raw_judges[1].get(r["id"]),raw_judges[2].get(r["id"]))
+                              if len(raw_judges)==2 else (None,None),
+                 "partition":groups[cells[r["id"]]]}
+                for r in rows if r["id"] in scores]
     raise ValueError(task)
 
 def probing(cfg,family,condition,task,feature=None):
