@@ -210,7 +210,7 @@ def plot_category_matrices(pub, root, key, filename, title, colkey,
     fig,axes=plt.subplots(2,2,figsize=(13.2,13.3))
     matrices=[];qs=[]
     for m in FAMILIES:
-        file=root/"results"/m/"evaluation_results"/"analysis"/"output"/"tables"/filename
+        file=root/"results"/"black-box"/m/"evaluation_results"/"analysis"/"output"/"tables"/filename
         rows=read_csv(file)
         columns=CATEGORIES if colkey=="category" else tuple(str(i) for i in sorted({int(r[colkey]) for r in rows}))
         # Preserve labels even when a stratum is absent for a model.
@@ -235,7 +235,7 @@ def plot_category_matrices(pub, root, key, filename, title, colkey,
     fig.subplots_adjust(left=.12,right=.91,top=.93,bottom=.14,wspace=.35,hspace=.45)
     pub.publish(key,fig,gathered,
         title+". Original cluster-adjusted statistics are retained in the source-data export.",
-        [f"results/{m}/evaluation_results/analysis/output/tables/{filename}" for m in FAMILIES],
+        [f"results/black-box/{m}/evaluation_results/analysis/output/tables/{filename}" for m in FAMILIES],
         note+" Asterisks denote the original within-family FDR-adjusted q<0.05; grey cells are missing.")
 
 def plot_baselines(pub,root):
@@ -245,7 +245,7 @@ def plot_baselines(pub,root):
          ("canonical_minus_base_by_category.csv","control_minus_base_by_category.csv"),
          ("English canonical − base","Mandarin control − base")):
         for m in FAMILIES:
-            file=root/"results"/m/"evaluation_results"/"analysis"/"output"/"tables"/filename
+            file=root/"results"/"black-box"/m/"evaluation_results"/"analysis"/"output"/"tables"/filename
             rows=read_csv(file);by={r["category"]:r for r in rows}
             y=[number(by[c]["mean"]) if c in by else np.nan for c in CATEGORIES]
             ax.plot(range(len(CATEGORIES)),y,marker="o",ms=4,lw=1.5,
@@ -268,7 +268,7 @@ def plot_baselines(pub,root):
     fig.subplots_adjust(left=.09,right=.98,top=.85,bottom=.29,wspace=.13)
     pub.publish("fig04_baseline_gains",fig,used,
         "Canonical and source-language control gains relative to each pretrained model, stratified by generalization category.",
-        ["results/<model>/evaluation_results/analysis/output/tables/{canonical_minus_base,control_minus_base}_by_category.csv"],
+        ["results/black-box/<model>/evaluation_results/analysis/output/tables/{canonical_minus_base,control_minus_base}_by_category.csv"],
         "Whiskers are within-family category-level 95% cluster-bootstrap confidence intervals; comparisons are not cross-family hypothesis tests.")
 
 def plot_sensitivity(pub, source):
