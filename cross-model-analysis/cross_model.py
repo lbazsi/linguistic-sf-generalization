@@ -82,17 +82,18 @@ def sign(value):
     return (value > 0) - (value < 0)
 
 def ranks(values):
+    """One-based midranks: every member of a tie receives the same rank."""
     order = sorted(range(len(values)), key=lambda k: values[k])
     out = [0.] * len(values)
-    for position, idx in enumerate(order):
-        out[idx] = position + 1
-    for start in range(len(order)):
+    start = 0
+    while start < len(order):
         stop = start + 1
         while stop < len(order) and values[order[stop]] == values[order[start]]:
             stop += 1
-        mid = (start + 1 + stop) / 2
+        midrank = (start + 1 + stop) / 2
         for pos in range(start, stop):
-            out[order[pos]] = mid
+            out[order[pos]] = midrank
+        start = stop
     return out
 
 def pearson(x, y):
