@@ -26,7 +26,7 @@ def main():
     if args.figure_dpi<72 or args.figure_dpi>1200:
         p.error("--figure-dpi must be between 72 and 1200")
     root=args.repo_root.resolve()
-    mech=(args.mech_root or root/"mechanistic-interpretability"/"outputs").resolve()
+    mech=(args.mech_root or root/"results"/"mechanistic-interpretability").resolve()
     dest=args.output.resolve()
     dest.mkdir(parents=True,exist_ok=True)
 

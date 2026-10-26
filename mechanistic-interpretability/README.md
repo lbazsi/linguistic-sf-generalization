@@ -83,7 +83,7 @@ python ../cross-model-analysis/run.py --stage all
 
 Screen all registered features and both matching adapter conditions before invoking `steering-select`. Repeat separately with `--policy generation` for generation-step interventions. The judged-evaluation process uses only the held-out 100 scenario IDs, and its batch size follows the original evaluation configuration. `judge-plan` prints/writes workload counts; actual monetary pricing requires observed or independently supplied prompt/completion token estimates and current per-judge prices.
 
-The model configuration expects existing independently trained checkpoint trees, including midpoint/final adapters and their training summaries. Adapter bytes are not stored in this repository. Each additional model must have its revision pinned and adapters generated via the common fine-tuning contract. Results are written under `outputs/<model>/<stage>/` and are not input checkpoints.
+The model configuration expects existing independently trained checkpoint trees, including midpoint/final adapters and their training summaries. Adapter bytes are not stored in this repository. Each additional model must have its revision pinned and adapters generated via the common fine-tuning contract. GPU analyses write locally under `outputs/<model>/<stage>/`; the retained scalar results are transferred to `results/mechanistic-interpretability/<model>/` in this repository. These results are not input checkpoints.
 
 ### Verification and current boundaries
 
