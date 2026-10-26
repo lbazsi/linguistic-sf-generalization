@@ -110,11 +110,13 @@ def prepare(cfg,family,feature,force=False):
 def load_direction_bundle(cfg,family,feature):
     path=prepare(cfg,family,feature)
     bundle=load_file(str(path))
+    from .calibration import calibrate_sites
+    scales=calibrate_sites(cfg,family)
     def get(layer,site,kind="direction"):
         key=f"{layer}__{site}"
         if kind not in ("direction","random","shuffled"):
             raise ValueError(kind)
         direction=bundle[key+"__"+kind].float()
-        scale=float(bundle[key+"__scale"].item())
+        scale=float(scales[key])
         return direction,scale
     return get
