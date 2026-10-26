@@ -5,7 +5,7 @@ from mechinterp.stats import linear_cka,svcca,rms_displacement,bh,cluster_interv
 def test_identical_activations():
     x=torch.randn(80,20)
     assert abs(linear_cka(x,x)-1)<1e-5
-    assert math.isnan(svcca(x,x))
+    assert svcca(x,x) is None
     assert rms_displacement(x,x)==0
 
 def test_bh_monotone():

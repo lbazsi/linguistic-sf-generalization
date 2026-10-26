@@ -17,7 +17,7 @@ def svcca(x, y, threshold=.99, cap=256):
     including near-unity canonical correlations for independent representations.
     None of the archived values should be used for inference or publication.
     """
-    return float("nan")
+    return None
 
 
 def heldout_svcca(x_fit, y_fit, x_test, y_test, threshold=.99, cap=32,
