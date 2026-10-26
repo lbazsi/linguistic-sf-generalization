@@ -18,7 +18,7 @@ def relative_to_strength(fraction, width):
 
 @torch.inference_mode()
 def run_pilot(cfg,family,features=DEFAULT_FEATURES,n=20):
-    legacy=run_dir(cfg,family,"activation-steering").parent.parent/family/"activation-steering"/"selected_all.json"
+    legacy=run_dir(cfg,family,"activation-steering").parent.parent.parent/family/"activation-steering"/"selected_all.json"
     if not legacy.is_file():
         # External restored outputs may contain archived legacy screen selections.
         legacy=run_dir(cfg,family,"activation-steering")/"selected_all.json"

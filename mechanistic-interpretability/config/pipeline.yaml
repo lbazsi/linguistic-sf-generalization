@@ -7,22 +7,25 @@ models:
     adapters: ../fine_tuning/outputs
   qwen3:
     name: Qwen/Qwen3-8B-Base
-    revision: null
+    revision: 49e3418fbbbca6ecbdf9608b4d22e5a407081db4
     adapters: ../fine_tuning/outputs/qwen3
+    judgments: ../results/black-box/qwen3/evaluation_results/data/aggregated/combined_judgments.jsonl
   llama31:
     name: meta-llama/Llama-3.1-8B
-    revision: null
+    revision: d04e592bb4f6aa9cfee91e2e20afa771667e1d4b
     adapters: ../fine_tuning/outputs/llama31
+    judgments: ../results/black-box/llama31/evaluation_results/data/aggregated/combined_judgments.jsonl
   mistral:
     name: mistralai/Mistral-7B-v0.3
-    revision: null
+    revision: caa1feb0e54d415e2df31207e5f4e273e33509b1
     adapters: ../fine_tuning/outputs/mistral
+    judgments: ../results/black-box/mistral/evaluation_results/data/aggregated/combined_judgments.jsonl
 paths:
   canonical: ../results/data/canonical/corpus.jsonl
   features: ../results/data/final
-  controls: ../results/data/controls
-  scenarios: ../results/evaluation_results/data/scenarios/final/scenarios.jsonl
-  judgments: ../results/evaluation_results/data/aggregated/combined_judgments.jsonl
+  controls: ../results/data/language_controls
+  scenarios: ../results/black-box/gemma/evaluation_results/data/scenarios/final/scenarios.jsonl
+  judgments: ../results/black-box/gemma/evaluation_results/data/aggregated/combined_judgments.jsonl
   general: data/general_domain_prompts.json
   concepts: data/welfare_concept_probes.json
   steering: data/steering_screening.jsonl
