@@ -11,23 +11,52 @@ def linear_cka(x, y):
     return float((numerator / denom).item())
 
 def svcca(x, y, threshold=.99, cap=256):
-    """Regularized SVCCA using a shared heldout set and PCA derived from fit sets."""
-    x, y = x.double()-x.double().mean(0), y.double()-y.double().mean(0)
-    def reduce(z):
-        _, s, vh = torch.linalg.svd(z, full_matrices=False)
-        variance = s.square()
-        retain = int(torch.searchsorted(variance.cumsum(0) / variance.sum().clamp_min(1e-20),
-                                       threshold).item()) + 1
-        k = max(1, min(retain, cap, z.shape[0]-2))
-        return z @ vh[:k].T
-    a,b = reduce(x),reduce(y)
+    """Legacy, in-sample SVCCA is intentionally withdrawn.
+
+    Its high sample-dimensional PCA/CCA estimates are systematically optimistic,
+    including near-unity canonical correlations for independent representations.
+    None of the archived values should be used for inference or publication.
+    """
+    return float("nan")
+
+
+def heldout_svcca(x_fit, y_fit, x_test, y_test, threshold=.99, cap=32,
+                   ridge=0.1):
+    """Train PCA/CCA only on fit examples; evaluate canonical correlations on test.
+
+    Fit and test must comprise independent semantic cells. Rank is capped well
+    below sample size; centering, PCA, and CCA projections are fit-only.
+    """
+    if any(a.ndim!=2 for a in (x_fit,y_fit,x_test,y_test)):
+        raise ValueError("Expected matrices")
+    if x_fit.shape[0]!=y_fit.shape[0] or x_test.shape[0]!=y_test.shape[0]:
+        raise ValueError("Paired sample counts differ")
+    if x_fit.shape[0] < 20 or x_test.shape[0] < 20:
+        return float("nan")
+    def pca(a,b):
+        a=a.double();b=b.double()
+        mean=a.mean(0)
+        ac=a-mean
+        _, s, vh=torch.linalg.svd(ac,full_matrices=False)
+        ratios=s.square().cumsum(0)/s.square().sum().clamp_min(1e-20)
+        k=int(torch.searchsorted(ratios,threshold).item())+1
+        k=max(1,min(k,cap,a.shape[0]//5,b.shape[0]//5))
+        return ac@vh[:k].T,(b-mean)@vh[:k].T
+    a,at=pca(x_fit,x_test);b,bt=pca(y_fit,y_test)
     def whiten(z):
-        q, s, _ = torch.linalg.svd(z, full_matrices=False)
-        valid = s > s.max().clamp_min(1e-10)*1e-6
-        return q[:, valid]
-    qa,qb=whiten(a),whiten(b)
-    if qa.numel()==0 or qb.numel()==0: return float("nan")
-    return float(torch.linalg.svdvals(qa.T @ qb).mean().clamp(0,1).item())
+        c=z.T@z/max(1,len(z)-1)
+        ev,q=torch.linalg.eigh(c)
+        inv=q@torch.diag((ev.clamp_min(0)+ridge)**-.5)@q.T
+        return inv
+    wa=whiten(a);wb=whiten(b)
+    cross=(wa@a.T@b@wb)/max(1,len(a)-1)
+    u,_,vh=torch.linalg.svd(cross,full_matrices=False)
+    aa=at@wa@u
+    bb=bt@wb@vh.T
+    aa=aa-aa.mean(0);bb=bb-bb.mean(0)
+    aa=aa/(aa.square().sum(0).sqrt().clamp_min(1e-10))
+    bb=bb/(bb.square().sum(0).sqrt().clamp_min(1e-10))
+    return float((aa*bb).sum(0).abs().clamp(0,1).mean())
 
 def rms_displacement(x,y):
     num=(x.float()-y.float()).square().mean().sqrt()
