@@ -28,7 +28,7 @@ paths:
   steering: data/steering_screening.jsonl
   evaluation_config: ../evaluation/config/config.yaml
   evaluation_prompt: ../evaluation/prompts/judge_response.txt
-  outputs: outputs
+  outputs: outputs/revision_2
 runtime:
   batch_size: 4
   max_length: 512

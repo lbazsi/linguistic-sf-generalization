@@ -30,4 +30,4 @@ python -m unittest discover -s cross-model-analysis/tests -v
 
 Additional options: `--stage behavioral`, `--stage mechanistic`, `--mech-root PATH`, `--output PATH`, `--skip-figures`, `--figures-only`, and `--figure-dpi 600`.
 
-Inputs are the committed `results/<model>/evaluation_results/analysis/output/` files and, when available, scalar outputs in `results/mechanistic-interpretability/<family>/`. The pipeline writes all generated results to `cross-model-analysis/output/`. Figure production does not load GPU model weights or make judging API requests.
+Inputs are the committed `results/black-box/<model>/evaluation_results/analysis/output/` files and, when available, scalar outputs in `results/mechanistic-interpretability/<family>/`. The pipeline writes all generated results to `cross-model-analysis/output/`. Figure production does not load GPU model weights or make judging API requests.

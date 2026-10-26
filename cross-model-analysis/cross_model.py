@@ -155,7 +155,7 @@ def stratum_replication(data, key, columns, value_col="mean"):
 def load_behavioral(root: Path):
     all_data = {}
     for model in FAMILIES:
-        folder = (root / "results" / model / "evaluation_results" /
+        folder = (root / "results" / "black-box" / model / "evaluation_results" /
                   "analysis" / "output")
         tables = {key: read_csv(folder / "tables" / name)
                   for key, name in TABLES.items()}

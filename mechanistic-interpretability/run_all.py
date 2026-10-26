@@ -12,6 +12,12 @@ def plan(model,stage):
     if stage=="difference":
         return [{"stage":"difference","model":model,"condition":x}
                 for x in ("canonical","control_zh",*FEATURES)]
+    if stage=="behavior-probes":
+        return [{"stage":"probe","model":model,"task":"behavior","condition":condition}
+                for condition in ("base","canonical","control_zh",*FEATURES)]
+    if stage=="functional":
+        return [{"stage":"lora-functional","model":model,"checkpoint":x}
+                for x in ("midpoint","final")]
     if stage=="probes":
         tasks=[]
         for condition in ("base","canonical","control_zh",*FEATURES):
@@ -51,7 +57,7 @@ def execute(cfg,task):
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument("--model",choices=("gemma2","qwen3","llama31","mistral"),required=True)
-    parser.add_argument("--stage",choices=("difference","probes","lora","steering"),required=True)
+    parser.add_argument("--stage",choices=("difference","probes","behavior-probes","functional","lora","steering"),required=True)
     parser.add_argument("--config",default="config/pipeline.yaml")
     parser.add_argument("--execute",action="store_true")
     parser.add_argument("--resume",action="store_true")

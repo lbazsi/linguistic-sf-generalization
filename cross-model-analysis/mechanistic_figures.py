@@ -119,9 +119,8 @@ def generate_mechanistic(pub,root):
     plot_depth(pub,root,"representations","cka",
                "Representation similarity over network depth (welfare prompts)",
                "fig12_cka_depth","welfare")
-    plot_depth(pub,root,"representations","svcca",
-               "SVCCA over network depth (welfare prompts)",
-               "fig13_svcca_depth","welfare")
+    pub.skipped("fig13_svcca_depth",
+                "Legacy in-sample SVCCA invalid; requires independent fit/evaluation rerun")
     plot_depth(pub,root,"probes","linguistic_roc_auc",
                "Held-out linguistic-feature decodability over depth",
                "fig14_linguistic_probes")
