@@ -4,7 +4,7 @@
 
 This study characterizes how semantically matched linguistic variants of animal-welfare fine-tuning data affect model representations, learned LoRA updates, and downstream animal-welfare value generalization. The analyses are observational except for exploratory activation steering. Results are compared across four pretrained model families to evaluate replication.
 
-The five stages are (1) model-difference analysis, (2) linear probing, (3) LoRA analysis with midpoint-to-final comparison, (4) linguistic-direction activation steering, and (5) replication and synthesis across models. The stage-specific methods are in [Model-difference-analysis](Model-difference-analysis/README.md), [linear-probing](linear-probing/README.md), [LoRA-analysis](LoRA-analysis/README.md), and [activation-steering](activation-steering/README.md). Replication is specified here because the same four stages are applied across architectures.
+The four stages are (1) model-difference analysis, (2) linear probing, (3) LoRA analysis with midpoint-to-final comparison, and (4) linguistic-direction activation steering. The stage-specific methods are in [Model-difference-analysis](Model-difference-analysis/README.md), [linear-probing](linear-probing/README.md), [LoRA-analysis](LoRA-analysis/README.md), and [activation-steering](activation-steering/README.md). Cross-model replication and synthesis are specified separately in [cross-model-analysis](../cross-model-analysis/README.md).
 
 ## Models and conditions
 
@@ -44,7 +44,7 @@ For representation analysis add **1,000 general-domain, non-animal-welfare Engli
 3. Run [linear probes](linear-probing/README.md) for linguistic identification, welfare-concept detection and welfare-behavior prediction using a fixed estimator protocol.
 4. Run [LoRA analysis](LoRA-analysis/README.md) over all adapters, modules and midpoint/final steps.
 5. Run [activation steering](activation-steering/README.md) for all 14 features, both associated adapter conditions, every layer and both activation sites. The complete layerwise screening results are retained; validation selects one configuration per feature–adapter pair for a separately authorized held-out judged evaluation.
-6. Repeat the full training/evaluation/analysis protocol for all four families and synthesize: behavioral effect sign/magnitude and uncertainty; depth-normalized similarity profiles; probe discrimination/calibration and adapter-transfer gaps; relative LoRA geometry; steering dose-response and linguistic-feature manipulation success. Compare per-feature patterns across architectures without comparing raw coordinates across different hidden spaces.
+6. Export the four families' scalar analysis artifacts for separate comparison in [cross-model-analysis](../cross-model-analysis/README.md).
 
 ## Inference and limitations
 
@@ -78,7 +78,7 @@ python run.py judge-plan --model gemma2
 python run.py judge-generate --model gemma2
 python run.py judge-run --model gemma2 --execute-judges  # explicit API charges
 python run.py judge-aggregate --model gemma2
-python run.py synthesis
+python ../cross-model-analysis/run.py --stage all
 ```
 
 Screen all registered features and both matching adapter conditions before invoking `steering-select`. Repeat separately with `--policy generation` for generation-step interventions. The judged-evaluation process uses only the held-out 100 scenario IDs, and its batch size follows the original evaluation configuration. `judge-plan` prints/writes workload counts; actual monetary pricing requires observed or independently supplied prompt/completion token estimates and current per-judge prices.
@@ -124,9 +124,9 @@ python run.py judge-run --model gemma2 --execute-judges
 python run.py judge-aggregate --model gemma2
 
 # Repeat on qwen3, llama31, and mistral after training/evaluation.
-python run.py synthesis
+python ../cross-model-analysis/run.py --stage all
 ```
 
-The standard judged budget is 14 features × two matched adapter conditions × 100 held-out scenarios = 2,800 continuations per model. At two judges and ten items per API request, this corresponds to 560 judging requests per model, excluding retries; token usage and actual prices determine monetary cost. Generation and judging are separately invoked. Direction extraction saves only small unit vectors and calibration scales, never token activations. The cross-family synthesis consumes original feature-minus-control evaluation effects and mechanical summaries when they become available.
+The standard judged budget is 14 features × two matched adapter conditions × 100 held-out scenarios = 2,800 continuations per model. At two judges and ten items per API request, this corresponds to 560 judging requests per model, excluding retries; token usage and actual prices determine monetary cost. Generation and judging are separately invoked. Direction extraction saves only small unit vectors and calibration scales, never token activations. Cross-model replication and synthesis use the standalone cross-model-analysis package.
 
 The implementation is intended for a single GPU with sequential base/adapter loading. Its numerical correctness, model-specific compatibility, observed memory use and full evaluation integration still require an end-to-end GPU pilot before interpreting research findings.

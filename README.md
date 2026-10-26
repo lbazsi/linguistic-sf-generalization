@@ -198,6 +198,8 @@ There is currently no dedicated activation-probing, mechanistic-analysis, or cau
 | [Feature registry](synthetic_data_generation/LoRA_training/features/) | Operational definitions of interventions and the measured covariate |
 | [Fine-tuning](fine_tuning/README.md) | Input contracts, validation split, training settings, verification, and adapter outputs |
 | [Evaluation](evaluation/README.md) | Scenario categories, continuation format, judging rubric, aggregation, and analysis commands |
+| [Cross-model analysis](cross-model-analysis/README.md) | Behavioral replication and comparison of cross-family mechanistic results |
+| [Mechanistic interpretability](mechanistic-interpretability/README.md) | Within-model representations, probes, LoRA geometry, and steering |
 | [Further research directions](further_research_directions/generalization_from_linguistics.md) | Proposed domain-general linguistic fine-tuning experiment |
 | [Linguistic feature interactions](further_research_directions/linguistic_feature_interactions.md) | Proposed study of combined feature effects, amplification, and cancellation |
 
