@@ -11,10 +11,12 @@ def test_reconstruct_saved_probe_forward():
 
 def test_select_development_not_test(tmp_path):
     p=tmp_path/"scores.jsonl"
-    p.write_text("\\n".join(json.dumps(row) for row in [
+    records=[
         {"method":"dual_ridge_v2","layer":0,"site":"mlp","pooling":"final",
          "development":{"rmse":.2},"test":{"rmse":5.}},
         {"method":"dual_ridge_v2","layer":1,"site":"mlp","pooling":"final",
-         "development":{"rmse":.4},"test":{"rmse":.01}}]).replace("\\\\n","\\n"))
+         "development":{"rmse":.4},"test":{"rmse":.01}},
+    ]
+    p.write_text("".join(json.dumps(row) + chr(10) for row in records))
     _,i=selected_probe(p)
     assert i==0
