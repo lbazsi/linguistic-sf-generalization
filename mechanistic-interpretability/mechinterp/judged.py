@@ -20,6 +20,30 @@ from .models import load_model,steer,encode,unload,blocks
 from .steering import direction_for,calibrate
 from .stats import cluster_interval,bh
 
+def verified_batch_judgments(group, returned):
+    expected={int(r["scenario_id"]) for r in group}
+    matched={}
+    for judgment in returned:
+        sid=int(judgment["scenario_id"])
+        if sid not in expected or sid in matched:
+            raise ValueError(f"Unknown or duplicate scenario_id: {sid}")
+        matched[sid]=judgment
+    if set(matched)!=expected:
+        raise ValueError("Missing scenario IDs from judge response")
+    return matched
+
+
+def id_keyed_judgment_schema(count):
+    from schemas import JUDGMENT_SCHEMA
+    item={"type":"object","additionalProperties":False,
+          "required":["scenario_id",*JUDGMENT_SCHEMA["required"]],
+          "properties":{"scenario_id":{"type":"integer","minimum":1},
+                        **JUDGMENT_SCHEMA["properties"]}}
+    return {"type":"object","additionalProperties":False,"required":["judgments"],
+            "properties":{"judgments":{"type":"array","minItems":count,"maxItems":count,
+                                       "items":item}}}
+
+
 def selected_conditions(cfg,family,policy="prompt_last"):
     path=run_dir(cfg,family,"activation-steering")/"selected_all.json"
     selected=json.loads(path.read_text(encoding="utf-8"))
@@ -102,8 +126,13 @@ def generate(cfg,family,policy="prompt_last"):
                                 do_sample=generation["do_sample"],
                                 temperature=generation["temperature"],
                                 top_p=generation["top_p"],pad_token_id=tok.pad_token_id)
-                        continuation=tok.decode(
-                            output[0,tokens["input_ids"].shape[1]:],
+                        generated_ids=output[0,tokens["input_ids"].shape[1]:]
+                        eos_ids=model.generation_config.eos_token_id
+                        if eos_ids is None:eos_ids=tok.eos_token_id
+                        eos_ids={int(x) for x in (eos_ids if isinstance(eos_ids,(list,tuple)) else [eos_ids]) if x is not None}
+                        ends_eos=bool(len(generated_ids) and int(generated_ids[-1]) in eos_ids)
+                        reached_limit=bool(len(generated_ids)>=int(generation["max_new_tokens"]) and not ends_eos)
+                        continuation=tok.decode(generated_ids,
                             skip_special_tokens=True).strip()
                         arms[arm].append({
                             "scenario_id":item["scenario_id"],
@@ -112,6 +141,10 @@ def generate(cfg,family,policy="prompt_last"):
                             "strength":strength,"policy":entry["policy"],
                             "condition":f"{feature}__{condition}__{entry['policy']}",
                             "generation_seed":seed,"continuation":continuation,
+                            "generated_tokens":int(len(generated_ids)),
+                            "ended_with_eos":ends_eos,
+                            "reached_token_limit":reached_limit,
+                            "max_new_tokens":int(generation["max_new_tokens"]),
                             "prompt":prompt,
                         })
                 for arm,f in files.items():
@@ -144,7 +177,6 @@ async def judge(cfg,family,policy="prompt_last",execute=False):
     evaluation_scripts=location(cfg,"evaluation_config").parent.parent/"scripts"
     sys.path.insert(0,str(evaluation_scripts))
     from common import OpenRouterClient, render_prompt, json_text
-    from schemas import judgment_batch_schema
     ecfg=yaml.safe_load(location(cfg,"evaluation_config").read_text(encoding="utf-8"))
     files=judge_plan(cfg,family,policy)
     scenarios={int(r["id"]):r for r in load_scenarios(cfg)}
@@ -171,12 +203,14 @@ async def judge(cfg,family,policy="prompt_last",execute=False):
                                      int(ecfg["judging"]["batch_size"])):
                     template=location(cfg,"evaluation_prompt").read_text(encoding="utf-8")
                     prompt=template.replace("{{ITEMS_JSON}}",json_text(group))
+                    prompt += "\nInclude each item's original scenario_id in its judgment. Order does not matter.\n"
                     response=await client.request_json(model_key=f"response_judge_{judge_no}",
                         temperature_key=f"response_judge_{judge_no}",seed_key=f"response_judge_{judge_no}",
-                        prompt=prompt,schema=judgment_batch_schema(len(group)),
+                        prompt=prompt,schema=id_keyed_judgment_schema(len(group)),
                         schema_name=f"steering_judgments_{judge_no}")
-                    for item,judgment in zip(group,response["judgments"],strict=True):
-                        completed[item["scenario_id"]]={"scenario_id":item["scenario_id"],
+                    matched=verified_batch_judgments(group,response["judgments"])
+                    for scenario_id,judgment in matched.items():
+                        completed[scenario_id]={"scenario_id":scenario_id,
                              "judge":judge_no,"scores":judgment["scores"],"outcome":judgment["outcome"]}
                     write_rows(partial,[completed[k] for k in sorted(completed)])
                 if len(completed)!=len(source):raise RuntimeError("Missing judged responses")
