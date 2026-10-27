@@ -73,7 +73,9 @@ steering:
   selected_per_feature_adapter: 1
   # Full judged generation must be explicitly requested; it is not a pipeline default.
   generation:
-    max_new_tokens: 96
+    # Revised matched-arm steering protocol. Not identical to the original
+    # 96-token black-box evaluation; preserve both arms, seed and metadata.
+    max_new_tokens: 256
     temperature: 0.2
     top_p: 0.95
     do_sample: true
