@@ -13,6 +13,14 @@ from .directions import load_direction_bundle
 DEFAULT_FEATURES=("epistemic_hedging","nominalization","narrative_framing","constituent_order")
 FRACTIONS=(0.,.03,.1,.25)
 
+def select_pilot_linguistic_pairs(pairs, seed, n):
+    """Development-only pilot. Leave the linguistic TEST partition sealed."""
+    split=split_groups((p["id"] for p in pairs),int(seed))
+    chosen=[p for p in pairs if split[p["id"]]=="development"]
+    random.Random(int(seed)).shuffle(chosen)
+    return chosen[:n]
+
+
 def relative_to_strength(fraction, width):
     if fraction<0 or fraction>.5:raise ValueError("Intervention fraction out of range")
     return float(fraction)*math.sqrt(width)
@@ -43,12 +51,10 @@ def run_pilot(cfg,family,features=DEFAULT_FEATURES,n=20):
             prompts=[scenario_prompt(r["scenario"]) for r in val]
             yes=[r["welfare_supporting"] for r in val]
             no=[r["welfare_opposing"] for r in val]
-            # Independent linguistic-ID split; contrast directions use TRAIN
-            # matched pairs and this diagnostic uses TEST matched pairs only.
+            # Direction fitting uses TRAIN IDs. Pilot diagnostics use DEVELOPMENT
+            # IDs; reserve TEST IDs for a future, one-time confirmatory audit.
             raw=feature_pairs(cfg,spec["feature"])
-            split=split_groups((p["id"] for p in raw),int(cfg["seed"]))
-            held=[p for p in raw if split[p["id"]]=="test"]
-            random.Random(int(cfg["seed"])).shuffle(held)
+            held=select_pilot_linguistic_pairs(raw,int(cfg["seed"]),n)
             neutral="Complete the following passage naturally:\n"
             max_len=int(cfg["runtime"]["max_length"])
             held=[p for p in held
@@ -79,7 +85,7 @@ def run_pilot(cfg,family,features=DEFAULT_FEATURES,n=20):
                         rows.append({"feature":spec["feature"],"adapter":spec["adapter"],
                             "pair_id":pair["id"],"fraction":fraction,"alpha":alpha,
                             "policy":spec["policy"],"kind":"linguistic_variant_log_gap",
-                            "score":score,"split":"linguistic_test"})
+                            "score":score,"split":"linguistic_development"})
                     if fraction not in (0.,.1):continue
                     for row,prompt in zip(val,prompts):
                         tokens=encode(tok,[prompt],model.device,cfg["runtime"]["max_length"])
@@ -127,11 +133,12 @@ def run_pilot(cfg,family,features=DEFAULT_FEATURES,n=20):
                             "policy":spec["policy"],"kind":"direction_control",
                             "task":task,"control":control_name,"score":score})
         finally:unload(model)
-    path=out/"pilot.jsonl"
+    path=out/"pilot_v3.jsonl"
     write_rows(path,rows)
-    write_json(out/"manifest.json",{"version":2,"n_validation":len(val),
-        "features":features,"fractions":FRACTIONS,"welfare_heldout_test_used":False,"linguistic_heldout_test_used":True,
-        "interpretation":"Pilot scores are welfare-option proxies, not verified linguistic manipulation. The independent paired linguistic contrast is a proxy, not proof of realized grammar. Inspect generated output forms, coherence, language switching, and randomized controls before expansion."})
+    write_json(out/"manifest_v3.json",{"version":3,"n_validation":len(val),
+        "features":features,"fractions":FRACTIONS,"welfare_heldout_test_used":False,
+        "linguistic_heldout_test_used":False,"linguistic_development_used":True,
+        "interpretation":"Exploratory, previously used welfare validation; no fresh welfare confirmation. Linguistic DEV contrast is a proxy, not proof of generated grammar. The revision-2 pilot previously inspected linguistic TEST pairs on Llama and must not be treated as untouched confirmation. Inspect generated feature realization, coherence, language switching and controls before expansion."})
     return path
 
 def main():
