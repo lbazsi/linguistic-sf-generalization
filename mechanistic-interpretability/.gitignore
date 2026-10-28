@@ -1,0 +1,5 @@
+# GPU intermediates are local; publish explicitly via export_final_results.py.
+/outputs/
+/.pytest_cache/
+/__pycache__/
+*.py[cod]
