@@ -58,3 +58,20 @@ A contrastive activation direction need not correspond to a single linguistic co
 Contrastive directions for all layers/sites are estimated together from the model's base checkpoint using matched semantic-ID training pairs. The only cached objects are small unit direction vectors, shuffled-label control directions, random unit control directions and per-site activation RMS calibration scales. Raw prompt/token activations are not saved. The screen uses the existing 200-scenario matched-option dataset: 20 `screen`, 80 `validation`, and 100 untouched `test` examples. Every feature is screened on its own feature adapter and its registered control, with residual/MLP intervention sites, every layer, both `prompt_last` and `generation` policies, and alpha in `[-2,-1,0,1,2]`. Scoring uses teacher-forced, length-normalized log-probability differences, without generating judge-bound responses.
 
 The selector retains full-layer screening outputs and chooses **one** layer/site/strength/token-policy combination per feature–adapter pair from the 80 validation scenarios. Selected configurations are checked against norm-matched random and shuffled-label direction controls. The full judged evaluation generates 100 held-out continuations per selection and uses the two original blind judges in batches of ten. Preview the number of continuations, judgments and requests with `python run.py judge-plan --model gemma2`. The separate `judge-run --execute-judges` command is the only stage that contacts the remote judge APIs; the program cannot silently advance from screening to judging. Original unsteered condition scores are used for paired evaluation differences.
+
+## Optimized screening implementation
+
+The optional `steering-screen-fast` entry point preserves the existing teacher-forced supporting-minus-opposing log-probability scoring, full layer/site/strength grid, and `screen_<feature>_<adapter>_<policy>.jsonl` output schema. `run_all.py --stage steering --execute --resume` now uses this implementation. The original `steering-screen` command remains available as the reference scorer.
+
+The optimized path pre-tokenizes the 100 screen/validation scenarios and both continuations once per invocation, uses `steering.screening.batch_size` scenarios per forward batch (two candidates per scenario), and caches the unsteered zero-strength score once per adapter, shared across features, layers, sites and policies. Each completed layer/site grid is written atomically under `activation-steering/.work/screen_checkpoints/`; incomplete layers are recomputed on restart. Compatible cached scores are stored under `activation-steering/.work/screen_cache/`. Manifests record model/adapter weight identity, data, attention/dtype, batch size, direction artifact and calibration fingerprints. Incompatible resumes are rejected instead of silently mixing screening methods.
+
+Begin with batch size 8, then evaluate 16 only after confirming memory headroom and agreement with the reference scorer. This is independent of `steering.generation.batch_size`. GPU memory consumption can be higher than batched text generation because scoring materializes token-level vocabulary logits. For a clean numerical validation on an actual GPU, compare optimized and reference scores using the same batch size for selected scenarios, sites, strengths and both policies, then check the selected configurations. Changing batch size or data identity requires archiving any existing fast-screening checkpoints and relevant final files first.
+
+```bash
+python -m pytest tests/test_screening_fast.py -q
+python run.py steering-screen-fast --model qwen3 --feature conditionality --condition canonical --policy prompt_last
+python run.py steering-screen-fast --model qwen3 --feature conditionality --condition canonical --policy generation
+python run_all.py --model qwen3 --stage steering --execute --resume
+```
+
+The optimization does not change Llama's already completed screening artifacts and never invokes paid judge calls.

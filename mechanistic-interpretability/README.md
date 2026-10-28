@@ -130,3 +130,20 @@ python ../cross-model-analysis/run.py --stage all
 The standard judged budget is 14 features × two matched adapter conditions × 100 held-out scenarios = 2,800 continuations per model. At two judges and ten items per API request, this corresponds to 560 judging requests per model, excluding retries; token usage and actual prices determine monetary cost. Generation and judging are separately invoked. Direction extraction saves only small unit vectors and calibration scales, never token activations. Cross-model replication and synthesis use the standalone cross-model-analysis package.
 
 The implementation is intended for a single GPU with sequential base/adapter loading. Its numerical correctness, model-specific compatibility, observed memory use and full evaluation integration still require an end-to-end GPU pilot before interpreting research findings.
+
+
+## Clean output layout and final-only publication
+
+New runs write to `mechanistic-interpretability/outputs/<model>/<stage>/`, with no revision, iteration or batch directories in the public results tree. The optimized screening implementation keeps resumable intermediate artifacts in `activation-steering/.work/`, excluded from final exports. Older experimental output directories are historical and need not be migrated or deleted. Generation batch size and protocol are recorded in each generated row for auditability, not in its directory name.
+
+To publish **only final results**, run the dry-run exporter followed by an explicitly authorized export:
+
+```bash
+cd mechanistic-interpretability
+python export_final_results.py --model llama31
+python export_final_results.py --model llama31 --execute
+```
+
+The exporter copies finished model-difference, probing and LoRA scalar files, complete steering screens and selections, judgment summary and aggregated matched outcomes, and final plots into `results/mechanistic-interpretability/<model>/`. It deliberately excludes raw `judged/` generations, judge-specific files, partial checkpoints, caches, pilots, temporary archives, and large direction tensors. It does not delete anything. Existing different results are protected unless `--overwrite` is specified. Before claiming that an evaluation is complete, separately validate generation/judge coverage, truncation rates and output quality. The Llama matched evaluation produced 5,600 nonempty generations; 3,545 (63.3%) reached the 256-token cap, a consequential limitation requiring disclosure and a representative completion-quality review.
+
+A model with an older `outputs/revision_2/<model>/` location can be exported without rearranging that GPU instance by specifying `--source outputs/revision_2/<model>`. For copying directly to a fresh Codespace, transfer the **model's finished GPU `outputs/<model>/` directory** separately from this repository and run the exporter there; if a transfer should contain only publishable artifacts, export into a staging directory first. Existing `results/mechanistic-interpretability/v0/` historical outputs should remain intact.

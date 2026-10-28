@@ -10,9 +10,9 @@ from .common import (FEATURES, load_config,load_concepts,load_general,load_scree
 
 def main():
     p=argparse.ArgumentParser(description="Mechanistic interpretability experiment pipeline")
-    p.add_argument("stage",choices=("validate","difference","probe","lora","steering-screen",
+    p.add_argument("stage",choices=("validate","difference","probe","lora","steering-screen","steering-screen-fast",
                                     "steering-select","steering-controls","lora-functional","plots","judge-plan","judge-generate","judge-run",
-                                    "judge-aggregate"))
+                                    "judge-aggregate","judge-generate-batched"))
     p.add_argument("--config",default=str(Path(__file__).resolve().parents[1]/"config/pipeline.yaml"))
     p.add_argument("--model",choices=("gemma2","qwen3","llama31","mistral"),default="gemma2")
     p.add_argument("--condition",default="canonical")
@@ -51,6 +51,10 @@ def main():
         from .steering import screen
         if not args.feature: p.error("--feature required")
         result=screen(cfg,args.model,args.feature,args.condition,args.policy)
+    elif args.stage=="steering-screen-fast":
+        from .screening_fast import screen_fast
+        if not args.feature:p.error("--feature required")
+        result=screen_fast(cfg,args.model,args.feature,args.condition,args.policy)
     elif args.stage=="steering-select":
         from .steering import selection
         result=selection(cfg,args.model,policy=args.policy)
@@ -63,6 +67,9 @@ def main():
     elif args.stage=="judge-generate":
         from .judged import generate
         result=generate(cfg,args.model,args.policy)
+    elif args.stage=="judge-generate-batched":
+        from .batched_generation import generate_batched
+        result=generate_batched(cfg,args.model,args.policy)
     elif args.stage=="judge-run":
         if not args.execute_judges:p.error("Remote judge calls require --execute-judges")
         from .judged import judge

@@ -60,7 +60,11 @@ def screen(cfg,family,feature,adapter_condition,policy="prompt_last"):
             for site in cfg["runtime"]["sites"]:
                 unit,scale=get_direction(layer,site)
                 vector=unit*scale
-                for strength in cfg["steering"]["alphas"]:
+                fractions=cfg["steering"].get("relative_norm_fractions", [-.25,-.1,-.03,0.,.03,.1,.25])
+                if 0. not in fractions or len(set(fractions))!=len(fractions):
+                    raise ValueError("Relative norm grid requires unique strengths and zero")
+                for fraction in fractions:
+                    strength=float(fraction)*math.sqrt(unit.numel())
                     values=continuation_scores(target,tok,prompts,pos,neg,layer,site,vector,
                                                 float(strength),policy,cfg["runtime"]["max_length"])
                     for r,val in zip(scenarios,values):
@@ -69,7 +73,9 @@ def screen(cfg,family,feature,adapter_condition,policy="prompt_last"):
                                         "policy":policy,"scenario_id":r["scenario_id"],
                                         "split":r["split"],"category":r["category"],
                                         "tradeoff":r["tradeoff"],"score":val,
-                                        "calibration_scale":scale})
+                                        "calibration_scale":scale,
+                                        "target_relative_norm_fraction":float(fraction),
+                                        "strength_convention":"relative_activation_norm_v2"})
         path=out/f"screen_{feature}_{adapter_condition}_{policy}.jsonl"
         write_rows(path,records)
         return path

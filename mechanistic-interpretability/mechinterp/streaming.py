@@ -115,6 +115,9 @@ def evaluate_bank(bank,model,tok,rows,cfg,keys):
     return results
 
 def fit_all(model,tok,train,development,test,task,cfg,weights_path):
+    if task == "regression":
+        from .ridge import fit_behavior
+        return fit_behavior(model,tok,train,development,test,cfg,weights_path)
     keys=model_keys(model,cfg)
     mean,std=train_statistics(model,tok,train,cfg,keys)
     pcfg=cfg["probing"]

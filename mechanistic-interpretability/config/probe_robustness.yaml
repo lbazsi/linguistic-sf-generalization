@@ -1,0 +1,90 @@
+version: "1.0"
+seed: 42
+models:
+  gemma2:
+    name: google/gemma-2-9b
+    revision: 33c193028431c2fde6c6e51f29e6f17b60cbfac6
+    adapters: ../fine_tuning/outputs
+  qwen3:
+    name: Qwen/Qwen3-8B-Base
+    revision: 49e3418fbbbca6ecbdf9608b4d22e5a407081db4
+    adapters: ../fine_tuning/outputs/qwen3
+    judgments: ../results/black-box/qwen3/evaluation_results/data/aggregated/combined_judgments.jsonl
+  llama31:
+    name: meta-llama/Llama-3.1-8B
+    revision: d04e592bb4f6aa9cfee91e2e20afa771667e1d4b
+    adapters: ../fine_tuning/outputs/llama31
+    judgments: ../results/black-box/llama31/evaluation_results/data/aggregated/combined_judgments.jsonl
+  mistral:
+    name: mistralai/Mistral-7B-v0.3
+    revision: caa1feb0e54d415e2df31207e5f4e273e33509b1
+    adapters: ../fine_tuning/outputs/mistral
+    judgments: ../results/black-box/mistral/evaluation_results/data/aggregated/combined_judgments.jsonl
+paths:
+  canonical: ../results/data/canonical/corpus.jsonl
+  features: ../results/data/final
+  controls: ../results/data/language_controls
+  scenarios: ../results/black-box/gemma/evaluation_results/data/scenarios/final/scenarios.jsonl
+  judgments: ../results/black-box/gemma/evaluation_results/data/aggregated/combined_judgments.jsonl
+  general: data/general_domain_prompts.json
+  concepts: data/welfare_concept_probes.json
+  steering: data/steering_screening.jsonl
+  evaluation_config: ../evaluation/config/config.yaml
+  evaluation_prompt: ../evaluation/prompts/judge_response.txt
+  outputs: outputs/revision_3_probe_robustness
+runtime:
+  batch_size: 4
+  max_length: 512
+  dtype: bfloat16
+  attention: eager
+  pooling: [final, mean]
+  sites: [residual, mlp]
+  # Pooled activation matrices are temporary and remain on device. No raw activations are saved.
+  calibration_n: 200
+analysis:
+  cka: true
+  svcca: true
+  svcca_variance: 0.99
+  svcca_components_cap: 256
+  svm_holdout_fraction: 0.5
+probing:
+  train_fraction: 0.70
+  development_fraction: 0.15
+  epochs: 4
+  max_linguistic_pairs: 1000
+  learning_rate: 0.01
+  weight_decay: 0.001
+  # Same estimator, penalty and hyperparameters for every model, site and feature.
+  classifier: logistic
+  regressor: dual_ridge_v2
+  ridge_alphas: [0.01, 0.1, 1.0, 10.0, 100.0, 1000.0]
+  # Validation selects only the stopping epoch, not different per-task estimators.
+steering:
+  # Effective alpha = signed fraction times sqrt(hidden width)
+  relative_norm_fractions: [-0.25, -0.10, -0.03, 0.0, 0.03, 0.10, 0.25]
+  directions_pooling: final
+  token_policies: [prompt_last, generation]
+  screening_splits: [screen, validation]
+  judged_split: test
+  initial_n: 20
+  validation_n: 80
+  judged_n: 100
+  # One configuration per feature x registered control/feature adapter, per model.
+  selected_per_feature_adapter: 1
+  # Full judged generation must be explicitly requested; it is not a pipeline default.
+  generation:
+    max_new_tokens: 96
+    temperature: 0.2
+    top_p: 0.95
+    do_sample: true
+    seed: 45
+  judging:
+    batch_size: 10
+    concurrency: 8
+    input_usd_per_million: null
+    output_usd_per_million: null
+stats:
+  confidence: 0.95
+  bootstrap_replicates: 2000
+  permutations: 2000
+  fdr: bh
