@@ -51,7 +51,8 @@ def execute(cfg,task):
     if stage=="lora":return experiments.lora_analysis(cfg,model)
     if stage=="lora-functional":return functional_analysis(cfg,model,task["checkpoint"])
     if stage=="steering-screen":
-        return steering.screen(cfg,model,task["feature"],task["condition"],task["policy"])
+        from mechinterp.screening_fast import screen_fast
+        return screen_fast(cfg,model,task["feature"],task["condition"],task["policy"])
     raise ValueError(stage)
 
 def main():
