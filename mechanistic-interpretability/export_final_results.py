@@ -25,6 +25,7 @@ ALLOW_ROOT={
 STEERING_FILES={
     "selected_all.json", "selected_validation_audit.json",
     "selected_controls.jsonl", "site_calibration_v2.json", "workload_all.json",
+    "generation_quality.json",
 }
 JUDGMENT_FILES={"summary.json","api_usage.json"}
 
@@ -52,7 +53,8 @@ def choose(source):
                         (p.name.startswith("screen_") and p.suffix==".jsonl" or
                          p.name.startswith("directions_") and p.name.endswith("_metadata.json") or
                          p.name in STEERING_FILES or
-                         p.name in {x.replace(".json", "_manifest.json") for x in STEERING_FILES}))
+                         p.name in {f"{Path(x).stem}_manifest.json" for x in STEERING_FILES} or
+                         (p.name.startswith("screen_") and p.name.endswith("_manifest.json"))))
         jud=steer/"judgments"
         selected.extend(jud/p for p in JUDGMENT_FILES if (jud/p).is_file())
         # Final aggregated paired results, not 5,600 prompt/response source files.
