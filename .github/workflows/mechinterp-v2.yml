@@ -31,7 +31,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: classifier-controls-revision2
-          path: mechanistic-interpretability/outputs/revision_2/llama31/linear-probing/classifier_control_audit.json
+          path: mechanistic-interpretability/outputs/llama31/linear-probing/classifier_control_audit.json
           if-no-files-found: error
       - name: Cross-model regression tests
         run: python -m unittest discover -s cross-model-analysis/tests -v
