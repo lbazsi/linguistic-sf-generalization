@@ -240,6 +240,7 @@ async def judge(cfg,family,policy="prompt_last",execute=False):
     sys.path.insert(0,str(evaluation_scripts))
     from common import OpenRouterClient, render_prompt, json_text
     ecfg=yaml.safe_load(location(cfg,"evaluation_config").read_text(encoding="utf-8"))
+    ecfg["judging"]["batch_size"]=int(cfg["steering"]["judging"]["batch_size"])
     files=judge_plan(cfg,family,policy)
     scenarios={int(r["id"]):r for r in load_scenarios(cfg)}
     client=OpenRouterClient(ecfg)
@@ -266,11 +267,19 @@ async def judge(cfg,family,policy="prompt_last",execute=False):
                     template=location(cfg,"evaluation_prompt").read_text(encoding="utf-8")
                     prompt=template.replace("{{ITEMS_JSON}}",json_text(group))
                     prompt += "\nInclude each item's original scenario_id in its judgment. Order does not matter.\n"
-                    response=await client.request_json(model_key=f"response_judge_{judge_no}",
-                        temperature_key=f"response_judge_{judge_no}",seed_key=f"response_judge_{judge_no}",
-                        prompt=prompt,schema=id_keyed_judgment_schema(len(group)),
-                        schema_name=f"steering_judgments_{judge_no}")
-                    matched=verified_batch_judgments(group,response["judgments"])
+                    matched=None
+                    for attempt in range(int(cfg["steering"]["judging"].get("invalid_batch_retries",3))):
+                        response=await client.request_json(model_key=f"response_judge_{judge_no}",
+                            temperature_key=f"response_judge_{judge_no}",seed_key=f"response_judge_{judge_no}",
+                            prompt=prompt,schema=id_keyed_judgment_schema(len(group)),
+                            schema_name=f"steering_judgments_{judge_no}")
+                        try:
+                            matched=verified_batch_judgments(group,response["judgments"])
+                            break
+                        except (ValueError,KeyError,TypeError) as exc:
+                            if attempt+1>=int(cfg["steering"]["judging"].get("invalid_batch_retries",3)):
+                                raise RuntimeError(f"Judge {judge_no} repeatedly returned mismatched scenario IDs") from exc
+                            print(f"Retrying malformed judge batch (judge {judge_no}, attempt {attempt+1})",flush=True)
                     for scenario_id,judgment in matched.items():
                         completed[scenario_id]={"scenario_id":scenario_id,
                              "judge":judge_no,"scores":judgment["scores"],"outcome":judgment["outcome"]}
