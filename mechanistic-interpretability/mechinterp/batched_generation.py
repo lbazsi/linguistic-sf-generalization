@@ -106,8 +106,8 @@ def generate_batched(cfg,family,policy="prompt_last"):
     gen=cfg["steering"]["generation"]
     size=int(gen.get("batch_size",1))
     max_new=int(gen["max_new_tokens"])
-    if not 2<=size<=16:
-        raise ValueError("Batched generation requires batch_size between 2 and 16")
+    if not 2<=size<=32:
+        raise ValueError("Batched generation requires batch_size between 2 and 32")
     if max_new<=0:
         raise ValueError("Invalid generation length")
     scenarios=[x for x in load_screening(cfg) if x["split"]==cfg["steering"]["judged_split"]]
