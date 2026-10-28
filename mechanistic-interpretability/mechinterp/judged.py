@@ -266,7 +266,13 @@ async def judge(cfg,family,policy="prompt_last",execute=False):
                                      int(ecfg["judging"]["batch_size"])):
                     template=location(cfg,"evaluation_prompt").read_text(encoding="utf-8")
                     prompt=template.replace("{{ITEMS_JSON}}",json_text(group))
-                    prompt += "\nInclude each item's original scenario_id in its judgment. Order does not matter.\n"
+                    # The shared black-box rubric requests no IDs; steering needs
+                    # scenario-id keys for exact, order-independent matching.
+                    prompt=prompt.replace(
+                        "Return exactly one judgment for every supplied item, in exactly the same order. Do not return scenario IDs. Return no rationale or commentary.",
+                        "Return exactly one judgment for every supplied item, each with its original scenario_id. Return no rationale or commentary.")
+                    if "Do not return scenario IDs." in prompt:
+                        raise ValueError("Steering judging prompt still forbids scenario IDs")
                     matched=None
                     for attempt in range(int(cfg["steering"]["judging"].get("invalid_batch_retries",3))):
                         response=await client.request_json(model_key=f"response_judge_{judge_no}",
