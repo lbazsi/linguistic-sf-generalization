@@ -179,7 +179,7 @@ def signature(value):
 
 def baseline_cache_path(out, adapter, identity_value):
     key = signature(identity_value)[:20]
-    return out / "screen_cache" / f"baseline_{adapter}_{key}.json"
+    return out / ".work" / "screen_cache" / f"baseline_{adapter}_{key}.json"
 
 
 def read_baseline(path, identity_value, scenarios):
@@ -263,7 +263,7 @@ def screen_fast(cfg, family, feature, adapter, policy="prompt_last"):
     out = run_dir(cfg, family, "activation-steering")
     stem = f"{feature}_{adapter}_{policy}"
     final = out / f"screen_{stem}.jsonl"
-    checkpoint_dir = out / "screen_checkpoints" / stem
+    checkpoint_dir = out / ".work" / "screen_checkpoints" / stem
     manifest_path = checkpoint_dir / "manifest.json"
     # Direction preparation may load the base model. Finish before loading adapter.
     get_direction = load_direction_bundle(cfg, family, feature)
