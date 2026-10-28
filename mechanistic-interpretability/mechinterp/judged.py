@@ -77,11 +77,35 @@ def write_workload(cfg,family,policy="prompt_last"):
     write_json(path,result)
     return path
 
-def generate(cfg,family,policy="prompt_last"):
-    """Produce same-seed, new unsteered and steered continuations on each test ID.
+def validate_generation_pairs(pairs, test, feature, adapter, policy, max_new_tokens, seed):
+    """Validate resumable pair checkpoints before accepting them."""
+    reference={int(item["scenario_id"]):item for item in test}
+    used=set()
+    for pair in pairs:
+        sid=int(pair["scenario_id"])
+        if sid not in reference or sid in used:
+            raise ValueError(f"Unknown or duplicate completed scenario: {sid}")
+        used.add(sid)
+        a,b=pair["unsteered"],pair["steered"]
+        expected_prompt=scenario_prompt(reference[sid]["scenario"])
+        for arm,row in (("unsteered",a),("steered",b)):
+            if (row["scenario_id"]!=sid or row["feature"]!=feature or
+                row["adapter"]!=adapter or row["policy"]!=policy or
+                row["arm"]!=arm or row["prompt"]!=expected_prompt or
+                row["generation_seed"]!=int(seed)+sid or
+                row.get("max_new_tokens")!=int(max_new_tokens)):
+                raise ValueError(f"Incompatible or corrupted {arm} record: {sid}")
+        if abs(float(a["strength"]))>1e-10:
+            raise ValueError("The unsteered arm has nonzero intervention strength")
+    return used
 
-    Both arms use identical prompts and model state but different interventions.
-    Unsteered responses are *not* reused from a prior, differently seeded run.
+
+def generate(cfg,family,policy="prompt_last"):
+    """Produce same-seed matched pairs, atomically checkpointing every five pairs.
+
+    A restart resumes only complete matching pairs and cannot silently overwrite
+    old target files. Original 96-token output files require explicit archiving:
+    files without 256-token generation metadata are not reused.
     """
     from .directions import load_direction_bundle
     selected=selected_conditions(cfg,family,policy)
@@ -93,62 +117,100 @@ def generate(cfg,family,policy="prompt_last"):
     grouped=defaultdict(list)
     for entry in selected:
         grouped[entry["adapter"]].append(entry)
+    generation=cfg["steering"]["generation"]
+    max_new=int(generation["max_new_tokens"])
+    if max_new<1:raise ValueError("Invalid max_new_tokens")
     for condition,specs in grouped.items():
+        # Skip fully complete, compatible conditions without loading model.
+        todo=[]
+        for entry in specs:
+            stem=f"{entry['feature']}__{condition}__{entry['policy']}"
+            files={arm:out/f"{stem}__{arm}.jsonl" for arm in ("unsteered","steered")}
+            partial=out/f"{stem}__paired.partial.jsonl"
+            if all(f.exists() for f in files.values()) and not partial.exists():
+                left=read_data(files["unsteered"])
+                right=read_data(files["steered"])
+                if len(left)!=len(test) or len(right)!=len(test):
+                    raise ValueError(f"Incomplete previously generated pair files: {stem}")
+                pairs=[{"scenario_id":a["scenario_id"],"unsteered":a,"steered":b}
+                       for a,b in zip(left,right)]
+                if len({a["scenario_id"] for a in left})!=len(left) or any(
+                    a["scenario_id"]!=b["scenario_id"] for a,b in zip(left,right)):
+                    raise ValueError(f"Misaligned previously generated pair files: {stem}")
+                validate_generation_pairs(pairs,test,entry["feature"],condition,
+                                          entry["policy"],max_new,generation["seed"])
+                print(f"Skipping verified completed generations: {stem}",flush=True)
+                continue
+            if any(f.exists() for f in files.values()) and not partial.exists():
+                raise FileExistsError(f"One output arm missing and no pair checkpoint: {stem}")
+            todo.append((entry,files,partial))
+        if not todo:continue
         bundles={s["feature"]:load_direction_bundle(cfg,family,s["feature"])
-                 for s in specs}
+                 for s,_,_ in todo}
         model,tok=load_model(cfg,family,condition)
         try:
-            generation=cfg["steering"]["generation"]
-            for entry in specs:
+            for entry,files,partial in todo:
                 feature=entry["feature"]
                 layer=entry["layer"];site=entry["site"]
                 direction,scale=bundles[feature](layer,site)
-                files={
-                    arm:out/f"{feature}__{condition}__{entry['policy']}__{arm}.jsonl"
-                    for arm in ("unsteered","steered")
-                }
-                if any(f.exists() for f in files.values()):
-                    raise FileExistsError(
-                        f"One or both arms already exist for {feature}/{condition}; "
-                        "do not silently overwrite a partial matched-pair experiment")
-                arms={"unsteered":[],"steered":[]}
+                pairs=read_data(partial) if partial.exists() else []
+                complete=validate_generation_pairs(pairs,test,feature,condition,
+                                                    entry["policy"],max_new,
+                                                    generation["seed"])
                 for item in test:
+                    sid=int(item["scenario_id"])
+                    if sid in complete:continue
                     prompt=scenario_prompt(item["scenario"])
                     tokens=encode(tok,[prompt],model.device,cfg["runtime"]["max_length"])
-                    seed=int(generation["seed"])+int(item["scenario_id"])
+                    seed=int(generation["seed"])+sid
+                    arms={}
                     for arm in ("unsteered","steered"):
                         strength=0. if arm=="unsteered" else float(entry["strength"])
                         torch.manual_seed(seed)
                         with torch.inference_mode(),steer(
                             model,layer,site,direction*scale,strength,entry["policy"]):
                             output=model.generate(
-                                **tokens,max_new_tokens=generation["max_new_tokens"],
+                                **tokens,max_new_tokens=max_new,
                                 do_sample=generation["do_sample"],
                                 temperature=generation["temperature"],
-                                top_p=generation["top_p"],pad_token_id=tok.pad_token_id)
-                        generated_ids=output[0,tokens["input_ids"].shape[1]:]
+                                top_p=generation["top_p"],
+                                pad_token_id=tok.pad_token_id)
+                        tail=output[0,tokens["input_ids"].shape[1]:]
                         eos_ids=model.generation_config.eos_token_id
                         if eos_ids is None:eos_ids=tok.eos_token_id
                         eos_ids={int(x) for x in (eos_ids if isinstance(eos_ids,(list,tuple)) else [eos_ids]) if x is not None}
-                        ends_eos=bool(len(generated_ids) and int(generated_ids[-1]) in eos_ids)
-                        reached_limit=bool(len(generated_ids)>=int(generation["max_new_tokens"]) and not ends_eos)
-                        continuation=tok.decode(generated_ids,
-                            skip_special_tokens=True).strip()
-                        arms[arm].append({
-                            "scenario_id":item["scenario_id"],
-                            "feature":feature,"adapter":condition,
+                        ended=bool(len(tail) and int(tail[-1]) in eos_ids)
+                        continuation=tok.decode(tail,skip_special_tokens=True).strip()
+                        arms[arm]={
+                            "scenario_id":sid,"feature":feature,"adapter":condition,
                             "layer":layer,"site":site,"arm":arm,
                             "strength":strength,"policy":entry["policy"],
                             "condition":f"{feature}__{condition}__{entry['policy']}",
                             "generation_seed":seed,"continuation":continuation,
-                            "generated_tokens":int(len(generated_ids)),
-                            "ended_with_eos":ends_eos,
-                            "reached_token_limit":reached_limit,
-                            "max_new_tokens":int(generation["max_new_tokens"]),
-                            "prompt":prompt,
-                        })
-                for arm,f in files.items():
-                    write_rows(f,arms[arm])
+                            "prompt":prompt,"generated_tokens":int(len(tail)),
+                            "ended_with_eos":ended,
+                            "reached_token_limit":bool(len(tail)>=max_new and not ended),
+                            "max_new_tokens":max_new,
+                        }
+                    pairs.append({"scenario_id":sid,**arms})
+                    complete.add(sid)
+                    if len(pairs)%5==0:
+                        write_rows(partial,pairs)
+                        print(f"Generated {feature}/{condition}: {len(pairs)}/{len(test)} pairs",flush=True)
+                validate_generation_pairs(pairs,test,feature,condition,
+                                          entry["policy"],max_new,generation["seed"])
+                if len(pairs)!=len(test):
+                    raise ValueError(f"Incomplete matched generation for {feature}/{condition}")
+                write_rows(partial,pairs)
+                for arm,path in files.items():
+                    expected=[pair[arm] for pair in pairs]
+                    if path.exists():
+                        if read_data(path)!=expected:
+                            raise ValueError(f"Existing output mismatch; refusing overwrite: {path}")
+                    else:
+                        write_rows(path,expected)
+                partial.unlink(missing_ok=True)
+                print(f"Completed matched generations: {feature}/{condition}",flush=True)
         finally:
             unload(model)
     return out
