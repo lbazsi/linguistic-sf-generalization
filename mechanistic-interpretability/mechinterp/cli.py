@@ -12,7 +12,7 @@ def main():
     p=argparse.ArgumentParser(description="Mechanistic interpretability experiment pipeline")
     p.add_argument("stage",choices=("validate","difference","probe","lora","steering-screen",
                                     "steering-select","steering-controls","lora-functional","plots","judge-plan","judge-generate","judge-run",
-                                    "judge-aggregate"))
+                                    "judge-aggregate","judge-generate-batched"))
     p.add_argument("--config",default=str(Path(__file__).resolve().parents[1]/"config/pipeline.yaml"))
     p.add_argument("--model",choices=("gemma2","qwen3","llama31","mistral"),default="gemma2")
     p.add_argument("--condition",default="canonical")
@@ -63,6 +63,9 @@ def main():
     elif args.stage=="judge-generate":
         from .judged import generate
         result=generate(cfg,args.model,args.policy)
+    elif args.stage=="judge-generate-batched":
+        from .batched_generation import generate_batched
+        result=generate_batched(cfg,args.model,args.policy)
     elif args.stage=="judge-run":
         if not args.execute_judges:p.error("Remote judge calls require --execute-judges")
         from .judged import judge
