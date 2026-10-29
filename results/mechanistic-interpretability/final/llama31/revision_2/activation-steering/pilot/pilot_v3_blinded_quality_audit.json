@@ -1,0 +1,32 @@
+{
+  "responses": 240,
+  "matched_scenarios": 80,
+  "n_features": 4,
+  "per_feature": {
+    "constituent_order": {
+      "n": 60,
+      "without_terminal_punctuation": 49,
+      "nonempty": 60,
+      "japanese_script": 0
+    },
+    "epistemic_hedging": {
+      "n": 60,
+      "without_terminal_punctuation": 55,
+      "nonempty": 60,
+      "japanese_script": 0
+    },
+    "narrative_framing": {
+      "n": 60,
+      "without_terminal_punctuation": 54,
+      "nonempty": 60,
+      "japanese_script": 0
+    },
+    "nominalization": {
+      "n": 60,
+      "without_terminal_punctuation": 58,
+      "nonempty": 60,
+      "japanese_script": 0
+    }
+  },
+  "punctuation_caveat": "Missing terminal punctuation is a truncation risk proxy, not confirmed token-limit exhaustion."
+}

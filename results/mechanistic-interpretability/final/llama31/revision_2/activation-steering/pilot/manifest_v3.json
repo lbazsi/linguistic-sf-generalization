@@ -1,0 +1,20 @@
+{
+  "version": 3,
+  "n_validation": 20,
+  "features": [
+    "epistemic_hedging",
+    "nominalization",
+    "narrative_framing",
+    "constituent_order"
+  ],
+  "fractions": [
+    0.0,
+    0.03,
+    0.1,
+    0.25
+  ],
+  "welfare_heldout_test_used": false,
+  "linguistic_heldout_test_used": false,
+  "linguistic_development_used": true,
+  "interpretation": "Exploratory, previously used welfare validation; no fresh welfare confirmation. Linguistic DEV contrast is a proxy, not proof of generated grammar. The revision-2 pilot previously inspected linguistic TEST pairs on Llama and must not be treated as untouched confirmation. Inspect generated feature realization, coherence, language switching and controls before expansion."
+}

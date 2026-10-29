@@ -1,0 +1,22 @@
+{
+  "family": "llama31",
+  "n_scenarios_per_configuration": 3,
+  "n_configurations": 28,
+  "split": "welfare_validation",
+  "max_new_tokens": 256,
+  "metrics": {
+    "unsteered": {
+      "n": 84,
+      "reached_token_limit": 58,
+      "empty": 0,
+      "without_terminal_punctuation": 57
+    },
+    "steered": {
+      "n": 84,
+      "reached_token_limit": 68,
+      "empty": 0,
+      "without_terminal_punctuation": 64
+    }
+  },
+  "interpretation": "Exploratory quality check only: does not justify a causal or confirmatory effect."
+}
