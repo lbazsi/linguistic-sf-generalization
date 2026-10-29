@@ -75,3 +75,10 @@ python run_all.py --model qwen3 --stage steering --execute --resume
 ```
 
 The optimization does not change Llama's already completed screening artifacts and never invokes paid judge calls.
+
+
+## Sentence-boundary judged generation
+
+The judged batched generator retains the original open-ended `Situation/Assessment` prompt, the temperature/top-p sampling settings, the paired steering conditions, and the 512-token fallback ceiling. Rather than instructing a base model to be concise, it stops **each row individually** at the first complete sentence boundary encountered after `steering.generation.min_new_tokens` (default 48 newly generated tokens). EOS always remains a valid natural stop. Surface punctuation boundaries are heuristic and must not be interpreted as semantic completion, particularly for abbreviations, numbered items and cross-language responses. Existing samples are never post-hoc shortened for paid evaluation.
+
+The batched protocol is now `paired_batch_sentence_v2` and cannot resume `paired_batch_rng_v1` artifacts. Archive the old `outputs/<model>/activation-steering/judged/` folder (and any judge outputs tied to it) before starting a fresh generation. Do not mix old and new raw continuations. Each new row records `stop_reason` as `eos`, `sentence_boundary`, or `token_limit`; `reached_token_limit` counts only genuine non-EOS ceiling hits. Before paid judging, inspect response completeness and judge-relevant quality across both arms, all features and non-English categories; report the stopping mechanism and compare response lengths by arm. The stopping rule changes the evaluated response distribution and may affect measured steering effects; it is not directly comparable to prior 256/512-token or fixed-cap protocols.

@@ -25,6 +25,7 @@ def test_batch_resumption_rejects_protocol_mix():
     row={"scenario_id":10,"feature":"voice","adapter":"voice","policy":"generation",
          "prompt":scenario_prompt("A scenario"),"generation_seed":55,
          "sampling_protocol":PROTOCOL,"batch_size_requested":4,
+         "min_new_tokens":48,
          "batch_scenario_ids":[10],"max_new_tokens":256}
     pair={"scenario_id":10,"unsteered":{**row,"arm":"unsteered","strength":0},
           "steered":{**row,"arm":"steered","strength":16}}
