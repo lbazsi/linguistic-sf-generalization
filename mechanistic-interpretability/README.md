@@ -41,7 +41,7 @@ For representation analysis add **1,000 general-domain, non-animal-welfare Engli
 
 1. Verify base revisions, adapter archives, exact datasets, condition-to-control mappings and GPU compatibility. Generate and validate the 1,000 general prompts and concept-probe dataset.
 2. Run [model-difference analysis](Model-difference-analysis/README.md) for welfare and general prompts; summarize layer/module sensitivity.
-3. Run [linear probes](linear-probing/README.md) for linguistic identification, welfare-concept detection and welfare-behavior prediction using a fixed estimator protocol.
+3. Run [linear probes](linear-probing/README.md) for linguistic identification, welfare-concept detection and welfare-behavior prediction. Behavioral probes use the corrected `dual_ridge_v2` estimator with development-selected regularization and explicit baseline comparison; superseded estimator outputs are excluded.
 4. Run [LoRA analysis](LoRA-analysis/README.md) over all adapters, modules and midpoint/final steps.
 5. Run [activation steering](activation-steering/README.md) for all 14 features, both associated adapter conditions, every layer and both activation sites. The complete layerwise screening results are retained; validation selects one configuration per feature–adapter pair for a separately authorized held-out judged evaluation.
 6. Export the four families' scalar analysis artifacts for separate comparison in [cross-model-analysis](../cross-model-analysis/README.md).
@@ -57,7 +57,7 @@ Record resolved Hugging Face base-model revision, adapter hash and checkpoint st
 
 ## Implementation and commands
 
-The Python implementation lives in `mechinterp/`, with a single command entry point, `run.py`, configuration in `config/pipeline.yaml` and smoke tests in `tests/`. Install with `pip install -r requirements.txt` and run `python -m pytest tests -q`. The repository provides method specifications and implementation; the GPU analyses have not been executed by this documentation commit.
+The Python implementation lives in `mechinterp/`, with a single command entry point, `run.py`, configuration in `config/pipeline.yaml` and smoke tests in `tests/`. Install with `pip install -r requirements.txt` and run `python -m pytest tests -q`. The repository provides method specifications, implementation and reproducible analysis commands.
 
 On GPU images with an existing CUDA-enabled PyTorch installation, an environment created with `python3 -m venv --system-site-packages .venv` can reuse that PyTorch build. Install the full requirements file **inside** the virtual environment: its compatible NumPy, Pillow, scikit-learn, and Transformers versions must take precedence over older system-level packages. Run `python -m pip check` and the smoke tests before GPU inference. The dependency bounds exclude NumPy 2 for legacy binary compatibility and Transformers 5 pending validation of the model-loading interface. When restoring feature adapters, the loader accepts both their original numbered paths (for example, `features/conditionality_01/seed_42`) and unnumbered paths. It verifies the presence of both `adapter_config.json` and `adapter_model.safetensors`; use the original checksum manifest separately for byte-integrity verification.
 
@@ -81,9 +81,9 @@ python run.py judge-aggregate --model gemma2
 python ../cross-model-analysis/run.py --stage all
 ```
 
-Screen all registered features and both matching adapter conditions before invoking `steering-select`. Repeat separately with `--policy generation` for generation-step interventions. The judged-evaluation process uses only the held-out 100 scenario IDs, and its batch size follows the original evaluation configuration. `judge-plan` prints/writes workload counts; actual monetary pricing requires observed or independently supplied prompt/completion token estimates and current per-judge prices.
+Screen all registered features and both matching adapter conditions before invoking `steering-select`. Repeat separately with `--policy generation` for generation-step interventions. The judged evaluation uses 100 held-out scenarios per selected feature–adapter pair and matched steered/unsteered continuations. `judge-plan` prints/writes workload counts; actual monetary pricing requires observed or independently supplied prompt/completion token estimates and current per-judge prices.
 
-The model configuration expects existing independently trained checkpoint trees, including midpoint/final adapters and their training summaries. Adapter bytes are not stored in this repository. Each additional model must have its revision pinned and adapters generated via the common fine-tuning contract. GPU analyses write locally under `outputs/<model>/<stage>/`; the retained scalar results are transferred to `results/mechanistic-interpretability/<model>/` in this repository. These results are not input checkpoints.
+The configuration requires the independently trained midpoint/final adapter checkpoints and their provenance summaries. Adapter tensors remain outside GitHub; GPU analyses write under `outputs/<model>/<stage>/`. Only validated final artifacts are promoted to the repository's `results/mechanistic-interpretability/final/<model>/` tree.
 
 ### Verification and current boundaries
 
@@ -129,25 +129,14 @@ python ../cross-model-analysis/run.py --stage all
 
 The standard matched judged budget is 14 features × two matched adapter conditions × 100 held-out scenarios = 2,800 **paired scenarios**, with two generation arms per pair: **5,600 continuations per model**. At two judges and batches of 20 responses per request, this corresponds to **560 judging requests per model**, excluding retries; token usage and actual prices determine monetary cost. Generation and judging are separately invoked. Direction extraction saves only small unit vectors and calibration scales, never token activations. Cross-model replication and synthesis use the standalone cross-model-analysis package.
 
-The implementation is intended for a single GPU with sequential base/adapter loading. Its numerical correctness, model-specific compatibility, observed memory use and full evaluation integration still require an end-to-end GPU pilot before interpreting research findings.
+Execution uses sequential base/adapter loading on a single GPU. Model-specific compatibility and output-quality validation remain part of reproducibility assessment.
 
 
-## Clean output layout and final-only publication
+## Final results and publication
 
-New runs write to `mechanistic-interpretability/outputs/<model>/<stage>/`, with no revision, iteration or batch directories in the public results tree. The optimized screening implementation keeps resumable intermediate artifacts in `activation-steering/.work/`, excluded from final exports. Older experimental output directories are historical and need not be migrated or deleted. Generation batch size and protocol are recorded in each generated row for auditability, not in its directory name.
+The authoritative analysis tree is `results/mechanistic-interpretability/final/<model>/`, with four stage directories and `plots/`. Each stage contains only its final accepted outputs; no `revision_2/`, superseded probe files, pilots, or intermediate checkpoints belong in this tree. Corrected behavioral-probe records are identified by `method: dual_ridge_v2`. Cross-model analyses read the flat final stage directories and exclude earlier behavioral estimators.
 
-To publish **only final results**, run the dry-run exporter followed by an explicitly authorized export:
-
-```bash
-cd mechanistic-interpretability
-python export_final_results.py --model llama31
-python export_final_results.py --model llama31 --execute
-```
-
-The exporter copies finished model-difference, probing and LoRA scalar files, complete steering screens and selections, judgment summary and aggregated matched outcomes, and final plots into `results/mechanistic-interpretability/<model>/`. It deliberately excludes raw `judged/` generations, judge-specific files, partial checkpoints, caches, pilots, temporary archives, and large direction tensors. It does not delete anything. Existing different results are protected unless `--overwrite` is specified. Before claiming that an evaluation is complete, separately validate generation/judge coverage, truncation rates and output quality. The Llama matched evaluation produced 5,600 nonempty generations; 3,545 (63.3%) reached the 256-token cap, a consequential limitation requiring disclosure and a representative completion-quality review.
-
-A model with an older `outputs/revision_2/<model>/` location can be exported without rearranging that GPU instance by specifying `--source outputs/revision_2/<model>`. For copying directly to a fresh Codespace, transfer the **model's finished GPU `outputs/<model>/` directory** separately from this repository and run the exporter there; if a transfer should contain only publishable artifacts, export into a staging directory first. Existing `results/mechanistic-interpretability/v0/` historical outputs should remain intact.
-
+GPU working files remain under `mechanistic-interpretability/outputs/<model>/`. The exporter selects scalar results, steering screens and aggregate judgments, and figures; raw generations, judge-specific records, direction tensors and temporary artifacts require separate archival where needed. Validate the completeness and provenance of each stage before promotion into the final tree.
 
 ## Portable judged continuation on GPU instances
 
@@ -170,4 +159,4 @@ python run_judged_remainder.py --model gemma2 --stage all --execute-judges
 
 Only run one model command per GPU and use the model family matching the instance. The generator saves exactly the same directory layout for all families. It archives legacy/incompatible raw `judged/` and `judgments/` outputs under the *local*, excluded `activation-steering/.work/archived_judged_<timestamp>/`. It does not touch completed layer screens, selected configurations, direction tensors, LoRA summaries or other families. V2 checkpoints resume in place. A strict coverage/pair-consistency gate and a 25% overall-and-per-arm token-limit threshold prevent paid judge invocation if generation is incomplete or too truncated. Surface sentence stopping is heuristic, so inspect a stratified sample of actual continuations and output-language shifts before relying on the outcome. The default `generate` stage never invokes remote APIs. `judge` and `all` require explicit `--execute-judges` authorization; paid judgments are not initiated by a repository pull.
 
-The final exporter retains only small publishable scalar/plot outputs, under `results/mechanistic-interpretability/<model>/`, while GPU-private raw responses and judge files remain in `mechanistic-interpretability/outputs/<model>/`. On a different machine, copy required raw inputs and adapter artifacts before resuming; do not mistake the exported results for model checkpoints. Conflicting previously published results require explicit `--overwrite-export` after reviewing the intended replacement. Cross-model analysis is run only after all four families' final results are present.
+Publish validated, supersession-free artifacts under `results/mechanistic-interpretability/final/<model>/`. Local working exports and GPU output directories are not authoritative final archives. Original model and adapter checkpoints remain external to the repository; cross-model synthesis requires comparable final stages across all four families.
