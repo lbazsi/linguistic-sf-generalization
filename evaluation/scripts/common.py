@@ -304,6 +304,23 @@ def normalize_judge_response_shape(parsed: Any, *, schema_name: str, schema: dic
         return {"judgments": parsed}
     return parsed
 
+class JudgeResponseFormatError(RuntimeError):
+    """Judge provider exhausted retries returning nonconforming structured data."""
+
+
+def format_judge_error(exc: Exception) -> str:
+    """Short diagnostics; do not dump the entire provider response or scenario data."""
+    if isinstance(exc, ValidationError):
+        path = "/".join(map(str, exc.absolute_path)) or "(root)"
+        value = exc.instance
+        actual = "list length " + str(len(value)) if isinstance(value, list) else type(value).__name__
+        return (f"JSON schema violation at {path}; rule={exc.validator}; "
+                f"constraint={exc.validator_value!r}; received={actual}")
+    if isinstance(exc, json.JSONDecodeError):
+        return f"Non-JSON response at character {exc.pos}: {exc.msg}"
+    return type(exc).__name__
+
+
 class OpenRouterClient:
     def __init__(self, config: dict[str, Any]) -> None:
         load_dotenv(PROJECT_ROOT / ".env")
@@ -389,7 +406,15 @@ class OpenRouterClient:
                     float(api["backoff_seconds"]) * (2 ** attempt),
                 )
                 await asyncio.sleep(delay)
-        raise RuntimeError(f"OpenRouter request failed: {last_error}")
+        if isinstance(last_error, (ValidationError, json.JSONDecodeError)):
+            raise JudgeResponseFormatError(
+                f"OpenRouter judge output invalid after {api['max_attempts']} attempts: "
+                + format_judge_error(last_error)
+            ) from None
+        raise RuntimeError(
+            f"OpenRouter request failed after {api['max_attempts']} attempts: "
+            + type(last_error).__name__ + ": " + str(last_error)
+        ) from last_error
 
     def stats(self) -> dict[str, int]:
         return {
