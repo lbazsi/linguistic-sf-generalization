@@ -45,32 +45,21 @@ def summarize_mechanisms(root: Path, dest: Path):
                                        "layer":row.get("layer"),"value":v})
         probes = patterns["probes"]
         for path in sorted(probes.glob("*.jsonl")) if probes.exists() else []:
-            if path.name.startswith("behavior_"):
-                # Never pool failed legacy behavior probes with a corrected revision.
-                continue
             for row in read_jsonl(path):
+                task = row.get("task")
+                if task == "behavior" and row.get("method") != "dual_ridge_v2":
+                    # Exclude superseded estimators until corrected outputs exist.
+                    continue
                 test = row.get("test") or {}
-                metric = "r2" if row.get("task") == "behavior" else "roc_auc"
+                metric = "r2" if task == "behavior" else "roc_auc"
                 v = number(test.get(metric))
                 if v is None: continue
                 normalized.append({"model":model, "stage":"probes",
                                    "feature":row.get("feature") or "all",
-                                   "metric":f'{row.get("task")}_{metric}',
+                                   "metric":f'{task}_{metric}',
                                    "condition":row.get("condition"),
                                    "site":row.get("site"), "pooling":row.get("pooling"),
                                    "layer":row.get("layer"),"value":v})
-        # Revised behavioral probes live in a distinct, versioned output tree.
-        revised = home / "revision_2" / "linear-probing"
-        for path in sorted(revised.glob("behavior_*.jsonl")) if revised.exists() else []:
-            for row in read_jsonl(path):
-                score = row.get("test") or {}
-                v = number(score.get("r2"))
-                if v is not None:
-                    normalized.append({"model": model, "stage": "probes",
-                                       "feature": row.get("feature") or "all",
-                                       "metric": "behavior_r2", "condition": row.get("condition"),
-                                       "site": row.get("site"), "pooling": row.get("pooling"),
-                                       "layer": row.get("layer"), "value": v})
         lora = patterns["lora"]
         geometry = lora / "module_geometry.jsonl"
         if geometry.exists():
@@ -86,7 +75,7 @@ def summarize_mechanisms(root: Path, dest: Path):
                                        "metric":metric,"module":row.get("module"),
                                        "layer":depth(row.get("module")),"value":v})
         for checkpoint in ("midpoint","final"):
-            file = home / "revision_2" / "LoRA-analysis" / f"functional_{checkpoint}.jsonl"
+            file = lora / f"functional_{checkpoint}.jsonl"
             if not file.exists(): continue
             for row in read_jsonl(file):
                 if row.get("condition") not in FEATURES: continue
