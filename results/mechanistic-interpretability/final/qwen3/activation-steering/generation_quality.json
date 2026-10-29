@@ -1,0 +1,39 @@
+{
+  "model": "qwen3",
+  "sampling_protocol": "paired_batch_sentence_v2",
+  "max_new_tokens": 512,
+  "min_new_tokens": 48,
+  "generation_batch_size": 32,
+  "selected_configurations": 28,
+  "generated_responses": 5600,
+  "stop_reasons": {
+    "sentence_boundary": 5381,
+    "eos": 219
+  },
+  "stop_reasons_by_arm": {
+    "unsteered": {
+      "sentence_boundary": 2696,
+      "eos": 104
+    },
+    "steered": {
+      "sentence_boundary": 2685,
+      "eos": 115
+    }
+  },
+  "truncation_fraction": 0.0,
+  "truncation_fraction_by_arm": {
+    "unsteered": 0.0,
+    "steered": 0.0
+  },
+  "mean_generated_tokens_by_arm": {
+    "unsteered": 59.29678571428571,
+    "steered": 59.145714285714284
+  },
+  "median_generated_tokens_by_arm": {
+    "unsteered": 58.0,
+    "steered": 58.0
+  },
+  "quality_gate_threshold": 0.25,
+  "quality_gate_passed": true,
+  "manual_quality_review_required": true
+}

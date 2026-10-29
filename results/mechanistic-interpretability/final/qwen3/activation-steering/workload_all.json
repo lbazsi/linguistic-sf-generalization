@@ -1,0 +1,14 @@
+{
+  "family": "qwen3",
+  "protocol": "paired_revised_v2",
+  "configurations": 28,
+  "scenarios_per_configuration": 100,
+  "matched_pairs": 2800,
+  "generations": 5600,
+  "unsteered_generations": 2800,
+  "steered_generations": 2800,
+  "individual_judgments": 11200,
+  "api_requests_without_retries": 560,
+  "judge_batch_size": 20,
+  "token_estimate_note": "Judge and response tokens vary; these are exact request counts before retries."
+}

@@ -1,0 +1,31 @@
+{
+  "created_at_utc": "2026-10-25T08:42:49.794400+00:00",
+  "stage": "probe",
+  "family": "qwen3",
+  "model": {
+    "name": "Qwen/Qwen3-8B-Base",
+    "revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4",
+    "adapters": "../fine_tuning/outputs/qwen3",
+    "judgments": "../evaluation/data/aggregated/combined_judgments.jsonl"
+  },
+  "seed": 42,
+  "config_sha256": "86f4b3524cd45e607b4fe27e9ca136ec0fc7eb8333266f30da6819040db63a78",
+  "input_hashes": {
+    "/lambda/nfs/Qwen/linguistic-sf-generalization/mechanistic-interpretability/data/general_domain_prompts.json": "edde4877b22661a174361377700977b70096e744e3595d569584016b6d36f496",
+    "/lambda/nfs/Qwen/linguistic-sf-generalization/mechanistic-interpretability/data/welfare_concept_probes.json": "d1dc1f0e242763a7f714390da43d8e5b3a614d8f54e93a62318cd5ee727ddbef",
+    "/lambda/nfs/Qwen/linguistic-sf-generalization/results/evaluation_results/data/scenarios/final/scenarios.jsonl": "5db7e8c67c7c43c8498a59a3e8bcdc1b1f7fb37cdbaf2fcdeb4f7eaa2f83d5fc",
+    "/lambda/nfs/Qwen/linguistic-sf-generalization/mechanistic-interpretability/data/steering_screening.jsonl": "52eb5af97fd4efa1a55b7c121dbc808bc3f96c41925c7a9e748f23561c4e62db"
+  },
+  "artifact": {
+    "path": "/lambda/nfs/Qwen/linguistic-sf-generalization/mechanistic-interpretability/outputs/qwen3/linear-probing/behavior_all_conditionality.jsonl",
+    "sha256": "661612f87e9f3d93613f176000d77e4a97ee3cf050960422de42c7a2641aadd6"
+  },
+  "python": "3.10.12",
+  "runtime": {
+    "torch": "2.7.0",
+    "cuda": "12.8",
+    "transformers": "4.57.6",
+    "peft": "0.21.2",
+    "gpu": "NVIDIA A100-SXM4-40GB"
+  }
+}
