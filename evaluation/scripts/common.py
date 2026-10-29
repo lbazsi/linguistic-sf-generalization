@@ -285,6 +285,25 @@ def validate_scenarios(rows: list[dict[str, Any]], expected_count: int) -> None:
         raise RuntimeError(f"Expected {expected_count} scenarios, found {len(rows)}")
 
 
+
+def normalize_judge_response_shape(parsed: Any, *, schema_name: str, schema: dict) -> Any:
+    """Accept bare arrays ONLY for held-out steering judgments.
+
+    Some providers return the requested judgments as a top-level JSON array
+    even when the strict response format specifies {"judgments": [...]}. This
+    is a lossless wrapper, not a repair of score values, ids, or batch counts:
+    ordinary JSON Schema validation still enforces all original constraints.
+    Other evaluation tasks retain their existing strict response contract.
+    """
+    if (
+        isinstance(parsed, list)
+        and schema_name.startswith("steering_judgments_")
+        and isinstance(schema, dict)
+        and "judgments" in schema.get("properties", {})
+    ):
+        return {"judgments": parsed}
+    return parsed
+
 class OpenRouterClient:
     def __init__(self, config: dict[str, Any]) -> None:
         load_dotenv(PROJECT_ROOT / ".env")
@@ -358,6 +377,7 @@ class OpenRouterClient:
                 self.output_tokens += int(usage.get("completion_tokens") or 0)
                 content = body["choices"][0]["message"]["content"]
                 parsed = json.loads(content) if isinstance(content, str) else content
+                parsed = normalize_judge_response_shape(parsed, schema_name=schema_name, schema=schema)
                 Draft202012Validator(schema).validate(parsed)
                 return parsed
             except (httpx.HTTPError, KeyError, TypeError, json.JSONDecodeError, ValidationError) as exc:
