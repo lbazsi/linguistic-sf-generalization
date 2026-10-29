@@ -18,6 +18,7 @@ Here, **value generalization** means applying welfare-related considerations in 
 - [Training corpus and semantic domains](#training-corpus-and-semantic-domains)
 - [Linguistic interventions](#linguistic-interventions)
 - [Dataset construction and quality control](#dataset-construction-and-quality-control)
+- [Models tested](#models-tested)
 - [Fine-tuning](#fine-tuning)
 - [Behavioral evaluation](#behavioral-evaluation)
 - [Analysis and interpretation](#analysis-and-interpretation)
@@ -109,6 +110,17 @@ The [synthetic-data pipeline](synthetic_data_generation/LoRA_training/README.md)
 The authoritative canonical corpus is `data/canonical/corpus.jsonl`. Accepted feature datasets are written to `data/final/<feature>.jsonl`. Each feature row records its semantic ID, domain assignments, feature name, manipulation level, source and target languages, English semantic anchor, control text, and variant text.
 
 Semantic preservation is a design objective checked through automated review. Changes in modality, genericity, tense, or narrative framing can alter implication, scope, or emphasis; passing review does not establish perfect equivalence.
+
+## Models tested
+
+The same experimental design is replicated across four pretrained base-model families. All models use separately trained LoRA adapters for the shared linguistic intervention conditions.
+
+| Model | Pretrained base checkpoint | Parameters |
+| --- | --- | --- |
+| Gemma 2 | `google/gemma-2-9b` | 9B |
+| Qwen 3 | `Qwen/Qwen3-8B-Base` | 8B |
+| Llama 3.1 | `meta-llama/Llama-3.1-8B` | 8B |
+| Mistral | `mistralai/Mistral-7B-v0.3` | 7B |
 
 ## Fine-tuning
 
