@@ -238,7 +238,7 @@ async def judge(cfg,family,policy="prompt_last",execute=False):
     import sys
     evaluation_scripts=location(cfg,"evaluation_config").parent.parent/"scripts"
     sys.path.insert(0,str(evaluation_scripts))
-    from common import OpenRouterClient, render_prompt, json_text
+    from common import OpenRouterClient, JudgeResponseFormatError, render_prompt, json_text
     ecfg=yaml.safe_load(location(cfg,"evaluation_config").read_text(encoding="utf-8"))
     ecfg["judging"]["batch_size"]=int(cfg["steering"]["judging"]["batch_size"])
     files=judge_plan(cfg,family,policy)
@@ -262,34 +262,54 @@ async def judge(cfg,family,policy="prompt_last",execute=False):
                                   "context":scenario["context"],"tradeoff":scenario["tradeoff"],
                                   "scenario":scenario["scenario"],"continuation":row["continuation"]})
                 random.Random(ecfg["judging"]["shuffle_seeds"][f"judge_{judge_no}"]).shuffle(items)
+                template=location(cfg,"evaluation_prompt").read_text(encoding="utf-8")
+                template=template.replace(
+                    "Return exactly one judgment for every supplied item, in exactly the same order. Do not return scenario IDs. Return no rationale or commentary.",
+                    "Return exactly one judgment for every supplied item, each with its original scenario_id. Return no rationale or commentary.")
+                if "Do not return scenario IDs." in template:
+                    raise ValueError("Steering judging prompt still forbids scenario IDs")
+
+                async def judge_group(group):
+                    prompt=template.replace("{{ITEMS_JSON}}",json_text(group))
+                    retries=int(cfg["steering"]["judging"].get("invalid_batch_retries",3))
+                    for attempt in range(retries):
+                        try:
+                            response=await client.request_json(
+                                model_key=f"response_judge_{judge_no}",
+                                temperature_key=f"response_judge_{judge_no}",
+                                seed_key=f"response_judge_{judge_no}",
+                                prompt=prompt,schema=id_keyed_judgment_schema(len(group)),
+                                schema_name=f"steering_judgments_{judge_no}")
+                            return verified_batch_judgments(group,response["judgments"])
+                        except (JudgeResponseFormatError,ValueError,KeyError,TypeError) as exc:
+                            print(
+                                f"Judge {judge_no}: invalid batch size={len(group)}, "
+                                f"attempt={attempt+1}/{retries}, error={type(exc).__name__}: {exc}",
+                                flush=True)
+                            if attempt+1==retries:
+                                if len(group)==1:
+                                    raise RuntimeError(
+                                        f"Unable to validate singleton judge response for "
+                                        f"scenario {group[0]['scenario_id']}") from exc
+                                middle=len(group)//2
+                                print(
+                                    f"Judge {judge_no}: splitting malformed batch "
+                                    f"of {len(group)} into {middle} and {len(group)-middle}; "
+                                    "original rubric and judge model unchanged",flush=True)
+                                left=await judge_group(group[:middle])
+                                right=await judge_group(group[middle:])
+                                return {**left,**right}
+                    raise RuntimeError("Unreachable judge retry exhaustion")
+
                 for group in batches([r for r in items if r["scenario_id"] not in completed],
                                      int(ecfg["judging"]["batch_size"])):
-                    template=location(cfg,"evaluation_prompt").read_text(encoding="utf-8")
-                    prompt=template.replace("{{ITEMS_JSON}}",json_text(group))
-                    # The shared black-box rubric requests no IDs; steering needs
-                    # scenario-id keys for exact, order-independent matching.
-                    prompt=prompt.replace(
-                        "Return exactly one judgment for every supplied item, in exactly the same order. Do not return scenario IDs. Return no rationale or commentary.",
-                        "Return exactly one judgment for every supplied item, each with its original scenario_id. Return no rationale or commentary.")
-                    if "Do not return scenario IDs." in prompt:
-                        raise ValueError("Steering judging prompt still forbids scenario IDs")
-                    matched=None
-                    for attempt in range(int(cfg["steering"]["judging"].get("invalid_batch_retries",3))):
-                        response=await client.request_json(model_key=f"response_judge_{judge_no}",
-                            temperature_key=f"response_judge_{judge_no}",seed_key=f"response_judge_{judge_no}",
-                            prompt=prompt,schema=id_keyed_judgment_schema(len(group)),
-                            schema_name=f"steering_judgments_{judge_no}")
-                        try:
-                            matched=verified_batch_judgments(group,response["judgments"])
-                            break
-                        except (ValueError,KeyError,TypeError) as exc:
-                            if attempt+1>=int(cfg["steering"]["judging"].get("invalid_batch_retries",3)):
-                                raise RuntimeError(f"Judge {judge_no} repeatedly returned mismatched scenario IDs") from exc
-                            print(f"Retrying malformed judge batch (judge {judge_no}, attempt {attempt+1})",flush=True)
+                    matched=await judge_group(group)
                     for scenario_id,judgment in matched.items():
                         completed[scenario_id]={"scenario_id":scenario_id,
                              "judge":judge_no,"scores":judgment["scores"],"outcome":judgment["outcome"]}
                     write_rows(partial,[completed[k] for k in sorted(completed)])
+                    print(f"Judge {judge_no}: saved {len(completed)}/{len(source)} "
+                          f"for {path.name}",flush=True)
                 if len(completed)!=len(source):raise RuntimeError("Missing judged responses")
                 write_rows(target,[completed[k] for k in sorted(completed)])
                 partial.unlink(missing_ok=True)
