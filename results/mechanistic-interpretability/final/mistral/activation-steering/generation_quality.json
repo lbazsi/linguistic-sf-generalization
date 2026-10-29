@@ -1,0 +1,39 @@
+{
+  "model": "mistral",
+  "sampling_protocol": "paired_batch_sentence_v2",
+  "max_new_tokens": 512,
+  "min_new_tokens": 48,
+  "generation_batch_size": 32,
+  "selected_configurations": 28,
+  "generated_responses": 5600,
+  "stop_reasons": {
+    "sentence_boundary": 5598,
+    "eos": 2
+  },
+  "stop_reasons_by_arm": {
+    "unsteered": {
+      "sentence_boundary": 2799,
+      "eos": 1
+    },
+    "steered": {
+      "sentence_boundary": 2799,
+      "eos": 1
+    }
+  },
+  "truncation_fraction": 0.0,
+  "truncation_fraction_by_arm": {
+    "unsteered": 0.0,
+    "steered": 0.0
+  },
+  "mean_generated_tokens_by_arm": {
+    "unsteered": 63.67214285714286,
+    "steered": 63.03214285714286
+  },
+  "median_generated_tokens_by_arm": {
+    "unsteered": 62.0,
+    "steered": 61.0
+  },
+  "quality_gate_threshold": 0.25,
+  "quality_gate_passed": true,
+  "manual_quality_review_required": true
+}

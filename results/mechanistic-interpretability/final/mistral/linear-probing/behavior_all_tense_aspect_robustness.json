@@ -1,0 +1,74 @@
+{
+  "seed": 42,
+  "bootstrap_replicates": 2000,
+  "n_scenarios": 123,
+  "n_semantic_cells": 65,
+  "inference": "Cluster bootstrap conditional on development-selected probe; no layer-wise independence assumed.",
+  "clipped": {
+    "r2": {
+      "estimate": -0.1994954102722002,
+      "ci_low": -1.3014326057162544,
+      "ci_high": 0.13127235575075633,
+      "valid_bootstrap_draws": 2000
+    },
+    "rmse": {
+      "estimate": 0.4029574225606054,
+      "ci_low": 0.25389704245610223,
+      "ci_high": 0.5618341566277585,
+      "valid_bootstrap_draws": 2000
+    },
+    "rmse_improvement": {
+      "estimate": -0.029260228883025763,
+      "ci_low": -0.09402739153419216,
+      "ci_high": 0.02974602492527585,
+      "valid_bootstrap_draws": 2000
+    },
+    "relative_rmse_improvement": {
+      "estimate": -0.07829930055153439,
+      "ci_low": -0.35293570668269075,
+      "ci_high": 0.09450011201887094,
+      "valid_bootstrap_draws": 2000
+    }
+  },
+  "unclipped": {
+    "r2": {
+      "estimate": -0.24757371950282847,
+      "ci_low": -1.482019489663443,
+      "ci_high": 0.06592770493419664,
+      "valid_bootstrap_draws": 2000
+    },
+    "rmse": {
+      "estimate": 0.4109537743623815,
+      "ci_low": 0.26641675421110367,
+      "ci_high": 0.5691909067748857,
+      "valid_bootstrap_draws": 2000
+    },
+    "rmse_improvement": {
+      "estimate": -0.037256580684801865,
+      "ci_low": -0.10286472908501523,
+      "ci_high": 0.01774418323883571,
+      "valid_bootstrap_draws": 2000
+    },
+    "relative_rmse_improvement": {
+      "estimate": -0.09969724502921017,
+      "ci_low": -0.39556491072865224,
+      "ci_high": 0.05640095933421766,
+      "valid_bootstrap_draws": 2000
+    }
+  },
+  "judges": {
+    "status": "insufficient_pairs",
+    "n_paired_judges": 0,
+    "n_holdout": 123,
+    "source": "Original paired judges of the same generated response",
+    "limitation": "Does not measure generation-seed noise or provide a causal noise ceiling"
+  },
+  "selection": {
+    "criterion": "development_rmse_only",
+    "layer": 14,
+    "site": "residual",
+    "pooling": "mean",
+    "penalty": 1.0,
+    "selected_baseline": false
+  }
+}

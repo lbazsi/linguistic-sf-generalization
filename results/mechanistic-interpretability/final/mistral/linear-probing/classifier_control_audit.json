@@ -1,0 +1,517 @@
+{
+  "family": "mistral",
+  "revision": 2,
+  "controls": {
+    "concept:all": {
+      "length": {
+        "development": {
+          "n": 150,
+          "balanced_accuracy": 0.5133333333333334,
+          "roc_auc": 0.5729777777777778,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 150,
+          "balanced_accuracy": 0.5533333333333333,
+          "roc_auc": 0.5796444444444444,
+          "class_prevalence": 0.5
+        }
+      },
+      "lexical_tfidf": {
+        "development": {
+          "n": 150,
+          "balanced_accuracy": 0.9,
+          "roc_auc": 0.9640888888888889,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 150,
+          "balanced_accuracy": 0.9333333333333333,
+          "roc_auc": 0.9740444444444444,
+          "class_prevalence": 0.5
+        }
+      },
+      "constant_baseline": {
+        "balanced_accuracy": 0.5,
+        "roc_auc": 0.5
+      }
+    },
+    "linguistic:conditionality": {
+      "length": {
+        "development": {
+          "n": 300,
+          "balanced_accuracy": 0.63,
+          "roc_auc": 0.6920444444444445,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 300,
+          "balanced_accuracy": 0.64,
+          "roc_auc": 0.669888888888889,
+          "class_prevalence": 0.5
+        }
+      },
+      "lexical_tfidf": {
+        "development": {
+          "n": 300,
+          "balanced_accuracy": 0.9666666666666667,
+          "roc_auc": 0.9724888888888887,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 300,
+          "balanced_accuracy": 0.9466666666666668,
+          "roc_auc": 0.9672444444444445,
+          "class_prevalence": 0.5
+        }
+      },
+      "constant_baseline": {
+        "balanced_accuracy": 0.5,
+        "roc_auc": 0.5
+      }
+    },
+    "linguistic:epistemic_hedging": {
+      "length": {
+        "development": {
+          "n": 300,
+          "balanced_accuracy": 0.6133333333333333,
+          "roc_auc": 0.6665777777777777,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 300,
+          "balanced_accuracy": 0.6666666666666667,
+          "roc_auc": 0.7055111111111111,
+          "class_prevalence": 0.5
+        }
+      },
+      "lexical_tfidf": {
+        "development": {
+          "n": 300,
+          "balanced_accuracy": 0.97,
+          "roc_auc": 0.9994666666666666,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 300,
+          "balanced_accuracy": 0.9633333333333334,
+          "roc_auc": 0.9877777777777778,
+          "class_prevalence": 0.5
+        }
+      },
+      "constant_baseline": {
+        "balanced_accuracy": 0.5,
+        "roc_auc": 0.5
+      }
+    },
+    "linguistic:formality": {
+      "length": {
+        "development": {
+          "n": 300,
+          "balanced_accuracy": 0.75,
+          "roc_auc": 0.8306888888888888,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 300,
+          "balanced_accuracy": 0.77,
+          "roc_auc": 0.8478888888888889,
+          "class_prevalence": 0.5
+        }
+      },
+      "lexical_tfidf": {
+        "development": {
+          "n": 300,
+          "balanced_accuracy": 0.9266666666666666,
+          "roc_auc": 0.9738666666666667,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 300,
+          "balanced_accuracy": 0.8666666666666667,
+          "roc_auc": 0.9423333333333332,
+          "class_prevalence": 0.5
+        }
+      },
+      "constant_baseline": {
+        "balanced_accuracy": 0.5,
+        "roc_auc": 0.5
+      }
+    },
+    "linguistic:genericity": {
+      "length": {
+        "development": {
+          "n": 300,
+          "balanced_accuracy": 0.5433333333333333,
+          "roc_auc": 0.5491333333333334,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 300,
+          "balanced_accuracy": 0.54,
+          "roc_auc": 0.5489333333333333,
+          "class_prevalence": 0.5
+        }
+      },
+      "lexical_tfidf": {
+        "development": {
+          "n": 300,
+          "balanced_accuracy": 0.6966666666666667,
+          "roc_auc": 0.7938666666666666,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 300,
+          "balanced_accuracy": 0.6733333333333333,
+          "roc_auc": 0.7438222222222222,
+          "class_prevalence": 0.5
+        }
+      },
+      "constant_baseline": {
+        "balanced_accuracy": 0.5,
+        "roc_auc": 0.5
+      }
+    },
+    "linguistic:modal_strength": {
+      "length": {
+        "development": {
+          "n": 300,
+          "balanced_accuracy": 0.52,
+          "roc_auc": 0.5292888888888889,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 300,
+          "balanced_accuracy": 0.5366666666666666,
+          "roc_auc": 0.5254444444444444,
+          "class_prevalence": 0.5
+        }
+      },
+      "lexical_tfidf": {
+        "development": {
+          "n": 300,
+          "balanced_accuracy": 0.73,
+          "roc_auc": 0.7184888888888887,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 300,
+          "balanced_accuracy": 0.7033333333333334,
+          "roc_auc": 0.7374222222222222,
+          "class_prevalence": 0.5
+        }
+      },
+      "constant_baseline": {
+        "balanced_accuracy": 0.5,
+        "roc_auc": 0.5
+      }
+    },
+    "linguistic:narrative_framing": {
+      "length": {
+        "development": {
+          "n": 300,
+          "balanced_accuracy": 0.7566666666666666,
+          "roc_auc": 0.8209777777777777,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 300,
+          "balanced_accuracy": 0.7,
+          "roc_auc": 0.7754000000000001,
+          "class_prevalence": 0.5
+        }
+      },
+      "lexical_tfidf": {
+        "development": {
+          "n": 300,
+          "balanced_accuracy": 0.9099999999999999,
+          "roc_auc": 0.9610666666666666,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 300,
+          "balanced_accuracy": 0.8833333333333333,
+          "roc_auc": 0.9590666666666665,
+          "class_prevalence": 0.5
+        }
+      },
+      "constant_baseline": {
+        "balanced_accuracy": 0.5,
+        "roc_auc": 0.5
+      }
+    },
+    "linguistic:nominalization": {
+      "length": {
+        "development": {
+          "n": 300,
+          "balanced_accuracy": 0.6333333333333333,
+          "roc_auc": 0.6988222222222222,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 300,
+          "balanced_accuracy": 0.6499999999999999,
+          "roc_auc": 0.7147555555555556,
+          "class_prevalence": 0.5
+        }
+      },
+      "lexical_tfidf": {
+        "development": {
+          "n": 300,
+          "balanced_accuracy": 0.9666666666666667,
+          "roc_auc": 0.9976444444444444,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 300,
+          "balanced_accuracy": 0.94,
+          "roc_auc": 0.9912000000000001,
+          "class_prevalence": 0.5
+        }
+      },
+      "constant_baseline": {
+        "balanced_accuracy": 0.5,
+        "roc_auc": 0.5
+      }
+    },
+    "linguistic:pronoun_distribution": {
+      "length": {
+        "development": {
+          "n": 300,
+          "balanced_accuracy": 0.5933333333333333,
+          "roc_auc": 0.6502666666666667,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 300,
+          "balanced_accuracy": 0.5933333333333334,
+          "roc_auc": 0.6276666666666667,
+          "class_prevalence": 0.5
+        }
+      },
+      "lexical_tfidf": {
+        "development": {
+          "n": 300,
+          "balanced_accuracy": 0.9466666666666667,
+          "roc_auc": 0.9733333333333334,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 300,
+          "balanced_accuracy": 0.95,
+          "roc_auc": 0.9807555555555556,
+          "class_prevalence": 0.5
+        }
+      },
+      "constant_baseline": {
+        "balanced_accuracy": 0.5,
+        "roc_auc": 0.5
+      }
+    },
+    "linguistic:subordination": {
+      "length": {
+        "development": {
+          "n": 300,
+          "balanced_accuracy": 0.7733333333333333,
+          "roc_auc": 0.8554444444444442,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 300,
+          "balanced_accuracy": 0.74,
+          "roc_auc": 0.8222,
+          "class_prevalence": 0.5
+        }
+      },
+      "lexical_tfidf": {
+        "development": {
+          "n": 300,
+          "balanced_accuracy": 0.9299999999999999,
+          "roc_auc": 0.9763777777777777,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 300,
+          "balanced_accuracy": 0.95,
+          "roc_auc": 0.9873555555555555,
+          "class_prevalence": 0.5
+        }
+      },
+      "constant_baseline": {
+        "balanced_accuracy": 0.5,
+        "roc_auc": 0.5
+      }
+    },
+    "linguistic:tense_aspect": {
+      "length": {
+        "development": {
+          "n": 300,
+          "balanced_accuracy": 0.5433333333333333,
+          "roc_auc": 0.5724,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 300,
+          "balanced_accuracy": 0.55,
+          "roc_auc": 0.5772888888888889,
+          "class_prevalence": 0.5
+        }
+      },
+      "lexical_tfidf": {
+        "development": {
+          "n": 300,
+          "balanced_accuracy": 0.9133333333333333,
+          "roc_auc": 0.9789777777777777,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 300,
+          "balanced_accuracy": 0.86,
+          "roc_auc": 0.9203111111111112,
+          "class_prevalence": 0.5
+        }
+      },
+      "constant_baseline": {
+        "balanced_accuracy": 0.5,
+        "roc_auc": 0.5
+      }
+    },
+    "linguistic:voice": {
+      "length": {
+        "development": {
+          "n": 300,
+          "balanced_accuracy": 0.6699999999999999,
+          "roc_auc": 0.7340444444444443,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 300,
+          "balanced_accuracy": 0.6666666666666666,
+          "roc_auc": 0.7272000000000001,
+          "class_prevalence": 0.5
+        }
+      },
+      "lexical_tfidf": {
+        "development": {
+          "n": 300,
+          "balanced_accuracy": 0.9733333333333334,
+          "roc_auc": 0.9983111111111111,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 300,
+          "balanced_accuracy": 0.9766666666666667,
+          "roc_auc": 0.996,
+          "class_prevalence": 0.5
+        }
+      },
+      "constant_baseline": {
+        "balanced_accuracy": 0.5,
+        "roc_auc": 0.5
+      }
+    },
+    "linguistic:constituent_order": {
+      "length": {
+        "development": {
+          "n": 300,
+          "balanced_accuracy": 1.0,
+          "roc_auc": 1.0,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 300,
+          "balanced_accuracy": 1.0,
+          "roc_auc": 1.0,
+          "class_prevalence": 0.5
+        }
+      },
+      "lexical_tfidf": {
+        "development": {
+          "n": 300,
+          "balanced_accuracy": 1.0,
+          "roc_auc": 1.0,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 300,
+          "balanced_accuracy": 0.9966666666666666,
+          "roc_auc": 1.0,
+          "class_prevalence": 0.5
+        }
+      },
+      "constant_baseline": {
+        "balanced_accuracy": 0.5,
+        "roc_auc": 0.5
+      }
+    },
+    "linguistic:inflectional_synthesis": {
+      "length": {
+        "development": {
+          "n": 300,
+          "balanced_accuracy": 1.0,
+          "roc_auc": 1.0,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 300,
+          "balanced_accuracy": 1.0,
+          "roc_auc": 1.0,
+          "class_prevalence": 0.5
+        }
+      },
+      "lexical_tfidf": {
+        "development": {
+          "n": 300,
+          "balanced_accuracy": 0.9866666666666667,
+          "roc_auc": 1.0,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 300,
+          "balanced_accuracy": 0.99,
+          "roc_auc": 1.0,
+          "class_prevalence": 0.5
+        }
+      },
+      "constant_baseline": {
+        "balanced_accuracy": 0.5,
+        "roc_auc": 0.5
+      }
+    },
+    "linguistic:fusion": {
+      "length": {
+        "development": {
+          "n": 300,
+          "balanced_accuracy": 1.0,
+          "roc_auc": 1.0,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 300,
+          "balanced_accuracy": 1.0,
+          "roc_auc": 0.9999999999999999,
+          "class_prevalence": 0.5
+        }
+      },
+      "lexical_tfidf": {
+        "development": {
+          "n": 300,
+          "balanced_accuracy": 1.0,
+          "roc_auc": 1.0,
+          "class_prevalence": 0.5
+        },
+        "test": {
+          "n": 300,
+          "balanced_accuracy": 0.9966666666666666,
+          "roc_auc": 0.9997777777777778,
+          "class_prevalence": 0.5
+        }
+      },
+      "constant_baseline": {
+        "balanced_accuracy": 0.5,
+        "roc_auc": 0.5
+      }
+    }
+  },
+  "interpretation": "High activation-classifier AUC must be compared with lexical and length baselines; concept detection is not welfare endorsement."
+}
