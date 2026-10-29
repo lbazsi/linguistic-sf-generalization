@@ -127,7 +127,7 @@ python run.py judge-aggregate --model gemma2
 python ../cross-model-analysis/run.py --stage all
 ```
 
-The standard judged budget is 14 features × two matched adapter conditions × 100 held-out scenarios = 2,800 continuations per model. At two judges and ten items per API request, this corresponds to 560 judging requests per model, excluding retries; token usage and actual prices determine monetary cost. Generation and judging are separately invoked. Direction extraction saves only small unit vectors and calibration scales, never token activations. Cross-model replication and synthesis use the standalone cross-model-analysis package.
+The standard matched judged budget is 14 features × two matched adapter conditions × 100 held-out scenarios = 2,800 **paired scenarios**, with two generation arms per pair: **5,600 continuations per model**. At two judges and batches of 20 responses per request, this corresponds to **560 judging requests per model**, excluding retries; token usage and actual prices determine monetary cost. Generation and judging are separately invoked. Direction extraction saves only small unit vectors and calibration scales, never token activations. Cross-model replication and synthesis use the standalone cross-model-analysis package.
 
 The implementation is intended for a single GPU with sequential base/adapter loading. Its numerical correctness, model-specific compatibility, observed memory use and full evaluation integration still require an end-to-end GPU pilot before interpreting research findings.
 
@@ -147,3 +147,27 @@ python export_final_results.py --model llama31 --execute
 The exporter copies finished model-difference, probing and LoRA scalar files, complete steering screens and selections, judgment summary and aggregated matched outcomes, and final plots into `results/mechanistic-interpretability/<model>/`. It deliberately excludes raw `judged/` generations, judge-specific files, partial checkpoints, caches, pilots, temporary archives, and large direction tensors. It does not delete anything. Existing different results are protected unless `--overwrite` is specified. Before claiming that an evaluation is complete, separately validate generation/judge coverage, truncation rates and output quality. The Llama matched evaluation produced 5,600 nonempty generations; 3,545 (63.3%) reached the 256-token cap, a consequential limitation requiring disclosure and a representative completion-quality review.
 
 A model with an older `outputs/revision_2/<model>/` location can be exported without rearranging that GPU instance by specifying `--source outputs/revision_2/<model>`. For copying directly to a fresh Codespace, transfer the **model's finished GPU `outputs/<model>/` directory** separately from this repository and run the exporter there; if a transfer should contain only publishable artifacts, export into a staging directory first. Existing `results/mechanistic-interpretability/v0/` historical outputs should remain intact.
+
+
+## Portable judged continuation on GPU instances
+
+Use the same checked-in code on each GPU instance after restoring its model-specific adapter tensors and its existing `outputs/<model>/activation-steering/` selection and direction artifacts. The new `run_judged_remainder.py` is independent of instance mount paths, uses `config/pipeline.yaml`, and never changes the model family or the held-out scenario prompt. Check required direction tensors, base access and adapter identity before an expensive full run. A fresh Gemma instance also needs its original checkpoint tensors and provenance summaries; scalar results alone cannot recreate them.
+
+Run from `mechanistic-interpretability/`:
+
+```bash
+# Free local generation only; safe to resume after interruption.
+python run_judged_remainder.py --model qwen3 --stage generate
+python run_judged_remainder.py --model mistral --stage generate
+
+# Separately authorize paid judging after reviewing the generated continuations.
+python run_judged_remainder.py --model qwen3 --stage judge --execute-judges
+python run_judged_remainder.py --model mistral --stage judge --execute-judges
+
+# Alternatively, generate, verify, judge, aggregate, plot, export in one run:
+python run_judged_remainder.py --model gemma2 --stage all --execute-judges
+```
+
+Only run one model command per GPU and use the model family matching the instance. The generator saves exactly the same directory layout for all families. It archives legacy/incompatible raw `judged/` and `judgments/` outputs under the *local*, excluded `activation-steering/.work/archived_judged_<timestamp>/`. It does not touch completed layer screens, selected configurations, direction tensors, LoRA summaries or other families. V2 checkpoints resume in place. A strict coverage/pair-consistency gate and a 25% overall-and-per-arm token-limit threshold prevent paid judge invocation if generation is incomplete or too truncated. Surface sentence stopping is heuristic, so inspect a stratified sample of actual continuations and output-language shifts before relying on the outcome. The default `generate` stage never invokes remote APIs. `judge` and `all` require explicit `--execute-judges` authorization; paid judgments are not initiated by a repository pull.
+
+The final exporter retains only small publishable scalar/plot outputs, under `results/mechanistic-interpretability/<model>/`, while GPU-private raw responses and judge files remain in `mechanistic-interpretability/outputs/<model>/`. On a different machine, copy required raw inputs and adapter artifacts before resuming; do not mistake the exported results for model checkpoints. Conflicting previously published results require explicit `--overwrite-export` after reviewing the intended replacement. Cross-model analysis is run only after all four families' final results are present.
