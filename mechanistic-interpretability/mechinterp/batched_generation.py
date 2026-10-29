@@ -14,9 +14,11 @@ import torch
 from .common import load_screening,run_dir,scenario_prompt,read_data,write_rows,batches
 from .models import load_model,unload,encode,steer
 from .directions import load_direction_bundle
+from .sentence_stop import SentenceBoundaryStop
+from transformers import StoppingCriteriaList
 
 
-PROTOCOL = "paired_batch_rng_v1"
+PROTOCOL = "paired_batch_sentence_v2"
 
 
 def batch_seed(seed, scenarios):
@@ -26,15 +28,18 @@ def batch_seed(seed, scenarios):
     return int(seed) + int(scenarios[0]["scenario_id"])
 
 
-def decode_generated_batch(output, prompt_length, tokenizer, model, max_new):
+def decode_generated_batch(output, prompt_length, tokenizer, model, max_new, stop_lengths=None):
     """Trim at the first EOS, ignoring subsequent batch-padding tokens."""
     eos=model.generation_config.eos_token_id
     if eos is None:
         eos=tokenizer.eos_token_id
     eos_set={int(v) for v in (eos if isinstance(eos,(list,tuple)) else [eos]) if v is not None}
     result=[]
-    for seq in output:
+    for index,seq in enumerate(output):
         tail=seq[prompt_length:].tolist()
+        sentence_length=stop_lengths[index] if stop_lengths is not None else None
+        if sentence_length is not None:
+            tail=tail[:sentence_length]
         stop=next((i for i,t in enumerate(tail) if int(t) in eos_set),None)
         ended=stop is not None
         tokens=tail[:stop+1] if ended else tail
@@ -44,12 +49,13 @@ def decode_generated_batch(output, prompt_length, tokenizer, model, max_new):
             "ended_with_eos":ended,
             "reached_token_limit":bool(not ended and len(tokens)>=max_new),
             "max_new_tokens":int(max_new),
+            "stop_reason":("eos" if ended else "sentence_boundary" if sentence_length is not None else "token_limit"),
         })
     return result
 
 
 def validate_batch_pairs(pairs, scenarios, feature, adapter, policy, strength,
-                         max_new, requested_batch_size, master_seed):
+                         max_new, requested_batch_size, master_seed, min_new_tokens=48):
     """Check paired metadata and frozen canonical batch grouping on every restart."""
     reference={int(x["scenario_id"]):x for x in scenarios}
     groups={}
@@ -77,6 +83,7 @@ def validate_batch_pairs(pairs, scenarios, feature, adapter, policy, strength,
                 or int(row["batch_size_requested"])!=requested_batch_size
                 or list(row["batch_scenario_ids"])!=ids
                 or int(row["max_new_tokens"])!=max_new
+                or int(row.get("min_new_tokens", -1))!=min_new_tokens
                 or abs(float(row["strength"])-expected_strength)>1e-7):
                 raise ValueError(f"Incompatible batched generation metadata {feature}/{adapter}/{sid}/{arm}")
     return seen
@@ -106,6 +113,9 @@ def generate_batched(cfg,family,policy="prompt_last"):
     gen=cfg["steering"]["generation"]
     size=int(gen.get("batch_size",1))
     max_new=int(gen["max_new_tokens"])
+    min_new=int(gen.get("min_new_tokens",48))
+    if not 1<=min_new<max_new:
+        raise ValueError("Sentence stopping minimum must be within the generation budget")
     if not 2<=size<=32:
         raise ValueError("Batched generation requires batch_size between 2 and 32")
     if max_new<=0:
@@ -137,7 +147,7 @@ def generate_batched(cfg,family,policy="prompt_last"):
                 pairs=[{"scenario_id":a["scenario_id"],"unsteered":a,"steered":z}
                        for a,z in zip(left,right)]
                 validate_batch_pairs(pairs,scenarios,spec["feature"],adapter,
-                                     spec["policy"],spec["strength"],max_new,size,gen["seed"])
+                                     spec["policy"],spec["strength"],max_new,size,gen["seed"],min_new)
                 print(f"Skipping verified batch generation {stem}",flush=True)
                 continue
             if any(p.exists() for p in arm_files.values()) and not partial.exists():
@@ -153,7 +163,7 @@ def generate_batched(cfg,family,policy="prompt_last"):
                 saved=read_data(partial) if partial.exists() else []
                 complete=validate_batch_pairs(
                     saved,scenarios,feature,adapter,spec["policy"],spec["strength"],
-                    max_new,size,gen["seed"])
+                    max_new,size,gen["seed"],min_new)
                 for group in groups:
                     ids=[int(x["scenario_id"]) for x in group]
                     used=[sid in complete for sid in ids]
@@ -170,6 +180,7 @@ def generate_batched(cfg,family,policy="prompt_last"):
                     for arm in ("unsteered","steered"):
                         strength=0. if arm=="unsteered" else float(spec["strength"])
                         torch.manual_seed(seed)
+                        stop=SentenceBoundaryStop(tok,prompt_length,len(group),min_new)
                         with steer(model,int(spec["layer"]),spec["site"],unit*scale,
                                    strength,spec["policy"]):
                             output=model.generate(
@@ -177,8 +188,9 @@ def generate_batched(cfg,family,policy="prompt_last"):
                                 do_sample=gen["do_sample"],
                                 temperature=gen["temperature"],
                                 top_p=gen["top_p"],
-                                pad_token_id=tok.pad_token_id)
-                        results[arm]=decode_generated_batch(output,prompt_length,tok,model,max_new)
+                                pad_token_id=tok.pad_token_id,
+                                stopping_criteria=StoppingCriteriaList([stop]))
+                        results[arm]=decode_generated_batch(output,prompt_length,tok,model,max_new,stop.stopped_lengths)
                         if len(results[arm])!=len(group):
                             raise RuntimeError("Inconsistent batched output size")
                     for index,item in enumerate(group):
@@ -196,6 +208,7 @@ def generate_batched(cfg,family,policy="prompt_last"):
                                 "generation_seed":seed,
                                 "sampling_protocol":PROTOCOL,
                                 "batch_size_requested":size,
+                                "min_new_tokens":min_new,
                                 "batch_scenario_ids":ids,
                                 **results[arm][index]
                             }
@@ -205,7 +218,7 @@ def generate_batched(cfg,family,policy="prompt_last"):
                     write_rows(partial,saved)
                     print(f"Generated {feature}/{adapter}: {len(saved)}/{len(scenarios)} pairs",flush=True)
                 validate_batch_pairs(saved,scenarios,feature,adapter,spec["policy"],
-                                     spec["strength"],max_new,size,gen["seed"])
+                                     spec["strength"],max_new,size,gen["seed"],min_new)
                 if len(saved)!=len(scenarios):
                     raise ValueError(f"Incomplete generation {feature}/{adapter}")
                 for arm,path in arm_files.items():
