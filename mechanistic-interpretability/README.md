@@ -1,162 +1,46 @@
-# Mechanistic Interpretability of Linguistic Fine-Tuning Effects
+# Mechanistic Interpretability
 
-## Research objective
+## Research question
 
-This study characterizes how semantically matched linguistic variants of animal-welfare fine-tuning data affect model representations, learned LoRA updates, and downstream animal-welfare value generalization. The analyses are observational except for exploratory activation steering. Results are compared across four pretrained model families to evaluate replication.
+How does holding animal-welfare training content approximately constant while changing its linguistic structure alter internal representations, LoRA updates, and expressed welfare-related decisions? We compare descriptive representation measurements with exploratory causal interventions, without equating decodability, association, or steering sensitivity with a unique mechanism.
 
-The four stages are (1) model-difference analysis, (2) linear probing, (3) LoRA analysis with midpoint-to-final comparison, and (4) linguistic-direction activation steering. The stage-specific methods are in [Model-difference-analysis](Model-difference-analysis/README.md), [linear-probing](linear-probing/README.md), [LoRA-analysis](LoRA-analysis/README.md), and [activation-steering](activation-steering/README.md). Cross-model replication and synthesis are specified separately in [cross-model-analysis](../cross-model-analysis/README.md).
+## Models and comparisons
 
-## Models and conditions
-
-| Family | Pretrained base checkpoint | Approximate parameters |
+| Family | Pinned pretrained base | Size |
 | --- | --- | --- |
 | Gemma 2 | `google/gemma-2-9b` | 9B |
 | Qwen 3 | `Qwen/Qwen3-8B-Base` | 8B |
 | Llama 3.1 | `meta-llama/Llama-3.1-8B` | 8B |
 | Mistral | `mistralai/Mistral-7B-v0.3` | 7B |
 
-Resolve and record an immutable checkpoint revision before training. For Qwen, explicitly verify availability and base (rather than instruct) status; do not substitute a reasoning/instruct checkpoint. For Mistral, use the v0.3 *base* model, not an Instruct checkpoint. Record access/licensing and architecture compatibility.
+Immutable checkpoint revisions are specified in [the pipeline configuration](config/pipeline.yaml). Within each family, independently trained LoRA adapters comprise English canonical, Mandarin control and 14 linguistic-feature conditions, with the unadapted base as reference. English interventions and English→Japanese constituent order use English canonical as their control; Mandarin→Korean inflectional synthesis and Mandarin→Latin fusion use Mandarin control. Cross-language differences confound typology with language identity. Lexical diversity is measured, not separately fine-tuned.
 
-For every family, evaluate the pretrained base model, English canonical adapter, Mandarin control adapter, and 14 feature adapters. The 11 English-to-English features are compared with English canonical. `constituent_order` (English→Japanese) uses English canonical as control; `inflectional_synthesis` (Mandarin→Korean) and `fusion` (Mandarin→Latin) use Mandarin control. Analyze cross-language contrasts separately because language identity and typology are confounded. `lexical_diversity` is a measured covariate, not a distinct adapter.
+Each adapter is trained from the same family-specific base with LoRA rank 16, alpha 32, zero dropout, a three-epoch schedule and seed 42, subject to architecture-compatible projection mappings. Midpoint and final adapter checkpoints are separate observations from the same training trajectory. Only one seed is used per condition.
 
-## Shared training and evaluation contracts
+## Datasets and representation protocol
 
-Reuse the reviewed paired training corpus and the existing 800-scenario evaluation benchmark. Train independent adapters from each model's identical base checkpoint: LoRA r=16, alpha=32, dropout=0, bias=none; target `q_proj,k_proj,v_proj,o_proj,gate_proj,up_proj,down_proj` when architecturally supported. Three epochs, learning rate 1e-4, cosine scheduler, warmup ratio 0.05, effective batch size 32, weight decay zero, seed 42; preserve semantic-ID validation splits and record unavoidable architecture-specific changes. Verify target coverage and trainable parameter counts before each run. Train and save midpoint and final adapters; the midpoint corresponds to half the scheduled optimizer steps, not a second independent run. Replication uses one training seed per condition, so variability from training seeds remains unmeasured.
+The study uses reviewed paired linguistic training data, the established 800-scenario behavioral evaluation with eight generalization categories, and [three supporting datasets](data/README.md): 1,000 general-domain prompts, 1,000 welfare-concept probe records and 200 steering scenarios divided into screen (20), validation (80) and test (100). Scenario and semantic-ID partitions are held fixed across within-model conditions.
 
-The evaluation contract is the existing pipeline: identical scenario IDs, prompt template, generation settings, two judges, 0–4 `target_value_support` primary outcome, and existing category/tradeoff stratification. The primary behavioral contrast is feature minus its registered control, with canonical minus base as a separate measure. Report judge reliability, invalid responses, uncertainty, and the original multiple-comparison families.
+Representations are measured at every transformer layer, at residual-stream and MLP-output sites, using final non-padding token and masked mean pooling. Base and adapter models are loaded sequentially. Inference uses BF16 where supported; statistical calculations use adequate higher precision. Token activations and pooled matrices remain transient rather than being committed to the repository.
 
-For representation analysis add **1,000 general-domain, non-animal-welfare English prompts**, independently generated in five batches of 200, assigned to predefined broad topical categories. Deduplicate exact and near-duplicate prompts and screen for welfare leakage. Preserve prompt texts, category, source batch, IDs and generation metadata in a small dataset artifact. Do not reuse probe training prompts for held-out steering evaluation. For concept probes, generate or derive balanced positive/negative statements, matched on animal mention, context, length and topic; independently label the presence of welfare concepts rather than using model response scores.
+## Analyses
 
-## Common measurement protocol
+**[Model differences](Model-difference-analysis/README.md).** On identical welfare and general-domain prompts, measure layerwise linear CKA, descriptive SVCCA and normalized representation displacement between each feature adapter and its registered control. Cross-family comparison uses layer-normalized profiles and summary statistics rather than raw coordinate alignment.
 
-- Extract representations at **every transformer layer**, including residual stream and MLP block outputs. Define hooks with respect to the forward computation (for example, post-block residual and pre-residual-add MLP output) and record exact module paths per architecture.
-- Collect both final *non-padding prompt token* and masked mean over prompt tokens, with a uniform tokenizer/padding policy. Keep tokenization-specific differences visible in the metadata.
-- Use the same semantic-ID-disjoint split assignments across matched canonical/feature examples. Use non-overlapping development and test subsets for layer/strength selection and final inference.
-- Use BF16 inference where supported, no dropout, `eval()`, no gradient tracking, fixed prompt formatting and generation seeds. Fit numerically sensitive statistics/probes in FP32/FP64.
-- Process one layer/batch/condition at a time. **Token activations are GPU-resident, transient and not persisted**: compute and accumulate sufficient statistics or probe batches online, then release buffers. Do not persist raw token activations, full activation matrices, or merged model checkpoints; pooled matrices may exist transiently on the GPU while CKA/SVCCA are calculated. The originally required midpoint/final adapter tensors remain necessary input artifacts, stored outside the repository; this project does not create additional heavyweight checkpoints.
-- Persist small artifacts sufficient to audit conclusions: run manifests, data/split hashes, model/adapter identifiers, hook maps, aggregate covariances or similarity summaries where practical, probe coefficients and metrics, small normalized steering directions if needed for rerunning steering (not token activations), scalar evaluation outputs, and plots/tables. Omit any summary that would reveal private prompt text if inputs are sensitive.
-- Device memory use depends on layer width, batch size, prompt length and whether modules emit logits or full token matrices; perform an A100 memory pilot rather than assuming unrestricted all-layer retention.
+**[Linear probing](linear-probing/README.md).** Fit separate linear classifiers for linguistic contrast and welfare-concept presence, and linear regressors for model-specific judged welfare support. Grouped 70/15/15 train/development/test splits prevent paired-item leakage. Behavioral regression uses `dual_ridge_v2`, regularization chosen only on development data, a constant-target baseline and separate held-out predictions. Lexical and length controls probe shortcut dependence. Classification accuracy establishes decodability, not causal utilization.
 
-## Sequence and outputs
+**[LoRA analysis](LoRA-analysis/README.md).** Compare effective low-rank parameter updates and module/subspace similarities across controls, features and training checkpoints. The functional analysis measures on-input update effects on a fixed stratified sample: 160 welfare prompts (category × tradeoff) and 200 general prompts (topic strata), separately for midpoint and final adapters. Report global RMS with element-count normalization, not an average of batchwise RMS values.
 
-1. Verify base revisions, adapter archives, exact datasets, condition-to-control mappings and GPU compatibility. Generate and validate the 1,000 general prompts and concept-probe dataset.
-2. Run [model-difference analysis](Model-difference-analysis/README.md) for welfare and general prompts; summarize layer/module sensitivity.
-3. Run [linear probes](linear-probing/README.md) for linguistic identification, welfare-concept detection and welfare-behavior prediction. Behavioral probes use the corrected `dual_ridge_v2` estimator with development-selected regularization and explicit baseline comparison; superseded estimator outputs are excluded.
-4. Run [LoRA analysis](LoRA-analysis/README.md) over all adapters, modules and midpoint/final steps.
-5. Run [activation steering](activation-steering/README.md) for all 14 features, both associated adapter conditions, every layer and both activation sites. The complete layerwise screening results are retained; validation selects one configuration per feature–adapter pair for a separately authorized held-out judged evaluation.
-6. Export the four families' scalar analysis artifacts for separate comparison in [cross-model-analysis](../cross-model-analysis/README.md).
+**[Activation steering](activation-steering/README.md).** Extract paired feature-minus-control directions from base-model representations, calibrate direction norms at each site and screen 14 features × two adapters × two token policies = 56 configurations across all layers/sites and signed doses. The active strength convention is `relative_activation_norm_v2`. A validation-only proxy selects 28 feature–adapter configurations, one each; random and label-shuffled directions provide diagnostic controls. The selected configurations undergo matched steered/unsteered held-out generation on 100 unseen scenarios, followed by two-judge scoring and paired statistical analysis with bootstrap intervals and FDR correction. A significant likelihood-proxy shift does not establish successful linguistic manipulation.
 
-## Inference and limitations
+## Quality control and interpretation
 
-Report paired scenario-level effects with 95% semantic-cell-cluster bootstrap confidence intervals; use cluster-aware sign-flip/permutation tests where appropriate and Benjamini–Hochberg FDR within predeclared outcome families. Separately show feature-level and held-out-domain effects. With four distinct model families, consistent signs and patterns are strong **cross-model replication evidence within this sample**, not a universal claim; seed-level uncertainty cannot be assessed with one seed. Probes demonstrate decodability, and differences in representation or LoRA parameters are descriptive. Steering supports limited intervention-based evidence but can move activations off-distribution.
+Keep direction-fitting training IDs, steering validation and final test scenarios separate. Probe development selection must not use test labels; subsequent held-out audits are conditional on the selected estimator and do not measure training-seed uncertainty. Steering pilots on development texts are exploratory; linguistic test pairs exposed by earlier pilots cannot be treated retrospectively as untouched confirmation. Judge item ordering, arm matching, response validity, coherence and language switching require explicit checks. Automated generation coverage/truncation gates are necessary but not sufficient: inspect stratified matched continuations, particularly cross-language conditions, before interpreting behavioral differences.
 
-## Reproducibility contract
+The screening proxy, judged welfare support and linguistic feature realization are distinct outcomes. Steered-versus-unsteered differences demonstrate intervention sensitivity, not proof that a linguistic direction mediates a fine-tuning effect. Negative outcomes remain part of the registered analysis. Comparisons across families remain descriptive because architectural, tokenizer and pretraining differences are not experimentally controlled.
 
-Record resolved Hugging Face base-model revision, adapter hash and checkpoint step, package/CUDA/PyTorch/Transformers/PEFT versions, hardware, random seeds, full evaluation configuration, corpus and prompt hashes, split ID lists, hook definition, pooling rule, regularization choices, normalization calibration, predeclared search space, and scoring revisions. Transient activations and model weights are deliberately excluded from committed artifacts; reproducing results requires regenerating the activations from the original inputs and external base/adapter checkpoints. Documentation here specifies planned analyses; it does not claim they have already been executed.
+## Execution and results
 
+The pipeline is configured in [`config/pipeline.yaml`](config/pipeline.yaml). `run_all.py` orchestrates local difference, probe, functional LoRA and steering-screen tasks; `run.py` exposes individual analyses, screening selection and controls. `run_judged_remainder.py` runs the matched 512-token maximum, 48-token minimum generation protocol (generation batch 32), checks coverage and truncation and, only with explicit `--execute-judges`, invokes batched remote judging (batch 20), aggregation and plots. Base-model access, adapter archives, configuration and API credentials are external prerequisites; the pipeline does not create them.
 
-## Implementation and commands
-
-The Python implementation lives in `mechinterp/`, with a single command entry point, `run.py`, configuration in `config/pipeline.yaml` and smoke tests in `tests/`. Install with `pip install -r requirements.txt` and run `python -m pytest tests -q`. The repository provides method specifications, implementation and reproducible analysis commands.
-
-On GPU images with an existing CUDA-enabled PyTorch installation, an environment created with `python3 -m venv --system-site-packages .venv` can reuse that PyTorch build. Install the full requirements file **inside** the virtual environment: its compatible NumPy, Pillow, scikit-learn, and Transformers versions must take precedence over older system-level packages. Run `python -m pip check` and the smoke tests before GPU inference. The dependency bounds exclude NumPy 2 for legacy binary compatibility and Transformers 5 pending validation of the model-loading interface. When restoring feature adapters, the loader accepts both their original numbered paths (for example, `features/conditionality_01/seed_42`) and unnumbered paths. It verifies the presence of both `adapter_config.json` and `adapter_model.safetensors`; use the original checksum manifest separately for byte-integrity verification.
-
-```bash
-cd mechanistic-interpretability
-python run.py validate
-python run.py validate --check-screening   # requires steering_screening.jsonl
-python run.py difference --model gemma2 --condition epistemic_hedging
-python run.py probe --model gemma2 --condition canonical --task concept
-python run.py probe --model gemma2 --condition canonical --task linguistic --feature epistemic_hedging
-python run.py probe --model gemma2 --condition canonical --task behavior
-python run.py lora --model gemma2
-python run.py lora-functional --model gemma2
-python run.py steering-screen --model gemma2 --feature epistemic_hedging --condition canonical
-python run.py steering-screen --model gemma2 --feature epistemic_hedging --condition epistemic_hedging
-python run.py steering-select --model gemma2
-python run.py judge-plan --model gemma2
-python run.py judge-generate --model gemma2
-python run.py judge-run --model gemma2 --execute-judges  # explicit API charges
-python run.py judge-aggregate --model gemma2
-python ../cross-model-analysis/run.py --stage all
-```
-
-Screen all registered features and both matching adapter conditions before invoking `steering-select`. Repeat separately with `--policy generation` for generation-step interventions. The judged evaluation uses 100 held-out scenarios per selected feature–adapter pair and matched steered/unsteered continuations. `judge-plan` prints/writes workload counts; actual monetary pricing requires observed or independently supplied prompt/completion token estimates and current per-judge prices.
-
-The configuration requires the independently trained midpoint/final adapter checkpoints and their provenance summaries. Adapter tensors remain outside GitHub; GPU analyses write under `outputs/<model>/<stage>/`. Only validated final artifacts are promoted to the repository's `results/mechanistic-interpretability/final/<model>/` tree.
-
-### Verification and current boundaries
-
-Unit smoke tests verify data parsing, grouped splits, key statistics and hook behavior without downloading large models. Full GPU validation must separately verify architecture hooks, PEFT adapter reassembly, CUDA memory use, Qwen/Mistral/Llama compatibility and agreement of generated continuations with the original evaluator. Probe metrics, model differences and LoRA geometry are descriptive; observed intervention effects are not an identification of training-time causation. The current steering screen ranks by welfare log-probability change; linguistic-manipulation and coherence diagnostics and matched random-direction controls require additional validation before strong causal interpretation. No judge stage is called automatically from analysis commands.
-
-
-## Complete local execution sequence
-
-`run_all.py` lists local experiments by default; `--execute` is required to launch them and `--resume` skips existing completed result files. This orchestration never invokes API judges.
-
-```bash
-cd mechanistic-interpretability
-pip install -r requirements.txt
-python -m pytest tests -q
-python run.py validate --check-screening
-
-# Preview each local workload before execution.
-python run_all.py --model gemma2 --stage difference
-python run_all.py --model gemma2 --stage probes
-python run_all.py --model gemma2 --stage lora
-python run_all.py --model gemma2 --stage steering
-
-# Run individual stages as GPU capacity permits:
-python run_all.py --model gemma2 --stage difference --execute --resume
-python run_all.py --model gemma2 --stage probes --execute --resume
-python run_all.py --model gemma2 --stage lora --execute --resume
-python run_all.py --model gemma2 --stage steering --execute --resume
-
-# One selected configuration per feature-adapter pair, across both token policies.
-python run.py steering-select --model gemma2
-python run.py steering-controls --model gemma2
-python run.py plots --model gemma2
-
-# Deliberately separate expensive judged evaluation.
-python run.py judge-plan --model gemma2
-python run.py judge-generate --model gemma2
-python run.py judge-run --model gemma2 --execute-judges
-python run.py judge-aggregate --model gemma2
-
-# Repeat on qwen3, llama31, and mistral after training/evaluation.
-python ../cross-model-analysis/run.py --stage all
-```
-
-The standard matched judged budget is 14 features × two matched adapter conditions × 100 held-out scenarios = 2,800 **paired scenarios**, with two generation arms per pair: **5,600 continuations per model**. At two judges and batches of 20 responses per request, this corresponds to **560 judging requests per model**, excluding retries; token usage and actual prices determine monetary cost. Generation and judging are separately invoked. Direction extraction saves only small unit vectors and calibration scales, never token activations. Cross-model replication and synthesis use the standalone cross-model-analysis package.
-
-Execution uses sequential base/adapter loading on a single GPU. Model-specific compatibility and output-quality validation remain part of reproducibility assessment.
-
-
-## Final results and publication
-
-The authoritative analysis tree is `results/mechanistic-interpretability/final/<model>/`, with four stage directories and `plots/`. Each stage contains only its final accepted outputs; no `revision_2/`, superseded probe files, pilots, or intermediate checkpoints belong in this tree. Corrected behavioral-probe records are identified by `method: dual_ridge_v2`. Cross-model analyses read the flat final stage directories and exclude earlier behavioral estimators.
-
-GPU working files remain under `mechanistic-interpretability/outputs/<model>/`. The exporter selects scalar results, steering screens and aggregate judgments, and figures; raw generations, judge-specific records, direction tensors and temporary artifacts require separate archival where needed. Validate the completeness and provenance of each stage before promotion into the final tree.
-
-## Portable judged continuation on GPU instances
-
-Use the same checked-in code on each GPU instance after restoring its model-specific adapter tensors and its existing `outputs/<model>/activation-steering/` selection and direction artifacts. The new `run_judged_remainder.py` is independent of instance mount paths, uses `config/pipeline.yaml`, and never changes the model family or the held-out scenario prompt. Check required direction tensors, base access and adapter identity before an expensive full run. A fresh Gemma instance also needs its original checkpoint tensors and provenance summaries; scalar results alone cannot recreate them.
-
-Run from `mechanistic-interpretability/`:
-
-```bash
-# Free local generation only; safe to resume after interruption.
-python run_judged_remainder.py --model qwen3 --stage generate
-python run_judged_remainder.py --model mistral --stage generate
-
-# Separately authorize paid judging after reviewing the generated continuations.
-python run_judged_remainder.py --model qwen3 --stage judge --execute-judges
-python run_judged_remainder.py --model mistral --stage judge --execute-judges
-
-# Alternatively, generate, verify, judge, aggregate, plot, export in one run:
-python run_judged_remainder.py --model gemma2 --stage all --execute-judges
-```
-
-Only run one model command per GPU and use the model family matching the instance. The generator saves exactly the same directory layout for all families. It archives legacy/incompatible raw `judged/` and `judgments/` outputs under the *local*, excluded `activation-steering/.work/archived_judged_<timestamp>/`. It does not touch completed layer screens, selected configurations, direction tensors, LoRA summaries or other families. V2 checkpoints resume in place. A strict coverage/pair-consistency gate and a 25% overall-and-per-arm token-limit threshold prevent paid judge invocation if generation is incomplete or too truncated. Surface sentence stopping is heuristic, so inspect a stratified sample of actual continuations and output-language shifts before relying on the outcome. The default `generate` stage never invokes remote APIs. `judge` and `all` require explicit `--execute-judges` authorization; paid judgments are not initiated by a repository pull.
-
-Publish validated, supersession-free artifacts under `results/mechanistic-interpretability/final/<model>/`. Local working exports and GPU output directories are not authoritative final archives. Original model and adapter checkpoints remain external to the repository; cross-model synthesis requires comparable final stages across all four families.
+Temporary GPU outputs are kept in `outputs/<model>/`; accepted compact results are organized under `../results/mechanistic-interpretability/final/<model>/`, with stage directories `model-difference-analysis/`, `linear-probing/`, `LoRA-analysis/`, `activation-steering/`, and `plots/`. Earlier analysis versions are retained separately and must not be combined with corrected estimators or strength conventions. Models' raw direction tensors, adapter weights and transitory representations are not publication artifacts in Git. The independent [cross-model analysis](../cross-model-analysis/README.md) examines replication and heterogeneity.

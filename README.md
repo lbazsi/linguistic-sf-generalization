@@ -112,7 +112,7 @@ Semantic preservation is a design objective checked through automated review. Ch
 
 ## Fine-tuning
 
-The [fine-tuning pipeline](fine_tuning/README.md) uses the pretrained **`google/gemma-2-9b`** base causal language model. Training applies the ordinary causal-language-model objective to complete texts, without a chat template or preference objective.
+The [fine-tuning pipeline](fine_tuning/README.md) is applied independently to four pretrained base causal language models: **Gemma 2 9B** (`google/gemma-2-9b`), **Qwen 3 8B Base** (`Qwen/Qwen3-8B-Base`), **Llama 3.1 8B** (`meta-llama/Llama-3.1-8B`), and **Mistral 7B v0.3** (`mistralai/Mistral-7B-v0.3`). Model revisions are pinned per family. Each family uses the same semantic training contrasts with separately trained adapters; training applies the ordinary causal-language-model objective to complete texts, without a chat template or preference objective.
 
 The default configuration uses:
 
@@ -180,15 +180,13 @@ The current analysis produces descriptive scores, paired differences, and lexica
 
 Cross-language results combine the intended typological contrast with differences in vocabulary, tokenization, language proficiency, and other linguistic properties. They cannot independently identify the effect of a single grammatical property. Because evaluation is in English, they also measure transfer from non-English training into English responses.
 
-The default experiment uses one base model and one training seed. Behavioral scores depend on the scenario distribution, continuation format, and automated judges; they do not establish broad deployment reliability or a mechanistic explanation.
+The design uses four base-model families and one training seed per condition; between-seed variability remains unmeasured. Behavioral scores depend on the scenario distribution, continuation format, and automated judges; they do not establish broad deployment reliability or a mechanistic explanation.
 
-## Current implementation and artifact status
+## Mechanistic investigation and research artifacts
 
-The repository currently contains implementation code, configuration files, prompts, feature definitions, and component documentation for dataset generation, LoRA training, behavioral evaluation, and lexical-diversity analysis.
+The [mechanistic-interpretability pipeline](mechanistic-interpretability/README.md) applies the same four-stage protocol to Gemma 2, Qwen 3, Llama 3.1 and Mistral: layerwise model-difference analysis, linear decoding probes, LoRA parameter/functional analysis, and contrastive linguistic-direction activation steering. Evaluation uses separate screening/validation/test partitions, paired held-out generations and two independent automated judges. The [cross-model analysis](cross-model-analysis/README.md) compares within-model effect patterns without directly aligning hidden coordinates between architectures.
 
-Generated corpora, trained adapters, run manifests, model responses, judgments, and aggregate results are **not committed in the current repository snapshot**. The data and output directories contain placeholders. Consequently, this overview documents the implemented methodology and configured experiment; it does not report completed empirical findings.
-
-There is currently no dedicated activation-probing, mechanistic-analysis, or causal-intervention pipeline in this repository. Midpoint and final adapters provide artifacts that can support subsequent model comparisons.
+The repository retains reviewed datasets, behavioral evaluation results and versioned mechanistic result archives. The authoritative completed mechanistic outputs are organized under `results/mechanistic-interpretability/final/<model>/` when validated; historical versions remain separate. Base model weights, adapter tensors and transient activations are not stored in Git. The result directories are empirical records, not evidence that every result supports the research hypothesis.
 
 ## Repository guide
 
@@ -212,14 +210,16 @@ Run the components in dependency order:
 1. Construct, review, and finalize the synthetic training datasets; measure their lexical diversity.
 2. Verify the inputs and train the canonical, source-language-control, and feature adapters.
 3. Generate and review evaluation scenarios; generate continuations; run both judges; aggregate scores and analyze lexical diversity.
+4. Run within-family mechanistic analyses for all four base models, then compare artifact-complete results across model families.
 
-Each component has its own `requirements.txt`. API stages use OpenRouter credentials configured through the component's `.env` file. Local training and continuation generation require suitable GPU resources and Hugging Face access to Gemma. The synthetic-data lexical measurements also use the Gemma tokenizer.
+Each component has its own `requirements.txt`. API stages use OpenRouter credentials configured through the component's `.env` file. Local training, probing and continuation generation require suitable GPU resources and access to the respective pinned base checkpoints. The synthetic-data lexical measurements use the configured Gemma tokenizer.
 
 The active configuration files are:
 
 - [Dataset generation](synthetic_data_generation/LoRA_training/config/configs.yaml)
 - [Fine-tuning](fine_tuning/config/training.yaml)
 - [Evaluation](evaluation/config/config.yaml)
+- [Mechanistic interpretability](mechanistic-interpretability/config/pipeline.yaml)
 
 Generation and evaluation manifests record configuration and prompt hashes, input/output hashes, model/provider settings, seeds, and token usage where applicable. Training summaries record the exact resolved model revision and data provenance. API provider fallback is disabled in the configured roles. These records support auditing and rerunning documented conditions; they do not guarantee identical outputs from hosted models.
 
