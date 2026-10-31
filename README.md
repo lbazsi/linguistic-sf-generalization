@@ -210,8 +210,8 @@ The repository retains reviewed datasets, behavioral evaluation results and vers
 | [Evaluation](evaluation/README.md) | Scenario categories, continuation format, judging rubric, aggregation, and analysis commands |
 | [Cross-model analysis](cross-model-analysis/README.md) | Behavioral replication and comparison of cross-family mechanistic results |
 | [Mechanistic interpretability](mechanistic-interpretability/README.md) | Within-model representations, probes, LoRA geometry, and steering |
-| [Further research directions](further_research_directions/generalization_from_linguistics.md) | Proposed domain-general linguistic fine-tuning experiment |
-| [Linguistic feature interactions](further_research_directions/linguistic_feature_interactions.md) | Proposed study of combined feature effects, amplification, and cancellation |
+| [Further research directions](https://github.com/lbazsi/future-research/blob/main/linguistic/generalization_from_linguistics.md) | Proposed domain-general linguistic fine-tuning experiment |
+| [Linguistic feature interactions](https://github.com/lbazsi/future-research/blob/main/linguistic/linguistic_feature_interactions.md) | Proposed study of combined feature effects, amplification, and cancellation |
 
 This README describes the research question, design, and interpretation. Component READMEs provide the detailed execution procedures and artifact schemas. Configuration files specify the active parameters.
 
@@ -239,10 +239,10 @@ The generation pipeline supports resumable pilots through `--feature` and `--max
 
 ## Further research
 
-The documented follow-up in [Generalization from linguistic fine-tuning](further_research_directions/generalization_from_linguistics.md) would apply linguistic transformations to a broad, domain-general corpus and then evaluate animal-welfare behavior. That design tests cross-domain behavioral transfer without directly teaching animal-welfare values in the fine-tuning corpus.
+The documented follow-up in [Generalization from linguistic fine-tuning](https://github.com/lbazsi/future-research/blob/main/linguistic/generalization_from_linguistics.md) would apply linguistic transformations to a broad, domain-general corpus and then evaluate animal-welfare behavior. That design tests cross-domain behavioral transfer without directly teaching animal-welfare values in the fine-tuning corpus.
 
-A separate proposal, [Interactions between linguistic features and value generalization](further_research_directions/linguistic_feature_interactions.md), would test whether combining or reducing features creates additive, amplifying, or counteracting behavioral effects, using matched single-feature and combined-feature fine-tunes.
+A separate proposal, [Interactions between linguistic features and value generalization](https://github.com/lbazsi/future-research/blob/main/linguistic/linguistic_feature_interactions.md), would test whether combining or reducing features creates additive, amplifying, or counteracting behavioral effects, using matched single-feature and combined-feature fine-tunes.
 
-A third proposal, [Linguistic structure and value propagation in synthetic data generation](further_research_directions/linguistic_structure_in_synthetic_data_generation.md), would investigate whether linguistic effects influence the value content of generated datasets and potentially propagate through subsequent training rounds.
+A third proposal, [Linguistic structure and value propagation in synthetic data generation](https://github.com/lbazsi/future-research/blob/main/linguistic/linguistic_structure_in_synthetic_data_generation.md), would investigate whether linguistic effects influence the value content of generated datasets and potentially propagate through subsequent training rounds.
 
 Future empirical reports can be organized by experiment, with each report identifying its hypothesis, configuration, dataset and model artifacts, controls, analysis, results, and limitations. The shared semantic IDs, feature registry, training summaries, and evaluation interfaces provide the basis for extending the project while retaining comparable provenance.
