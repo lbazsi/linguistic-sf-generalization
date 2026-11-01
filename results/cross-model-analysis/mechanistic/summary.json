@@ -1,0 +1,12 @@
+{
+  "models": [
+    "gemma",
+    "llama31",
+    "mistral",
+    "qwen3"
+  ],
+  "available_files": 658,
+  "normalized_measurements": 562260,
+  "comparable_profiles": 1090,
+  "inference": "Descriptive only; no missing results imputed and no hidden-space coordinates aligned."
+}

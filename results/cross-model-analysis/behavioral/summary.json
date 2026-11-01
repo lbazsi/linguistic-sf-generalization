@@ -1,0 +1,29 @@
+{
+  "models": [
+    "gemma",
+    "llama31",
+    "mistral",
+    "qwen3"
+  ],
+  "n_features": 14,
+  "common_fdr_discoveries": [
+    "constituent_order",
+    "epistemic_hedging",
+    "fusion",
+    "inflectional_synthesis",
+    "narrative_framing",
+    "nominalization"
+  ],
+  "four_family_sign_replication": [
+    "conditionality",
+    "constituent_order",
+    "epistemic_hedging",
+    "fusion",
+    "inflectional_synthesis",
+    "narrative_framing",
+    "nominalization",
+    "subordination",
+    "voice"
+  ],
+  "notes": "Descriptive summaries of existing per-family cluster-aware analyses; no cross-family independence assumed."
+}

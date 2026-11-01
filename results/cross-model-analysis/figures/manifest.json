@@ -1,0 +1,307 @@
+{
+  "scope": "all",
+  "formats": [
+    "png",
+    "svg",
+    "csv"
+  ],
+  "png_dpi": 600,
+  "packages": {
+    "matplotlib": "3.10.9",
+    "numpy": "2.2.6"
+  },
+  "python": "3.10.12",
+  "figures": [
+    {
+      "figure": "fig01_feature_effects_forest",
+      "family": "behavioral",
+      "caption": "Feature-versus-registered-control effects in all four models; whiskers are the original 95% semantic-cell bootstrap intervals.",
+      "interpretive_note": "Filled markers: within-family BH q<0.05; hollow: not significant. † marks a language-changing contrast. No pooled family-level confidence interval.",
+      "source_files": [
+        "behavioral/per_family_effects.csv"
+      ],
+      "data_rows": 56,
+      "exports": [
+        "figures/behavioral/fig01_feature_effects_forest.pdf",
+        "figures/behavioral/fig01_feature_effects_forest.svg",
+        "figures/behavioral/fig01_feature_effects_forest.png",
+        "figures/behavioral/fig01_feature_effects_forest.csv"
+      ]
+    },
+    {
+      "figure": "fig02_replication_heatmap",
+      "family": "behavioral",
+      "caption": "Per-model welfare-support effects for all linguistic features.",
+      "interpretive_note": "* indicates q<0.05 within a model; three bottom rows change training language. Missing values appear in grey.",
+      "source_files": [
+        "behavioral/per_family_effects.csv"
+      ],
+      "data_rows": 56,
+      "exports": [
+        "figures/behavioral/fig02_replication_heatmap.pdf",
+        "figures/behavioral/fig02_replication_heatmap.svg",
+        "figures/behavioral/fig02_replication_heatmap.png",
+        "figures/behavioral/fig02_replication_heatmap.csv"
+      ]
+    },
+    {
+      "figure": "fig03_architecture_correlation",
+      "family": "behavioral",
+      "caption": "Pairwise descriptive correlations of feature-effect profiles by model.",
+      "interpretive_note": "Correlations are across 14 or 11 feature estimates, not independent samples of model families; the diagonal equals one by definition.",
+      "source_files": [
+        "behavioral/cross_family_correlations.csv"
+      ],
+      "data_rows": 12,
+      "exports": [
+        "figures/behavioral/fig03_architecture_correlation.pdf",
+        "figures/behavioral/fig03_architecture_correlation.svg",
+        "figures/behavioral/fig03_architecture_correlation.png",
+        "figures/behavioral/fig03_architecture_correlation.csv"
+      ]
+    },
+    {
+      "figure": "fig04_baseline_gains",
+      "family": "behavioral",
+      "caption": "Canonical and source-language control gains relative to each pretrained model, stratified by generalization category.",
+      "interpretive_note": "Whiskers are within-family category-level 95% cluster-bootstrap confidence intervals; comparisons are not cross-family hypothesis tests.",
+      "source_files": [
+        "results/black-box/<model>/evaluation_results/analysis/output/tables/{canonical_minus_base,control_minus_base}_by_category.csv"
+      ],
+      "data_rows": 64,
+      "exports": [
+        "figures/behavioral/fig04_baseline_gains.pdf",
+        "figures/behavioral/fig04_baseline_gains.svg",
+        "figures/behavioral/fig04_baseline_gains.png",
+        "figures/behavioral/fig04_baseline_gains.csv"
+      ]
+    },
+    {
+      "figure": "fig05_generalization_categories",
+      "family": "behavioral",
+      "caption": "Generalization-category heterogeneity. Original cluster-adjusted statistics are retained in the source-data export.",
+      "interpretive_note": " Asterisks denote the original within-family FDR-adjusted q<0.05; grey cells are missing.",
+      "source_files": [
+        "results/black-box/gemma/evaluation_results/analysis/output/tables/feature_by_category.csv",
+        "results/black-box/llama31/evaluation_results/analysis/output/tables/feature_by_category.csv",
+        "results/black-box/mistral/evaluation_results/analysis/output/tables/feature_by_category.csv",
+        "results/black-box/qwen3/evaluation_results/analysis/output/tables/feature_by_category.csv"
+      ],
+      "data_rows": 448,
+      "exports": [
+        "figures/behavioral/fig05_generalization_categories.pdf",
+        "figures/behavioral/fig05_generalization_categories.svg",
+        "figures/behavioral/fig05_generalization_categories.png",
+        "figures/behavioral/fig05_generalization_categories.csv"
+      ]
+    },
+    {
+      "figure": "fig06_heldout_dimensions",
+      "family": "behavioral",
+      "caption": "Effects by number of held-out dimensions. Original cluster-adjusted statistics are retained in the source-data export.",
+      "interpretive_note": " Asterisks denote the original within-family FDR-adjusted q<0.05; grey cells are missing.",
+      "source_files": [
+        "results/black-box/gemma/evaluation_results/analysis/output/tables/feature_by_heldout_dimensions.csv",
+        "results/black-box/llama31/evaluation_results/analysis/output/tables/feature_by_heldout_dimensions.csv",
+        "results/black-box/mistral/evaluation_results/analysis/output/tables/feature_by_heldout_dimensions.csv",
+        "results/black-box/qwen3/evaluation_results/analysis/output/tables/feature_by_heldout_dimensions.csv"
+      ],
+      "data_rows": 224,
+      "exports": [
+        "figures/behavioral/fig06_heldout_dimensions.pdf",
+        "figures/behavioral/fig06_heldout_dimensions.svg",
+        "figures/behavioral/fig06_heldout_dimensions.png",
+        "figures/behavioral/fig06_heldout_dimensions.csv"
+      ]
+    },
+    {
+      "figure": "fig07_tradeoff_interactions",
+      "family": "behavioral",
+      "caption": "Tradeoff versus non-tradeoff interactions. Original cluster-adjusted statistics are retained in the source-data export.",
+      "interpretive_note": "Interaction estimates are not raw tradeoff-specific effects. Asterisks denote the original within-family FDR-adjusted q<0.05; grey cells are missing.",
+      "source_files": [
+        "results/black-box/gemma/evaluation_results/analysis/output/tables/tradeoff_interactions.csv",
+        "results/black-box/llama31/evaluation_results/analysis/output/tables/tradeoff_interactions.csv",
+        "results/black-box/mistral/evaluation_results/analysis/output/tables/tradeoff_interactions.csv",
+        "results/black-box/qwen3/evaluation_results/analysis/output/tables/tradeoff_interactions.csv"
+      ],
+      "data_rows": 448,
+      "exports": [
+        "figures/behavioral/fig07_tradeoff_interactions.pdf",
+        "figures/behavioral/fig07_tradeoff_interactions.svg",
+        "figures/behavioral/fig07_tradeoff_interactions.png",
+        "figures/behavioral/fig07_tradeoff_interactions.csv"
+      ]
+    },
+    {
+      "figure": "fig08_high_coherence_sensitivity",
+      "family": "behavioral",
+      "caption": "Comparison of primary feature estimates with estimates on high-coherence responses.",
+      "interpretive_note": "Each marker represents a feature; the dashed diagonal denotes equality. These are sensitivity estimates, not independent replications.",
+      "source_files": [
+        "behavioral/sensitivity.csv"
+      ],
+      "data_rows": 56,
+      "exports": [
+        "figures/behavioral/fig08_high_coherence_sensitivity.pdf",
+        "figures/behavioral/fig08_high_coherence_sensitivity.svg",
+        "figures/behavioral/fig08_high_coherence_sensitivity.png",
+        "figures/behavioral/fig08_high_coherence_sensitivity.csv"
+      ]
+    },
+    {
+      "figure": "fig09_lexical_associations",
+      "family": "behavioral",
+      "caption": "Association between feature-level lexical-diversity change and welfare-support differences.",
+      "interpretive_note": "Exploratory: 11 within-English features per model, permutation p-values from the upstream analyses; no pooled inference or mediation claim.",
+      "source_files": [
+        "behavioral/lexical_associations.csv"
+      ],
+      "data_rows": 4,
+      "exports": [
+        "figures/behavioral/fig09_lexical_associations.pdf",
+        "figures/behavioral/fig09_lexical_associations.svg",
+        "figures/behavioral/fig09_lexical_associations.png",
+        "figures/behavioral/fig09_lexical_associations.csv"
+      ]
+    },
+    {
+      "figure": "fig10_judge_reliability",
+      "family": "behavioral",
+      "caption": "Inter-judge agreement on welfare support, behavioral commitment, and tradeoff priority.",
+      "interpretive_note": "Kappa is reported on the upstream judged scores; high agreement does not establish construct validity.",
+      "source_files": [
+        "behavioral/judge_reliability.csv"
+      ],
+      "data_rows": 20,
+      "exports": [
+        "figures/behavioral/fig10_judge_reliability.pdf",
+        "figures/behavioral/fig10_judge_reliability.svg",
+        "figures/behavioral/fig10_judge_reliability.png",
+        "figures/behavioral/fig10_judge_reliability.csv"
+      ]
+    },
+    {
+      "figure": "fig11_response_coherence",
+      "family": "behavioral",
+      "caption": "Feature-level relationship between changes in welfare-support ratings and response-coherence ratings.",
+      "interpretive_note": "Descriptive association; it cannot rule out shared judging or training-related confounding.",
+      "source_files": [
+        "behavioral/per_family_effects.csv",
+        "behavioral/coherence_replication.csv"
+      ],
+      "data_rows": 56,
+      "exports": [
+        "figures/behavioral/fig11_response_coherence.pdf",
+        "figures/behavioral/fig11_response_coherence.svg",
+        "figures/behavioral/fig11_response_coherence.png",
+        "figures/behavioral/fig11_response_coherence.csv"
+      ]
+    },
+    {
+      "figure": "fig12_cka_depth",
+      "family": "mechanistic",
+      "caption": "Representation similarity over network depth (welfare prompts)",
+      "interpretive_note": "Descriptive averages across available conditions/sites/pooling; raw values remain in exported source tables. Do not interpret averages as matched model coordinates.",
+      "source_files": [
+        "mechanistic/normalized_metrics.csv"
+      ],
+      "data_rows": 142,
+      "exports": [
+        "figures/mechanistic/fig12_cka_depth.pdf",
+        "figures/mechanistic/fig12_cka_depth.svg",
+        "figures/mechanistic/fig12_cka_depth.png",
+        "figures/mechanistic/fig12_cka_depth.csv"
+      ]
+    },
+    {
+      "figure": "fig13_svcca_depth",
+      "family": "mechanistic",
+      "status": "not_generated",
+      "reason": "Legacy in-sample SVCCA invalid; requires independent fit/evaluation rerun"
+    },
+    {
+      "figure": "fig14_linguistic_probes",
+      "family": "mechanistic",
+      "caption": "Held-out linguistic-feature decodability over depth",
+      "interpretive_note": "Descriptive averages across available conditions/sites/pooling; raw values remain in exported source tables. Do not interpret averages as matched model coordinates.",
+      "source_files": [
+        "mechanistic/normalized_metrics.csv"
+      ],
+      "data_rows": 142,
+      "exports": [
+        "figures/mechanistic/fig14_linguistic_probes.pdf",
+        "figures/mechanistic/fig14_linguistic_probes.svg",
+        "figures/mechanistic/fig14_linguistic_probes.png",
+        "figures/mechanistic/fig14_linguistic_probes.csv"
+      ]
+    },
+    {
+      "figure": "fig15_behavior_probes",
+      "family": "mechanistic",
+      "caption": "Held-out welfare-behavior linear-probe performance",
+      "interpretive_note": "Descriptive averages across available conditions/sites/pooling; raw values remain in exported source tables. Do not interpret averages as matched model coordinates.",
+      "source_files": [
+        "mechanistic/normalized_metrics.csv"
+      ],
+      "data_rows": 142,
+      "exports": [
+        "figures/mechanistic/fig15_behavior_probes.pdf",
+        "figures/mechanistic/fig15_behavior_probes.svg",
+        "figures/mechanistic/fig15_behavior_probes.png",
+        "figures/mechanistic/fig15_behavior_probes.csv"
+      ]
+    },
+    {
+      "figure": "fig16_lora_geometry",
+      "family": "mechanistic",
+      "caption": "LoRA update distance versus registered controls",
+      "interpretive_note": "Feature-level averages are descriptive; mechanism availability and layer/site coverage can differ. †: language-changing contrasts.",
+      "source_files": [
+        "mechanistic/comparable_profiles.csv"
+      ],
+      "data_rows": 56,
+      "exports": [
+        "figures/mechanistic/fig16_lora_geometry.pdf",
+        "figures/mechanistic/fig16_lora_geometry.svg",
+        "figures/mechanistic/fig16_lora_geometry.png",
+        "figures/mechanistic/fig16_lora_geometry.csv"
+      ]
+    },
+    {
+      "figure": "fig18_steering_judged",
+      "family": "mechanistic",
+      "caption": "Independently judged held-out steering effects",
+      "interpretive_note": "Feature-level averages are descriptive; mechanism availability and layer/site coverage can differ. †: language-changing contrasts.",
+      "source_files": [
+        "mechanistic/comparable_profiles.csv"
+      ],
+      "data_rows": 56,
+      "exports": [
+        "figures/mechanistic/fig18_steering_judged.pdf",
+        "figures/mechanistic/fig18_steering_judged.svg",
+        "figures/mechanistic/fig18_steering_judged.png",
+        "figures/mechanistic/fig18_steering_judged.csv"
+      ]
+    },
+    {
+      "figure": "fig17_behavior_mechanism",
+      "family": "mechanistic",
+      "caption": "Associations between welfare-support effects and comparable scalar mechanistic measurements.",
+      "interpretive_note": "Exploratory; points represent differing sites, domains and checkpoint strata, not independent replicates. No causal mediation or corrected significance claim.",
+      "source_files": [
+        "cross_stage_associations.csv"
+      ],
+      "data_rows": 243,
+      "exports": [
+        "figures/mechanistic/fig17_behavior_mechanism.pdf",
+        "figures/mechanistic/fig17_behavior_mechanism.svg",
+        "figures/mechanistic/fig17_behavior_mechanism.png",
+        "figures/mechanistic/fig17_behavior_mechanism.csv"
+      ]
+    }
+  ],
+  "generated": 17,
+  "unavailable": 1,
+  "note": "Figures are descriptive unless the caption explicitly identifies upstream within-family confidence intervals or FDR."
+}

@@ -1,0 +1,9 @@
+model,contrast,weighted_category_mean,n,categories
+gemma,canonical_minus_base,0.9063291139240506,790.0,8
+gemma,mandarin_control_minus_base,0.7734177215189874,790.0,8
+llama31,canonical_minus_base,1.087708066581306,781.0,8
+llama31,mandarin_control_minus_base,0.9532650448143406,781.0,8
+mistral,canonical_minus_base,0.7863408521303258,798.0,8
+mistral,mandarin_control_minus_base,0.5582706766917294,798.0,8
+qwen3,canonical_minus_base,0.688125,800.0,8
+qwen3,mandarin_control_minus_base,0.62,800.0,8

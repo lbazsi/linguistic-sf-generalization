@@ -1,0 +1,17 @@
+model,stage,files,directory,status
+gemma,representations,16,/home/ubuntu/cross-model-research/linguistic-sf-generalization/results/mechanistic-interpretability/final/gemma2/model-difference-analysis,present
+gemma,probes,93,/home/ubuntu/cross-model-research/linguistic-sf-generalization/results/mechanistic-interpretability/final/gemma2/linear-probing,present
+gemma,lora,3,/home/ubuntu/cross-model-research/linguistic-sf-generalization/results/mechanistic-interpretability/final/gemma2/LoRA-analysis,present
+gemma,steering,57,/home/ubuntu/cross-model-research/linguistic-sf-generalization/results/mechanistic-interpretability/final/gemma2/activation-steering,present
+llama31,representations,16,/home/ubuntu/cross-model-research/linguistic-sf-generalization/results/mechanistic-interpretability/final/llama31/model-difference-analysis,present
+llama31,probes,76,/home/ubuntu/cross-model-research/linguistic-sf-generalization/results/mechanistic-interpretability/final/llama31/linear-probing,present
+llama31,lora,3,/home/ubuntu/cross-model-research/linguistic-sf-generalization/results/mechanistic-interpretability/final/llama31/LoRA-analysis,present
+llama31,steering,56,/home/ubuntu/cross-model-research/linguistic-sf-generalization/results/mechanistic-interpretability/final/llama31/activation-steering,present
+mistral,representations,16,/home/ubuntu/cross-model-research/linguistic-sf-generalization/results/mechanistic-interpretability/final/mistral/model-difference-analysis,present
+mistral,probes,93,/home/ubuntu/cross-model-research/linguistic-sf-generalization/results/mechanistic-interpretability/final/mistral/linear-probing,present
+mistral,lora,3,/home/ubuntu/cross-model-research/linguistic-sf-generalization/results/mechanistic-interpretability/final/mistral/LoRA-analysis,present
+mistral,steering,57,/home/ubuntu/cross-model-research/linguistic-sf-generalization/results/mechanistic-interpretability/final/mistral/activation-steering,present
+qwen3,representations,16,/home/ubuntu/cross-model-research/linguistic-sf-generalization/results/mechanistic-interpretability/final/qwen3/model-difference-analysis,present
+qwen3,probes,93,/home/ubuntu/cross-model-research/linguistic-sf-generalization/results/mechanistic-interpretability/final/qwen3/linear-probing,present
+qwen3,lora,3,/home/ubuntu/cross-model-research/linguistic-sf-generalization/results/mechanistic-interpretability/final/qwen3/LoRA-analysis,present
+qwen3,steering,57,/home/ubuntu/cross-model-research/linguistic-sf-generalization/results/mechanistic-interpretability/final/qwen3/activation-steering,present
