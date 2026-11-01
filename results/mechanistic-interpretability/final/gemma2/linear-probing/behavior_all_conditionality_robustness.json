@@ -1,0 +1,91 @@
+{
+  "seed": 42,
+  "bootstrap_replicates": 2000,
+  "n_scenarios": 123,
+  "n_semantic_cells": 65,
+  "inference": "Cluster bootstrap conditional on development-selected probe; no layer-wise independence assumed.",
+  "clipped": {
+    "r2": {
+      "estimate": 0.09386367927376738,
+      "ci_low": -0.1843456256078991,
+      "ci_high": 0.2256656073806513,
+      "valid_bootstrap_draws": 2000
+    },
+    "rmse": {
+      "estimate": 0.6105573305025472,
+      "ci_low": 0.42854947000065546,
+      "ci_high": 0.774329179441795,
+      "valid_bootstrap_draws": 2000
+    },
+    "rmse_improvement": {
+      "estimate": 0.030971176921850807,
+      "ci_low": -0.033471798239091265,
+      "ci_high": 0.08912968165368562,
+      "valid_bootstrap_draws": 2000
+    },
+    "relative_rmse_improvement": {
+      "estimate": 0.04827716393491782,
+      "ci_low": -0.06935247844745514,
+      "ci_high": 0.12312100823039232,
+      "valid_bootstrap_draws": 2000
+    }
+  },
+  "unclipped": {
+    "r2": {
+      "estimate": 0.08993372180670878,
+      "ci_low": -0.19308978752328895,
+      "ci_high": 0.22220277218750295,
+      "valid_bootstrap_draws": 2000
+    },
+    "rmse": {
+      "estimate": 0.6118799065119418,
+      "ci_low": 0.43051260813997755,
+      "ci_high": 0.7757684345614408,
+      "valid_bootstrap_draws": 2000
+    },
+    "rmse_improvement": {
+      "estimate": 0.029648600912456247,
+      "ci_low": -0.03465371610620207,
+      "ci_high": 0.08789851430564014,
+      "valid_bootstrap_draws": 2000
+    },
+    "relative_rmse_improvement": {
+      "estimate": 0.0462155626279012,
+      "ci_low": -0.07253192908853259,
+      "ci_high": 0.12146913248503491,
+      "valid_bootstrap_draws": 2000
+    }
+  },
+  "judges": {
+    "status": "complete",
+    "n_paired_judges": 123,
+    "n_holdout": 123,
+    "source": "Original paired judges of the same generated response",
+    "limitation": "Does not measure generation-seed noise or provide a causal noise ceiling",
+    "exact_agreement": 0.7642276422764228,
+    "mean_absolute_disagreement": 0.2764227642276423,
+    "mean_squared_disagreement": 0.35772357723577236,
+    "judge_1_test": {
+      "n": 123,
+      "rmse": 0.5613494420962343,
+      "mae": 0.34295790369917706,
+      "r2": 0.03259993010783502
+    },
+    "judge_2_test": {
+      "n": 123,
+      "rmse": 0.7805825389649235,
+      "mae": 0.4721026653196754,
+      "r2": 0.05705427823531528
+    },
+    "judge_correlation": 0.7341984668885049,
+    "max_aggregate_vs_judge_mean_difference": 0.0
+  },
+  "selection": {
+    "criterion": "development_rmse_only",
+    "layer": 21,
+    "site": "mlp",
+    "pooling": "final",
+    "penalty": 1.0,
+    "selected_baseline": false
+  }
+}

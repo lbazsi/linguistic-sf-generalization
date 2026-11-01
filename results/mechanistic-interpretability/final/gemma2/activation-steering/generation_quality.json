@@ -1,0 +1,41 @@
+{
+  "model": "gemma2",
+  "sampling_protocol": "paired_batch_sentence_v2",
+  "max_new_tokens": 512,
+  "min_new_tokens": 48,
+  "generation_batch_size": 32,
+  "selected_configurations": 28,
+  "generated_responses": 5600,
+  "stop_reasons": {
+    "eos": 5297,
+    "token_limit": 152,
+    "sentence_boundary": 151
+  },
+  "stop_reasons_by_arm": {
+    "unsteered": {
+      "eos": 2732,
+      "sentence_boundary": 68
+    },
+    "steered": {
+      "eos": 2565,
+      "token_limit": 152,
+      "sentence_boundary": 83
+    }
+  },
+  "truncation_fraction": 0.027142857142857142,
+  "truncation_fraction_by_arm": {
+    "unsteered": 0.0,
+    "steered": 0.054285714285714284
+  },
+  "mean_generated_tokens_by_arm": {
+    "unsteered": 27.55,
+    "steered": 54.62
+  },
+  "median_generated_tokens_by_arm": {
+    "unsteered": 27.0,
+    "steered": 28.0
+  },
+  "quality_gate_threshold": 0.25,
+  "quality_gate_passed": true,
+  "manual_quality_review_required": true
+}

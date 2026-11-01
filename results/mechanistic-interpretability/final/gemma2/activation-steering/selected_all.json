@@ -1,0 +1,282 @@
+[
+  {
+    "feature": "conditionality",
+    "adapter": "canonical",
+    "layer": 41,
+    "site": "residual",
+    "strength": 14.966629547095765,
+    "policy": "generation",
+    "validation_delta": 0.10426674336194992,
+    "n_validation": 80
+  },
+  {
+    "feature": "conditionality",
+    "adapter": "conditionality",
+    "layer": 41,
+    "site": "residual",
+    "strength": 14.966629547095765,
+    "policy": "generation",
+    "validation_delta": 0.10898696184158325,
+    "n_validation": 80
+  },
+  {
+    "feature": "epistemic_hedging",
+    "adapter": "canonical",
+    "layer": 20,
+    "site": "residual",
+    "strength": 14.966629547095765,
+    "policy": "generation",
+    "validation_delta": -0.12914595156908035,
+    "n_validation": 80
+  },
+  {
+    "feature": "epistemic_hedging",
+    "adapter": "epistemic_hedging",
+    "layer": 24,
+    "site": "residual",
+    "strength": 14.966629547095765,
+    "policy": "generation",
+    "validation_delta": -0.09967736899852753,
+    "n_validation": 80
+  },
+  {
+    "feature": "formality",
+    "adapter": "canonical",
+    "layer": 25,
+    "site": "residual",
+    "strength": 14.966629547095765,
+    "policy": "generation",
+    "validation_delta": -0.1804219052195549,
+    "n_validation": 80
+  },
+  {
+    "feature": "formality",
+    "adapter": "formality",
+    "layer": 37,
+    "site": "residual",
+    "strength": -14.966629547095765,
+    "policy": "generation",
+    "validation_delta": 0.09851710945367813,
+    "n_validation": 80
+  },
+  {
+    "feature": "genericity",
+    "adapter": "canonical",
+    "layer": 26,
+    "site": "residual",
+    "strength": -14.966629547095765,
+    "policy": "generation",
+    "validation_delta": -0.08349781781435013,
+    "n_validation": 80
+  },
+  {
+    "feature": "genericity",
+    "adapter": "genericity",
+    "layer": 41,
+    "site": "residual",
+    "strength": 14.966629547095765,
+    "policy": "generation",
+    "validation_delta": 0.06509139388799667,
+    "n_validation": 80
+  },
+  {
+    "feature": "modal_strength",
+    "adapter": "canonical",
+    "layer": 25,
+    "site": "residual",
+    "strength": 14.966629547095765,
+    "policy": "generation",
+    "validation_delta": -0.12476951330900192,
+    "n_validation": 80
+  },
+  {
+    "feature": "modal_strength",
+    "adapter": "modal_strength",
+    "layer": 25,
+    "site": "residual",
+    "strength": 14.966629547095765,
+    "policy": "generation",
+    "validation_delta": -0.10520396530628204,
+    "n_validation": 80
+  },
+  {
+    "feature": "narrative_framing",
+    "adapter": "canonical",
+    "layer": 23,
+    "site": "residual",
+    "strength": 14.966629547095765,
+    "policy": "generation",
+    "validation_delta": -0.11933590322732926,
+    "n_validation": 80
+  },
+  {
+    "feature": "narrative_framing",
+    "adapter": "narrative_framing",
+    "layer": 23,
+    "site": "residual",
+    "strength": 14.966629547095765,
+    "policy": "generation",
+    "validation_delta": -0.07553461343050002,
+    "n_validation": 80
+  },
+  {
+    "feature": "nominalization",
+    "adapter": "canonical",
+    "layer": 23,
+    "site": "residual",
+    "strength": 14.966629547095765,
+    "policy": "generation",
+    "validation_delta": -0.1619471177458763,
+    "n_validation": 80
+  },
+  {
+    "feature": "nominalization",
+    "adapter": "nominalization",
+    "layer": 23,
+    "site": "residual",
+    "strength": 14.966629547095765,
+    "policy": "generation",
+    "validation_delta": -0.13509990721940995,
+    "n_validation": 80
+  },
+  {
+    "feature": "pronoun_distribution",
+    "adapter": "canonical",
+    "layer": 23,
+    "site": "residual",
+    "strength": 14.966629547095765,
+    "policy": "generation",
+    "validation_delta": -0.0800867959856987,
+    "n_validation": 80
+  },
+  {
+    "feature": "pronoun_distribution",
+    "adapter": "pronoun_distribution",
+    "layer": 41,
+    "site": "residual",
+    "strength": 14.966629547095765,
+    "policy": "generation",
+    "validation_delta": 0.09422885477542878,
+    "n_validation": 80
+  },
+  {
+    "feature": "subordination",
+    "adapter": "canonical",
+    "layer": 41,
+    "site": "residual",
+    "strength": -14.966629547095765,
+    "policy": "generation",
+    "validation_delta": 0.12181413620710373,
+    "n_validation": 80
+  },
+  {
+    "feature": "subordination",
+    "adapter": "subordination",
+    "layer": 41,
+    "site": "residual",
+    "strength": -14.966629547095765,
+    "policy": "generation",
+    "validation_delta": 0.13155796825885774,
+    "n_validation": 80
+  },
+  {
+    "feature": "tense_aspect",
+    "adapter": "canonical",
+    "layer": 24,
+    "site": "residual",
+    "strength": 14.966629547095765,
+    "policy": "generation",
+    "validation_delta": -0.12406319230794907,
+    "n_validation": 80
+  },
+  {
+    "feature": "tense_aspect",
+    "adapter": "tense_aspect",
+    "layer": 25,
+    "site": "residual",
+    "strength": 14.966629547095765,
+    "policy": "generation",
+    "validation_delta": -0.10404796898365021,
+    "n_validation": 80
+  },
+  {
+    "feature": "voice",
+    "adapter": "canonical",
+    "layer": 23,
+    "site": "residual",
+    "strength": 14.966629547095765,
+    "policy": "generation",
+    "validation_delta": -0.21662694811820984,
+    "n_validation": 80
+  },
+  {
+    "feature": "voice",
+    "adapter": "voice",
+    "layer": 23,
+    "site": "residual",
+    "strength": 14.966629547095765,
+    "policy": "generation",
+    "validation_delta": -0.1637122482061386,
+    "n_validation": 80
+  },
+  {
+    "feature": "constituent_order",
+    "adapter": "canonical",
+    "layer": 37,
+    "site": "residual",
+    "strength": 14.966629547095765,
+    "policy": "generation",
+    "validation_delta": 0.1378869369626045,
+    "n_validation": 80
+  },
+  {
+    "feature": "constituent_order",
+    "adapter": "constituent_order",
+    "layer": 32,
+    "site": "residual",
+    "strength": 14.966629547095765,
+    "policy": "generation",
+    "validation_delta": 0.11734719723463058,
+    "n_validation": 80
+  },
+  {
+    "feature": "inflectional_synthesis",
+    "adapter": "control_zh",
+    "layer": 41,
+    "site": "residual",
+    "strength": -14.966629547095765,
+    "policy": "generation",
+    "validation_delta": 0.08167338073253631,
+    "n_validation": 80
+  },
+  {
+    "feature": "inflectional_synthesis",
+    "adapter": "inflectional_synthesis",
+    "layer": 41,
+    "site": "residual",
+    "strength": -14.966629547095765,
+    "policy": "generation",
+    "validation_delta": 0.06690844595432281,
+    "n_validation": 80
+  },
+  {
+    "feature": "fusion",
+    "adapter": "control_zh",
+    "layer": 41,
+    "site": "residual",
+    "strength": -14.966629547095765,
+    "policy": "generation",
+    "validation_delta": 0.08393211960792542,
+    "n_validation": 80
+  },
+  {
+    "feature": "fusion",
+    "adapter": "fusion",
+    "layer": 41,
+    "site": "residual",
+    "strength": -14.966629547095765,
+    "policy": "generation",
+    "validation_delta": 0.06763346046209336,
+    "n_validation": 80
+  }
+]
