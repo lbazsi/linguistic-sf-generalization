@@ -2,26 +2,44 @@
 
 ## Scope
 
-This analysis compares behavioral and mechanistic results from Gemma 2, Llama 3.1, Mistral, and Qwen 3. It distinguishes the 11 within-English feature contrasts from three language-changing contrasts and preserves each model's original uncertainty intervals and false-discovery-rate adjustments. Cross-family comparisons are descriptive; the shared benchmark and pipeline do not support an independent-family meta-analysis.
+We compared feature-adapter versus registered-control effects across Gemma 2, Llama 3.1, Mistral, and Qwen 3, using the same animal-welfare evaluation design. The 14 contrasts comprise 11 within-English features and three language-changing features. Primary welfare-support differences are measured on a 0–4 scale, with original within-family clustered uncertainty and FDR adjustment preserved. Cross-family results are **descriptive comparisons**, not independent-family meta-analytic estimates.
 
 ## Behavioral replication
 
-Canonical fine-tuning increased target-value support relative to the pretrained base in every family (mean gains of +0.688 to +1.088 on the 0–4 scale). Six of 14 feature conditions showed negative, FDR-significant feature-minus-control effects in all four families: constituent order, epistemic hedging, fusion, inflectional synthesis, narrative framing, and nominalization. The first, third, and fourth of these involve language changes, so their effects cannot be attributed solely to the targeted grammatical feature.
+Canonical fine-tuning increased welfare-support scores over the pretrained base in all four families (+0.906 Gemma, +1.088 Llama, +0.786 Mistral, and +0.688 Qwen). Mandarin controls also improved scores (+0.773, +0.953, +0.558, and +0.620 respectively).
 
-Across the 14 feature effects, pairwise between-family Pearson correlations ranged from 0.674 to 0.861; for the 11 within-English contrasts, they ranged from 0.388 to 0.769. Category-level effects, held-out dimensions, tradeoff interactions, response quality, and judge agreement are reported separately to show heterogeneity rather than assume uniform replication.
+Six feature conditions produced **negative, FDR-significant overall feature-minus-control effects in all four models**: constituent order, epistemic hedging, fusion, inflectional synthesis, narrative framing, and nominalization. Constituent order, fusion, and inflectional synthesis also change the training language, so they do not independently identify the effect of grammar. Three additional features—conditionality, subordination, and voice—had the same negative point-estimate sign in all four families but did not show four-family FDR replication.
+
+| Comparison | Across the four families |
+|---|---|
+| Significant primary feature effects per model | 6/14 Gemma; 7/14 Llama; 7/14 Mistral; 6/14 Qwen |
+| All-family FDR-replicated features | 6/14 (3 within-English, 3 language-changing) |
+| All-family sign-consistent negative features | 9/14 |
+| Pairwise Pearson correlation of 14 effect profiles | 0.674–0.861 |
+| Pairwise Pearson correlation of 11 within-English profiles | 0.388–0.769 |
+
+The smaller correlations restricted to within-English contrasts caution against overinterpreting agreement driven by language-changing conditions. Subgroup evidence was less uniform: category-specific FDR discoveries occurred in 6, 15, 9, and 12 of 112 tests (Gemma, Llama, Mistral, Qwen), and only the constituent-order effect in the non-held-out category replicated at FDR significance across all four. No tradeoff interaction passed that four-family criterion. Response-quality, high-coherence, and judge-agreement analyses qualify the primary effects but do not erase their principal replicated pattern.
+
+The [full feature-effect table and source-data index](research_results.md) retain all 14 contrasts, including null and mixed-sign results.
 
 ## Mechanistic comparison
 
-The standardized outputs cover 658 mechanistic scalar-result files, 562,260 scalar records, and 1,090 comparable profiles. Feature and control representations remained broadly similar, linguistic and concept classifiers were highly decodable, and welfare-score prediction was weaker. LoRA updates differed measurably between conditions. Independently judged activation steering produced five FDR-significant configurations across Gemma 2 and Llama 3.1, but none in Mistral or Qwen 3. Associations between behavioral effect sizes and mechanistic measurements are exploratory; no common causal mechanism is established.
+The normalized dataset includes **658 scalar-result files**, **562,260 records**, **1,090 comparable profiles**, and 1,214 exploratory cross-stage association strata. Mean welfare-prompt representation CKA was approximately 0.97 across the four families, linguistic-condition probe AUC approximately 0.93, and welfare-score probe held-out R² only 0.06–0.13. Final LoRA updates were measurably different from registered controls, while within-training update directions were comparatively stable.
+
+On independently judged held-out activation steering, **five of 112 selected configurations** survived within-model FDR correction: three in Gemma and two in Llama, none in Mistral or Qwen. All five effects reduced judged welfare support. The steering effects do not consistently coincide with the features showing strongest black-box replication. Decodable information, adapter differences, and behavioral effects therefore cannot yet be combined into one established causal pathway. Cross-stage associations are exploratory and uncorrected for the many comparisons.
 
 ## Figures
 
-![Cross-model feature-effect replication heatmap](figures/behavioral/fig02_replication_heatmap.png)
+![Feature-effect replication heatmap](figures/behavioral/fig02_replication_heatmap.png)
 
-*Overall feature-minus-control effects in each architecture.* [Vector figure](figures/behavioral/fig02_replication_heatmap.svg) · [Plotted data](figures/behavioral/fig02_replication_heatmap.csv)
+*Per-feature differences against matched controls, by architecture.* [SVG](figures/behavioral/fig02_replication_heatmap.svg) · [Data](figures/behavioral/fig02_replication_heatmap.csv)
 
-![Correlations between model-family effect profiles](figures/behavioral/fig03_architecture_correlation.png)
+![Cross-family effect correlations](figures/behavioral/fig03_architecture_correlation.png)
 
-*Pairwise effect-profile correlations, with all-feature and within-English comparisons.* [Vector figure](figures/behavioral/fig03_architecture_correlation.svg) · [Plotted data](figures/behavioral/fig03_architecture_correlation.csv)
+*Pairwise effect-profile correlations for all 14 features and 11 within-English contrasts.* [SVG](figures/behavioral/fig03_architecture_correlation.svg) · [Data](figures/behavioral/fig03_architecture_correlation.csv)
 
-Further visualizations and source-data exports are indexed in [the results report](research_results.md), including [behavior–mechanism associations](figures/mechanistic/fig17_behavior_mechanism.svg). Machine-readable tables are under `behavioral/`, `mechanistic/`, and `cross_stage_associations.csv`. The analysis code is in [`cross-model-analysis/`](../../cross-model-analysis/).
+Additional figures are indexed in the [detailed results report](research_results.md); see also [behavior–mechanism associations](figures/mechanistic/fig17_behavior_mechanism.svg). Tables and scalar summaries are under `behavioral/`, `mechanistic/`, and `cross_stage_associations.csv`. Generation and comparison code is in the [analysis directory](../../cross-model-analysis/).
+
+## Limitations
+
+All four families share a benchmark, synthetic fine-tuning design, and automated judges; each adapter condition has one training seed. Language-changing contrasts confound grammatical structure with language identity. Representation metrics and linear probes are non-causal, and significant steering effects demonstrate intervention-specific sensitivity rather than mediation. The analyses do not establish human-reviewed generalization or a universal mechanism.
