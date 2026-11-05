@@ -1,36 +1,53 @@
 # Black-Box Evaluation Results
 
-## Evaluation
+## Evaluation design
 
-We evaluated four pretrained model families (Gemma 2 9B, Llama 3.1 8B, Mistral 7B, and Qwen 3 8B), each with an unadapted base, an English canonical adapter, a Mandarin control adapter, and 14 linguistic-feature adapters. The benchmark contains 800 independently generated animal-welfare scenarios across eight seen/held-out semantic categories, half with explicit tradeoffs.
+We evaluated Gemma 2 9B, Llama 3.1 8B, Mistral 7B, and Qwen 3 8B under 17 conditions per model: the pretrained base, English canonical and Mandarin control adapters, and 14 linguistic-feature adapters. Each condition was tested on the same 800 animal-welfare scenarios: 100 per generalization category, with half containing explicit tradeoffs. The categories vary whether the animal, value, and context are held out from training.
 
-Two independent automated judges scored each continuation. The primary outcome, `target_value_support`, ranges from 0 to 4. Feature effects are paired differences against the registered language-matched fine-tuning control, not against the pretrained base. Uncertainty uses semantic-cell cluster bootstrap intervals and cluster sign-flip tests, with Benjamini–Hochberg correction within each analysis family.
+Two independent automated judges scored each response. The primary outcome, `target_value_support`, measures support for animal welfare from 0 to 4; behavioral commitment, tradeoff priority, and response quality provide secondary checks. We compare paired scenario scores using the **feature adapter minus its registered fine-tuning control**: English canonical for 11 within-English features, Mandarin control for the three language-changing features. The pretrained-base comparisons address a separate question.
 
-## Results
+Reported inferential results use semantic-cell clustered bootstrap confidence intervals, cluster sign-flip tests, and Benjamini–Hochberg false-discovery-rate (FDR) correction. Negative feature effects mean *less support than the matched control*, not necessarily opposition to animal welfare.
 
-| Model family | Canonical minus base | FDR-significant feature effects |
-|---|---:|---:|
-| Gemma 2 | +0.906 | 6/14 |
-| Llama 3.1 | +1.088 | 7/14 |
-| Mistral | +0.786 | 7/14 |
-| Qwen 3 | +0.688 | 6/14 |
+## Main results
 
-Canonical fine-tuning increased judged welfare support in all eight evaluation categories for every model, including combinations with all three semantic dimensions held out. Six feature conditions—constituent order, epistemic hedging, fusion, inflectional synthesis, narrative framing, and nominalization—had negative, FDR-significant overall effects in all four families relative to their controls. A negative effect indicates *less welfare support than the matched control*, not necessarily welfare opposition.
+| Model | English canonical − base | Mandarin control − base | FDR-significant feature effects |
+|---|---:|---:|---:|
+| Gemma 2 | +0.906 | +0.773 | 6/14 |
+| Llama 3.1 | +1.088 | +0.953 | 7/14 |
+| Mistral | +0.786 | +0.558 | 7/14 |
+| Qwen 3 | +0.688 | +0.620 | 6/14 |
 
-Individual category effects and tradeoff interactions were less consistently replicated than the overall effects. Behavioral-commitment scores generally corroborated the main findings. Complete-case and high-coherence sensitivity checks preserved the major patterns, although some conditions changed response quality. Inter-judge exact agreement on the primary outcome was approximately 73–77%.
+Both fine-tuning controls improved welfare support over the pretrained base in every model. Canonical gains were positive in **all eight generalization categories**, including the category holding out animal, value, and context simultaneously.
+
+Six feature conditions had **negative, FDR-significant overall effects in all four models**:
+
+| Feature | Gemma 2 | Llama 3.1 | Mistral | Qwen 3 |
+|---|---:|---:|---:|---:|
+| Constituent order † | −0.196 | −0.254 | −0.410 | −0.180 |
+| Epistemic hedging | −0.139 | −0.049 | −0.078 | −0.066 |
+| Fusion † | −0.116 | −0.161 | −0.104 | −0.236 |
+| Inflectional synthesis † | −0.064 | −0.267 | −0.151 | −0.154 |
+| Narrative framing | −0.052 | −0.117 | −0.070 | −0.058 |
+| Nominalization | −0.054 | −0.106 | −0.071 | −0.054 |
+
+† These three contrasts change training language as well as the targeted linguistic structure. Their effect cannot be attributed to the grammatical difference alone. Estimates are mean points on the 0–4 scale; significance is assessed using the original per-model FDR-adjusted tests. The [full 14-feature table](../cross-model-analysis/research_results.md#behavioral-replication) includes smaller and non-significant results.
+
+## Robustness and heterogeneity
+
+Effects were less uniform when evaluated by generalization category or tradeoff status than when averaged over all scenarios. Only constituent order in the non-held-out category met the category-specific FDR criterion in all four families; no tradeoff interaction did so across all four. Secondary behavioral-commitment measurements corroborated several primary findings, while coherence and relevance could also shift (notably for conditionality and voice). Complete-case and high-coherence subsets generally preserved the leading effects but sometimes reduced their magnitudes.
+
+Exact agreement between judges on primary support scores was approximately 73–77%, and quadratic-weighted agreement was approximately 0.69–0.76. Automated judging and response-quality variation are therefore important measurement limitations.
 
 ## Figures
 
-![Canonical and source-language control gains relative to pretrained models](../cross-model-analysis/figures/behavioral/fig04_baseline_gains.png)
+![Control-adapter gains relative to pretrained models](../cross-model-analysis/figures/behavioral/fig04_baseline_gains.png)
 
-*Canonical and Mandarin-control gains by evaluation category.* [Vector figure](../cross-model-analysis/figures/behavioral/fig04_baseline_gains.svg) · [Plotted data](../cross-model-analysis/figures/behavioral/fig04_baseline_gains.csv)
+*Gains from English canonical and Mandarin controls, by model and generalization category.* [SVG](../cross-model-analysis/figures/behavioral/fig04_baseline_gains.svg) · [Data](../cross-model-analysis/figures/behavioral/fig04_baseline_gains.csv)
 
-![Feature effects and confidence intervals across four model families](../cross-model-analysis/figures/behavioral/fig01_feature_effects_forest.png)
+![Four-model feature-effect comparisons](../cross-model-analysis/figures/behavioral/fig01_feature_effects_forest.png)
 
-*Feature-minus-control effects with original 95% cluster-bootstrap intervals and within-family FDR significance.* [Vector figure](../cross-model-analysis/figures/behavioral/fig01_feature_effects_forest.svg) · [Plotted data](../cross-model-analysis/figures/behavioral/fig01_feature_effects_forest.csv)
+*Feature-minus-control effects and original clustered confidence intervals.* [SVG](../cross-model-analysis/figures/behavioral/fig01_feature_effects_forest.svg) · [Data](../cross-model-analysis/figures/behavioral/fig01_feature_effects_forest.csv)
 
-## Interpretation and data
+## Sources and limitations
 
-These results concern a synthetic benchmark scored by automated judges, with one training seed per condition. The three language-changing contrasts also vary training-language identity and therefore cannot isolate a grammatical property. Cross-family comparisons share a benchmark and evaluation procedure and are descriptive rather than independent-family meta-analysis.
-
-Per-model source responses, judgments, aggregate tables, manifests, and analysis reports are under `<model>/evaluation_results/`. [Cross-model summaries](../cross-model-analysis/research_results.md) and the [evaluation methodology](../../evaluation/README.md) provide additional detail.
+Each `<model>/evaluation_results/` directory contains the model-specific reports, aggregate tables, responses, and judgments. The [cross-model report](../cross-model-analysis/research_results.md) and [evaluation methodology](../../evaluation/README.md) document further comparisons. We used one fine-tuning seed per condition and a shared synthetic evaluation framework; these results do not establish human-evaluated performance or causal mediation by linguistic structure.
